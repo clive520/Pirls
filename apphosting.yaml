@@ -1,0 +1,13 @@
+# Firebase App Hosting 設定檔
+runConfig:
+  minInstances: 0
+  maxInstances: 5
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 1024
+
+env:
+  - variable: DB_STORAGE_MODE
+    value: "local"
+  - variable: JWT_SECRET
+    value: "super_secret_pirls_jwt_key_2026_taiwan_reading_literacy"
