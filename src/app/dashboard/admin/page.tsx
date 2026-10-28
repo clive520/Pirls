@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, UserCheck, UserX, Clock, Building, LogOut, CheckCircle, RefreshCw } from 'lucide-react';
+import { ShieldCheck, UserCheck, UserX, Clock, Building, LogOut, CheckCircle, RefreshCw, UserPlus } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -10,6 +10,14 @@ export default function AdminDashboardPage() {
   const [approvedTeachers, setApprovedTeachers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState('');
+
+  // 新增教師彈窗狀態
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [teacherUsername, setTeacherUsername] = useState('');
+  const [teacherPassword, setTeacherPassword] = useState('teacher123');
+  const [teacherDisplayName, setTeacherDisplayName] = useState('');
+  const [teacherSchool, setTeacherSchool] = useState('');
+  const [createLoading, setCreateLoading] = useState(false);
 
   const fetchTeachers = async () => {
     try {
@@ -51,6 +59,39 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleCreateTeacher = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateLoading(true);
+    try {
+      const res = await fetch('/api/admin/teachers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: teacherUsername,
+          password: teacherPassword,
+          displayName: teacherDisplayName,
+          school: teacherSchool,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setActionMsg(data.message);
+        setShowCreateModal(false);
+        setTeacherUsername('');
+        setTeacherDisplayName('');
+        setTeacherSchool('');
+        fetchTeachers();
+        setTimeout(() => setActionMsg(''), 3000);
+      } else {
+        alert(data.error || '建立失敗');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
@@ -70,13 +111,22 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-slate-500">PIRLS 閱讀素養評量平臺最高權限</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>登出系統</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-sm transition"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>直接新增教師</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>登出</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -188,6 +238,82 @@ export default function AdminDashboardPage() {
           )}
         </section>
       </main>
+
+      {/* 直接新增教師 Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <h3 className="text-lg font-bold text-slate-900">直接建立已開通教師帳號</h3>
+            <p className="text-xs text-slate-500 mt-1">此處建立之教師將直接開通（無需審核），可立即登入使用</p>
+            <form onSubmit={handleCreateTeacher} className="mt-4 space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700">登入帳號</label>
+                <input
+                  type="text"
+                  required
+                  value={teacherUsername}
+                  onChange={(e) => setTeacherUsername(e.target.value)}
+                  placeholder="例：teacher_lin"
+                  className="mt-1 block w-full rounded-lg border-slate-300 border px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700">初始密碼</label>
+                <input
+                  type="text"
+                  required
+                  value={teacherPassword}
+                  onChange={(e) => setTeacherPassword(e.target.value)}
+                  placeholder="teacher123"
+                  className="mt-1 block w-full rounded-lg border-slate-300 border px-3 py-2 text-sm font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700">教師姓名</label>
+                <input
+                  type="text"
+                  required
+                  value={teacherDisplayName}
+                  onChange={(e) => setTeacherDisplayName(e.target.value)}
+                  placeholder="例：林美華 老師"
+                  className="mt-1 block w-full rounded-lg border-slate-300 border px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700">任教學校</label>
+                <input
+                  type="text"
+                  required
+                  value={teacherSchool}
+                  onChange={(e) => setTeacherSchool(e.target.value)}
+                  placeholder="例：新北市板橋國小"
+                  className="mt-1 block w-full rounded-lg border-slate-300 border px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  disabled={createLoading}
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold shadow-sm"
+                >
+                  {createLoading ? '建立中...' : '確認開通建立'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

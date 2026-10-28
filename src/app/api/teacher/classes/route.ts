@@ -45,3 +45,26 @@ export async function POST(req: NextRequest) {
     class: newClass,
   });
 }
+
+export async function DELETE(req: NextRequest) {
+  const teacher = await checkTeacher(req);
+  if (!teacher) {
+    return NextResponse.json({ error: '無教師存取權限' }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const classId = searchParams.get('classId');
+
+  if (!classId) {
+    return NextResponse.json({ error: '請指定欲刪除的班級 ID' }, { status: 400 });
+  }
+
+  const { deleteClass } = await import('@/lib/db');
+  const success = await deleteClass(classId);
+
+  if (!success) {
+    return NextResponse.json({ error: '找不到該班級或刪除失敗' }, { status: 404 });
+  }
+
+  return NextResponse.json({ success: true, message: '班級及所屬學生已成功刪除' });
+}

@@ -57,10 +57,10 @@ export default function RegisterPage() {
           </Link>
         </div>
         <h2 className="mt-4 text-center text-3xl font-extrabold text-slate-900 tracking-tight">
-          申請教師專業教學帳號
+          建立教師教學帳號
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600">
-          填寫資料後將由管理員核准開通，方可建立班級與學生
+          填寫基本資料即可立即開通，登入後即可建立班級與學生帳號！
         </p>
       </div>
 
