@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PIRLSSystemSchemas",
+  "definitions": {
+    "CognitiveProcess": {
+      "type": "string",
+      "enum": ["retrieve", "inference", "interpret", "evaluate"],
+      "description": "PIRLS 閱讀理解四個思維層次：retrieve (直接提取特定訊息)、inference (直接推論)、interpret (詮釋整合觀點與訊息)、evaluate (檢驗評估內容、語言與文本要素)"
+    },
+    "TextType": {
+      "type": "string",
+      "enum": ["literary", "informational"],
+      "description": "PIRLS 文本大類：literary (文學性體驗)、informational (獲取與運用資訊)"
+    },
+    "GradeLevel": {
+      "type": "integer",
+      "minimum": 3,
+      "maximum": 6,
+      "description": "適用年級（國小 3 至 6 年級）"
+    },
+    "MultipleChoiceOption": {
+      "type": "object",
+      "required": ["label", "text", "is_correct", "explanation"],
+      "properties": {
+        "label": { "type": "string", "enum": ["A", "B", "C", "D"] },
+        "text": { "type": "string", "minLength": 1 },
+        "is_correct": { "type": "boolean" },
+        "explanation": { "type": "string", "description": "正確理由或誘答設計分析" }
+      }
+    },
+    "ScoringCriteria": {
+      "type": "object",
+      "required": ["score", "description", "key_evidence_needed"],
+      "properties": {
+        "score": { "type": "integer", "enum": [0, 1, 2] },
+        "description": { "type": "string", "description": "得分標準說明" },
+        "key_evidence_needed": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "學生回答中必須包含或引用的文本具體事實/線索"
+        }
+      }
+    },
+    "QuestionRubric": {
+      "type": "object",
+      "required": ["max_score", "criteria", "sample_full_credit_answer", "sample_partial_credit_answer"],
+      "properties": {
+        "max_score": { "type": "integer", "default": 2 },
+        "criteria": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ScoringCriteria" }
+        },
+        "sample_full_credit_answer": { "type": "string", "description": "滿分示範回答" },
+        "sample_partial_credit_answer": { "type": "string", "description": "部分得分示範回答" }
+      }
+    },
+    "PIRLSQuestion": {
+      "type": "object",
+      "required": ["id", "process_level", "type", "prompt", "points"],
+      "properties": {
+        "id": { "type": "string" },
+        "process_level": { "$ref": "#/definitions/CognitiveProcess" },
+        "process_level_number": { "type": "integer", "enum": [1, 2, 3, 4] },
+        "type": { "type": "string", "enum": ["multiple_choice", "constructed_response"] },
+        "prompt": { "type": "string", "description": "題幹描述" },
+        "points": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "options": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/MultipleChoiceOption" },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "correct_answer_label": { "type": "string", "enum": ["A", "B", "C", "D"] },
+        "rubric": { "$ref": "#/definitions/QuestionRubric" }
+      }
+    },
+    "PIRLSTestPaper": {
+      "type": "object",
+      "required": ["article_title", "target_grade", "text_type", "word_count", "article_content", "questions"],
+      "properties": {
+        "article_title": { "type": "string" },
+        "target_grade": { "$ref": "#/definitions/GradeLevel" },
+        "text_type": { "$ref": "#/definitions/TextType" },
+        "word_count": { "type": "integer", "minimum": 700, "maximum": 1300 },
+        "article_content": { "type": "string", "description": "800~1,200 字繁體中文正文" },
+        "questions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/PIRLSQuestion" }
+        }
+      }
+    },
+    "GradingResult": {
+      "type": "object",
+      "required": ["score", "max_score", "evidence_verified", "evidence_details", "sandwich_feedback"],
+      "properties": {
+        "score": { "type": "integer", "minimum": 0 },
+        "max_score": { "type": "integer" },
+        "evidence_verified": { "type": "boolean", "description": "學生答案中是否具備文本事實佐證" },
+        "evidence_details": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "學生回答中成功捕捉到的文本線索"
+        },
+        "sandwich_feedback": {
+          "type": "object",
+          "required": ["strength", "weakness", "scaffolding_tip"],
+          "properties": {
+            "strength": { "type": "string", "description": "頂層肯定：指出學生回答中的具體亮點與思考價值" },
+            "weakness": { "type": "string", "description": "夾層指引：溫和指出未完整回答或缺少文本證據之處" },
+            "scaffolding_tip": { "type": "string", "description": "底層引導：提供可再提升層次的思考問題或範例句型" }
+          }
+        }
+      }
+    }
+  }
+}
