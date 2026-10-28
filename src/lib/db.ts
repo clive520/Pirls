@@ -1,13 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { put, list, getDownloadUrl } from '@vercel/blob';
 import { User, ClassRoom, UserStatus, TestPaper, ExamSubmission } from './types';
 import { hashPassword } from './auth';
 
 /**
- * PIRLS 資料庫抽象層 (Serverless & Local Hybrid Storage)
- * 支援 Serverless (Vercel / Lambda) 唯讀檔案系統環境下的 /tmp 寫入與全域記憶體快取，
- * 確保在各運行環境中註冊帳號、建立班級、生成學生與派卷作答皆 100% 穩定持久。
+ * PIRLS 資料庫抽象層 (Serverless Vercel Blob & Local Hybrid Multi-tier Storage)
+ * 1. 雲端持久層：透過 Vercel Blob 進行跨 Serverless 實例資料即時同調。
+ * 2. 邊緣快取層：記憶體單例快取 (globalThis) 達到 0ms 極速讀取。
+ * 3. 容錯備援層：/tmp 檔案鏡像與隨附種子資料庫 (pirls_database.json)。
  */
 
 interface DBState {
@@ -20,12 +22,14 @@ interface DBState {
 declare global {
   // eslint-disable-next-line no-var
   var __pirls_db_cache: DBState | undefined;
+  // eslint-disable-next-line no-var
+  var __pirls_blob_synced: boolean | undefined;
 }
 
 const SEED_DB_PATH = path.resolve(process.cwd(), 'data', 'pirls_database.json');
+const BLOB_FILE_NAME = 'database/pirls_database.json';
 
 function getActiveDBPath(): string {
-  // 偵測是否運行於 Serverless (Vercel, AWS Lambda) 唯讀環境
   const isServerless = Boolean(
     process.env.VERCEL ||
     process.env.AWS_LAMBDA_FUNCTION_NAME ||
@@ -39,8 +43,75 @@ function getActiveDBPath(): string {
   return SEED_DB_PATH;
 }
 
+async function fetchFromBlob(): Promise<DBState | null> {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) return null;
+
+  try {
+    const { blobs } = await list({ prefix: BLOB_FILE_NAME, token });
+    if (blobs && blobs.length > 0) {
+      const downloadUrl = blobs[0].downloadUrl || getDownloadUrl(blobs[0].url);
+      const res = await fetch(downloadUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const data = (await res.json()) as DBState;
+        if (!data.users) data.users = {};
+        if (!data.classes) data.classes = {};
+        if (!data.testPapers) data.testPapers = {};
+        if (!data.submissions) data.submissions = {};
+        return data;
+      }
+    }
+  } catch (err) {
+    console.warn('[DB] Blob fetch note:', err);
+  }
+  return null;
+}
+
+async function syncToBlob(state: DBState): Promise<void> {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) return;
+
+  try {
+    await put(BLOB_FILE_NAME, JSON.stringify(state, null, 2), {
+      access: 'private',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      token,
+    });
+  } catch (err) {
+    console.warn('[DB] Blob sync warning:', err);
+  }
+}
+
+async function syncCloudOnBoot(): Promise<void> {
+  if (globalThis.__pirls_blob_synced) return;
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    globalThis.__pirls_blob_synced = true;
+    return;
+  }
+  try {
+    const cloud = await fetchFromBlob();
+    if (cloud) {
+      globalThis.__pirls_db_cache = cloud;
+      try {
+        fs.writeFileSync(getActiveDBPath(), JSON.stringify(cloud, null, 2), 'utf-8');
+      } catch {}
+    } else {
+      const seed = ensureLocalDB();
+      syncToBlob(seed).catch(() => {});
+    }
+  } catch (err) {
+    console.warn('[DB] syncCloudOnBoot error:', err);
+  } finally {
+    globalThis.__pirls_blob_synced = true;
+  }
+}
+
 function ensureLocalDB(): DBState {
-  // 1. 若全域內存快取已載入，直接返回以追求最高速度與一致性
   if (globalThis.__pirls_db_cache) {
     return globalThis.__pirls_db_cache;
   }
@@ -56,7 +127,6 @@ function ensureLocalDB(): DBState {
     console.warn('[DB] Failed to ensure directory:', e);
   }
 
-  // 2. 檢查目標路徑是否有資料庫檔案
   if (fs.existsSync(activePath)) {
     try {
       const content = fs.readFileSync(activePath, 'utf-8');
@@ -72,7 +142,6 @@ function ensureLocalDB(): DBState {
     }
   }
 
-  // 3. 若目標路徑尚無檔案（如 Vercel 冷啟動），嘗試從專案隨附的 SEED_DB_PATH 複製或讀取初始資料
   if (fs.existsSync(SEED_DB_PATH)) {
     try {
       const seedContent = fs.readFileSync(SEED_DB_PATH, 'utf-8');
@@ -84,7 +153,6 @@ function ensureLocalDB(): DBState {
 
       globalThis.__pirls_db_cache = seedParsed;
 
-      // 嘗試同步寫入活躍路徑
       try {
         fs.writeFileSync(activePath, JSON.stringify(seedParsed, null, 2), 'utf-8');
       } catch (writeErr) {
@@ -97,7 +165,6 @@ function ensureLocalDB(): DBState {
     }
   }
 
-  // 4. 預設空結構
   const initialState: DBState = {
     users: {},
     classes: {},
@@ -107,17 +174,13 @@ function ensureLocalDB(): DBState {
   globalThis.__pirls_db_cache = initialState;
   try {
     fs.writeFileSync(activePath, JSON.stringify(initialState, null, 2), 'utf-8');
-  } catch {
-    // 忽略唯讀錯誤
-  }
+  } catch {}
   return initialState;
 }
 
 function saveLocalDB(state: DBState) {
-  // 1. 即時更新全域內存快取
   globalThis.__pirls_db_cache = state;
 
-  // 2. 嘗試持久化寫入活躍檔案路徑
   try {
     const activePath = getActiveDBPath();
     const dir = path.dirname(activePath);
@@ -128,12 +191,17 @@ function saveLocalDB(state: DBState) {
   } catch (err) {
     console.warn('[DB] File save warning (memory state retained):', err);
   }
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    syncToBlob(state).catch((e) => console.warn('[DB] Blob sync error:', e));
+  }
 }
 
 /**
  * 確保預設管理員帳號存在 (admin / admin123)
  */
 export async function seedInitialAdmin(): Promise<User> {
+  await syncCloudOnBoot();
   const existing = await getUserByUsername('admin');
   if (existing) return existing;
 
@@ -152,10 +220,12 @@ export async function seedInitialAdmin(): Promise<User> {
   const state = ensureLocalDB();
   state.users[adminUser.id] = adminUser;
   saveLocalDB(state);
+  await syncToBlob(state);
   return adminUser;
 }
 
 export async function getUserByUsername(username: string): Promise<User | null> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   const lower = username.trim().toLowerCase();
   for (const u of Object.values(state.users)) {
@@ -167,11 +237,13 @@ export async function getUserByUsername(username: string): Promise<User | null> 
 }
 
 export async function getUserById(id: string): Promise<User | null> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return state.users[id] || null;
 }
 
 export async function createUser(data: Omit<User, 'id' | 'createdAt'>): Promise<User> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   const id = 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
   const newUser: User = {
@@ -181,20 +253,24 @@ export async function createUser(data: Omit<User, 'id' | 'createdAt'>): Promise<
   };
   state.users[id] = newUser;
   saveLocalDB(state);
+  await syncToBlob(state);
   return newUser;
 }
 
 export async function updateUserStatus(userId: string, status: UserStatus): Promise<boolean> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   if (state.users[userId]) {
     state.users[userId].status = status;
     saveLocalDB(state);
+    await syncToBlob(state);
     return true;
   }
   return false;
 }
 
 export async function listPendingTeachers(): Promise<User[]> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return Object.values(state.users).filter(
     (u) => u.role === 'teacher' && u.status === 'pending'
@@ -202,6 +278,7 @@ export async function listPendingTeachers(): Promise<User[]> {
 }
 
 export async function listApprovedTeachers(): Promise<User[]> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return Object.values(state.users).filter(
     (u) => u.role === 'teacher' && u.status === 'active'
@@ -213,6 +290,7 @@ export async function createClass(
   name: string,
   gradeLevel: number
 ): Promise<ClassRoom> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   const id = 'cls_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
   const newClass: ClassRoom = {
@@ -225,10 +303,12 @@ export async function createClass(
   };
   state.classes[id] = newClass;
   saveLocalDB(state);
+  await syncToBlob(state);
   return newClass;
 }
 
 export async function getTeacherClasses(teacherId: string): Promise<ClassRoom[]> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return Object.values(state.classes).filter((c) => c.teacherId === teacherId);
 }
@@ -244,6 +324,7 @@ export async function createStudentsBatch(
     gradeLevel: number;
   }>
 ): Promise<User[]> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   const created: User[] = [];
   const targetClass = state.classes[classId];
@@ -274,10 +355,12 @@ export async function createStudentsBatch(
   }
 
   saveLocalDB(state);
+  await syncToBlob(state);
   return created;
 }
 
 export async function getClassStudents(classId: string): Promise<User[]> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return Object.values(state.users)
     .filter((u) => u.classId === classId)
@@ -285,6 +368,7 @@ export async function getClassStudents(classId: string): Promise<User[]> {
 }
 
 export async function deleteStudent(studentId: string): Promise<boolean> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   const student = state.users[studentId];
   if (student) {
@@ -294,32 +378,36 @@ export async function deleteStudent(studentId: string): Promise<boolean> {
       state.classes[classId].studentCount -= 1;
     }
     saveLocalDB(state);
+    await syncToBlob(state);
     return true;
   }
   return false;
 }
 
 export async function deleteClass(classId: string): Promise<boolean> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   if (state.classes[classId]) {
     delete state.classes[classId];
-    // 同步移除該班學生或解除綁定
     for (const [uid, user] of Object.entries(state.users)) {
       if (user.classId === classId) {
         delete state.users[uid];
       }
     }
     saveLocalDB(state);
+    await syncToBlob(state);
     return true;
   }
   return false;
 }
 
 export async function resetUserPassword(userId: string, newPlainPassword: string): Promise<boolean> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   if (state.users[userId]) {
     state.users[userId].passwordHash = await hashPassword(newPlainPassword);
     saveLocalDB(state);
+    await syncToBlob(state);
     return true;
   }
   return false;
@@ -332,6 +420,7 @@ export async function resetUserPassword(userId: string, newPlainPassword: string
 export async function createTestPaper(
   data: Omit<TestPaper, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<TestPaper> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   const id = 'test_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
   const now = new Date().toISOString();
@@ -344,6 +433,7 @@ export async function createTestPaper(
   };
   state.testPapers[id] = newTest;
   saveLocalDB(state);
+  await syncToBlob(state);
   return newTest;
 }
 
@@ -351,6 +441,7 @@ export async function updateTestPaper(
   id: string,
   updates: Partial<TestPaper>
 ): Promise<TestPaper | null> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   if (!state.testPapers[id]) return null;
 
@@ -360,15 +451,18 @@ export async function updateTestPaper(
     updatedAt: new Date().toISOString(),
   };
   saveLocalDB(state);
+  await syncToBlob(state);
   return state.testPapers[id];
 }
 
 export async function getTestPaperById(id: string): Promise<TestPaper | null> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return state.testPapers[id] || null;
 }
 
 export async function getTeacherTestPapers(teacherId: string): Promise<TestPaper[]> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return Object.values(state.testPapers)
     .filter((t) => t.creatorId === teacherId)
@@ -376,26 +470,29 @@ export async function getTeacherTestPapers(teacherId: string): Promise<TestPaper
 }
 
 export async function getPublicTestPapers(): Promise<TestPaper[]> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   const publics = Object.values(state.testPapers).filter((t) => t.isPublic);
   if (publics.length > 0) {
     return publics.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
-  // 若尚無標註為公開的考卷，將已有的第一份考卷自動設為公開試卷供自學體驗
   const all = Object.values(state.testPapers);
   if (all.length > 0) {
     all[0].isPublic = true;
     saveLocalDB(state);
+    await syncToBlob(state);
     return [all[0]];
   }
   return [];
 }
 
 export async function deleteTestPaper(id: string): Promise<boolean> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   if (state.testPapers[id]) {
     delete state.testPapers[id];
     saveLocalDB(state);
+    await syncToBlob(state);
     return true;
   }
   return false;
@@ -406,6 +503,7 @@ export async function assignTestPaperToClasses(
   classIds: string[],
   options?: { isPublic?: boolean; examCode?: string }
 ): Promise<boolean> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   if (!state.testPapers[testId]) return false;
   state.testPapers[testId].assignedClassIds = classIds;
@@ -417,10 +515,12 @@ export async function assignTestPaperToClasses(
   }
   state.testPapers[testId].updatedAt = new Date().toISOString();
   saveLocalDB(state);
+  await syncToBlob(state);
   return true;
 }
 
 export async function getAssignedTestPapersForClass(classId: string): Promise<TestPaper[]> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return Object.values(state.testPapers).filter(
     (t) => t.assignedClassIds && t.assignedClassIds.includes(classId)
@@ -434,6 +534,7 @@ export async function getAssignedTestPapersForClass(classId: string): Promise<Te
 export async function createSubmission(
   data: Omit<ExamSubmission, 'id' | 'submittedAt'>
 ): Promise<ExamSubmission> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   const id = 'sub_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
   const now = new Date().toISOString();
@@ -444,15 +545,18 @@ export async function createSubmission(
   };
   state.submissions[id] = newSubmission;
   saveLocalDB(state);
+  await syncToBlob(state);
   return newSubmission;
 }
 
 export async function getSubmissionById(id: string): Promise<ExamSubmission | null> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return state.submissions[id] || null;
 }
 
 export async function getStudentSubmissions(studentId: string): Promise<ExamSubmission[]> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return Object.values(state.submissions)
     .filter((s) => s.studentId === studentId)
@@ -463,6 +567,7 @@ export async function getStudentTestSubmission(
   studentId: string,
   testPaperId: string
 ): Promise<ExamSubmission | null> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   for (const sub of Object.values(state.submissions)) {
     if (sub.studentId === studentId && sub.testPaperId === testPaperId) {
@@ -473,6 +578,7 @@ export async function getStudentTestSubmission(
 }
 
 export async function getTestPaperSubmissions(testPaperId: string): Promise<ExamSubmission[]> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return Object.values(state.submissions)
     .filter((s) => s.testPaperId === testPaperId)
@@ -480,6 +586,7 @@ export async function getTestPaperSubmissions(testPaperId: string): Promise<Exam
 }
 
 export async function getGradeSubmissions(targetGrade: number): Promise<ExamSubmission[]> {
+  await syncCloudOnBoot();
   const state = ensureLocalDB();
   return Object.values(state.submissions).filter((s) => s.targetGrade === targetGrade);
 }

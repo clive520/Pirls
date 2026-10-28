@@ -10,6 +10,7 @@
     "test:stage2": "node tests/eval_stage2_auth.mjs"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.2",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "firebase-admin": "^12.0.0",
