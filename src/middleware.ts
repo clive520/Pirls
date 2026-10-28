@@ -25,8 +25,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. 保護所有 /dashboard 開頭的路由
-  if (pathname.startsWith('/dashboard')) {
+  // 2. 保護所有 /dashboard 開頭的路由 (但放行 /dashboard/student/result/:path* 供自學者查閱個人診斷書)
+  if (pathname.startsWith('/dashboard') && !pathname.startsWith('/dashboard/student/result')) {
     if (!token) {
       return NextResponse.redirect(new URL('/login', request.url));
     }

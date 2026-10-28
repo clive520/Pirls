@@ -186,12 +186,12 @@ export default function StudentDashboardPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => alert("開放練習全站題庫即將在 Stage 6 正式開放！")}
+          <Link
+            href="/practice"
             className="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition flex-shrink-0"
           >
             探索自主練習
-          </button>
+          </Link>
         </section>
 
         {/* PIRLS 四層次能力勛章展示 */}
