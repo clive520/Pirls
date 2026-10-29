@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
+import * as admin from 'firebase-admin';
 import { put, list, getDownloadUrl } from '@vercel/blob';
 import { User, ClassRoom, UserRole, UserStatus, TestPaper, ExamSubmission, StudentAnswer } from './types';
 import { hashPassword } from './auth';
@@ -12,10 +12,11 @@ import {
 } from './pirls-norm';
 
 /**
- * PIRLS 資料庫抽象層 (Serverless Vercel Blob & Local Hybrid Multi-tier Storage)
- * 1. 雲端持久層：透過 Vercel Blob 進行跨 Serverless 實例資料即時同調。
- * 2. 邊緣快取層：記憶體單例快取 (globalThis) 達到 0ms 極速讀取。
- * 3. 容錯備援層：/tmp 檔案鏡像與隨附種子資料庫 (pirls_database.json)。
+ * PIRLS 資料庫抽象層 (Google Cloud Firestore & Vercel Blob & Local Multi-tier Hybrid Storage)
+ * 1. Google 生態核心持久層：透過 Google Cloud Firestore 進行全球多實例即時同調。
+ * 2. 備援雲端層：相容 Vercel Blob。
+ * 3. 邊緣快取層：記憶體單例快取 (globalThis) 達到 0ms 極速讀取。
+ * 4. 容錯備援層：/tmp 檔案鏡像與隨附種子資料庫 (pirls_database.json)。
  */
 
 interface DBState {
@@ -47,17 +48,111 @@ function isBuildPhase(): boolean {
 }
 
 function getActiveDBPath(): string {
-  const isServerless = Boolean(
-    process.env.VERCEL ||
-    process.env.AWS_LAMBDA_FUNCTION_NAME ||
-    process.env.LAMBDA_TASK_ROOT ||
-    process.env.NODE_ENV === 'production'
-  );
-
-  if (isServerless) {
-    return path.join(os.tmpdir(), 'pirls_database.json');
+  // 在 Linux / Docker / Cloud Run 生產環境下，快取路徑置於 /tmp
+  if (process.platform !== 'win32' && process.env.NODE_ENV === 'production') {
+    return '/tmp/pirls_database.json';
   }
   return SEED_DB_PATH;
+}
+
+function getFirestoreInstance(): FirebaseFirestore.Firestore | null {
+  if (isBuildPhase()) return null;
+
+  if (admin.apps.length > 0) {
+    return admin.firestore();
+  }
+
+  // 1. 本地 service-account.json
+  const saPath = path.resolve(process.cwd(), 'service-account.json');
+  if (fs.existsSync(saPath)) {
+    try {
+      const sa = JSON.parse(fs.readFileSync(saPath, 'utf8'));
+      admin.initializeApp({
+        credential: admin.credential.cert(sa),
+        projectId: sa.project_id,
+      });
+      return admin.firestore();
+    } catch (e) {
+      console.warn('[DB] Failed to init firebase-admin from service-account.json:', e);
+    }
+  }
+
+  // 2. 環境變數憑證
+  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  if (projectId && clientEmail && privateKey) {
+    try {
+      privateKey = privateKey.replace(/\\n/g, '\n');
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+        projectId,
+      });
+      return admin.firestore();
+    } catch (e) {
+      console.warn('[DB] Failed to init firebase-admin from env:', e);
+    }
+  }
+
+  // 3. Google Cloud Run (Application Default Credentials - ADC)
+  if (process.env.K_SERVICE || process.env.GOOGLE_CLOUD_PROJECT) {
+    try {
+      admin.initializeApp({
+        projectId: process.env.GOOGLE_CLOUD_PROJECT || 'pirls-system',
+      });
+      return admin.firestore();
+    } catch (e) {
+      console.warn('[DB] Failed to init firebase-admin with ADC:', e);
+    }
+  }
+
+  return null;
+}
+
+async function fetchFromFirestore(): Promise<{ data: DBState | null; exists: boolean }> {
+  const db = getFirestoreInstance();
+  if (!db) return { data: null, exists: false };
+
+  try {
+    const docSnap = await db.collection('_pirls_system').doc('database_state').get();
+    if (docSnap.exists) {
+      const raw = docSnap.data();
+      const data: DBState = {
+        users: raw?.users || {},
+        classes: raw?.classes || {},
+        testPapers: raw?.testPapers || {},
+        submissions: raw?.submissions || {},
+      };
+      return { data, exists: true };
+    }
+    return { data: null, exists: false };
+  } catch (err) {
+    console.warn('[DB] Firestore fetch note:', err);
+    return { data: null, exists: false };
+  }
+}
+
+async function syncToFirestore(state: DBState): Promise<void> {
+  if (isBuildPhase()) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+
+  try {
+    await db.collection('_pirls_system').doc('database_state').set({
+      users: state.users,
+      classes: state.classes,
+      testPapers: state.testPapers,
+      submissions: state.submissions,
+      lastSyncedAt: new Date().toISOString(),
+    });
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err) {
+    console.warn('[DB] Firestore sync warning:', err);
+  }
 }
 
 async function fetchFromBlob(): Promise<{ data: DBState | null; exists: boolean }> {
@@ -93,6 +188,10 @@ async function syncToBlob(state: DBState): Promise<void> {
   // 建置階段嚴格禁止向雲端發送上傳覆寫請求
   if (isBuildPhase()) return;
 
+  // 1. 優先同步至 Google Cloud Firestore
+  await syncToFirestore(state).catch((e) => console.warn('[DB] Firestore sync error:', e));
+
+  // 2. 備援同步至 Vercel Blob (若有設定 Token)
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token) return;
 
@@ -114,11 +213,35 @@ async function syncCloudOnBoot(): Promise<void> {
   if (isBuildPhase()) return;
 
   const now = Date.now();
-  // 快取有效期間（5 秒內免重複抓取），保證各 Serverless 容器間即時同步
+  // 快取有效期間（5 秒內免重複抓取），保證各容器實例間即時同步
   if (globalThis.__pirls_db_cache && globalThis.__pirls_blob_last_synced && now - globalThis.__pirls_blob_last_synced < 5000) {
     return;
   }
 
+  // 1. 優先從 Google Cloud Firestore 同步
+  const firestoreDb = getFirestoreInstance();
+  if (firestoreDb) {
+    try {
+      const { data: cloud, exists } = await fetchFromFirestore();
+      if (cloud) {
+        globalThis.__pirls_db_cache = cloud;
+        globalThis.__pirls_blob_last_synced = now;
+        try {
+          fs.writeFileSync(getActiveDBPath(), JSON.stringify(cloud, null, 2), 'utf-8');
+        } catch {}
+        return;
+      } else if (!exists && !isBuildPhase()) {
+        const seed = ensureLocalDB();
+        await syncToFirestore(seed);
+        globalThis.__pirls_blob_last_synced = now;
+        return;
+      }
+    } catch (err) {
+      console.warn('[DB] syncCloudOnBoot (Firestore) note:', err);
+    }
+  }
+
+  // 2. 備援：若無 Firestore，繼續從 Vercel Blob 同步
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token) {
     globalThis.__pirls_blob_last_synced = now;

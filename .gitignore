@@ -23,6 +23,10 @@ firebase-debug.*.log*
 
 # local env files
 .env*.local
+.env*
+*service-account*.json
+*.pem
+*.key
 
 # vercel
 .vercel
