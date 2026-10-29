@@ -93,7 +93,7 @@ export default function TeacherCreateTestPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '生成試卷失敗');
+      if (!res.ok || !data.success) throw new Error(data.error || '生成試卷失敗');
 
       setTestPaper(data.testPaper);
       setStep('editor');

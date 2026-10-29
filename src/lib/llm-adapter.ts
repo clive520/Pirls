@@ -119,7 +119,7 @@ ${params.pastedText}
 
 請依據上述自選文章提煉符合 PIRLS 四層次規範與給分規準之完整 JSON 試卷。`;
 
-  // 動態獲取該 API Key 可用的模型，預設優先採用快速且最節省額度的 Gemini 1.5 Flash
+  // 動態獲取該 API Key 可用的模型（嚴格限制最多 2 款：偏好模型 + 1 款省額度備援，防止多模型累積逾時）
   const models = await getAvailableGeminiModels(apiKey, params.preferredModel);
   let lastError: Error | null = null;
 
@@ -127,19 +127,18 @@ ${params.pastedText}
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-          systemInstruction: { parts: [{ text: systemInstruction }] },
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.7,
-            maxOutputTokens: 8192, // 確保 14 道四層次完整題本不被截斷
-          },
-        }),
-      });
+      const payload = {
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.7,
+          maxOutputTokens: 4096, // 4096 tokens 生成長文與 14 題足夠充裕，且 6~10 秒內即可高速完成
+        },
+      };
+
+      // 支援單次 18 秒超時與 503 臨時高負載重試
+      const response = await fetchWithRetry(url, payload, 2, 18000);
 
       if (!response.ok) {
         const errJson = await response.json().catch(() => null);
@@ -175,55 +174,96 @@ ${params.pastedText}
     }
   }
 
+  // 若錯誤包含 503 High demand，包裝為友善指引
+  if (lastError && (lastError.message.includes('503') || lastError.message.includes('high demand'))) {
+    throw new Error(
+      `Google 雲端伺服器臨時高負載 (503 High Demand)：Google 當前運算節點正在排隊，這並非金鑰或額度問題。請稍候 3~5 秒再次點擊「開始生成」，或切換至「Gemini 1.5 Flash」模型。`
+    );
+  }
+
   throw lastError || new Error('Google Gemini API 調用失敗，請確認 API Key 是否具有有效配額。');
+}
+
+/**
+ * 遇到 Google 503 (臨時高負載) 或 429 時的自動短延遲重試機制 (每輪調用上限 18 秒)
+ */
+async function fetchWithRetry(url: string, payload: any, maxRetries = 2, timeoutMs = 18000): Promise<Response> {
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    attempt++;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timer);
+
+      // 若遇到 503 (High demand) 或 429 且還有重試次數，等待 1 秒後重試
+      if ((response.status === 503 || response.status === 429) && attempt < maxRetries) {
+        console.warn(`[PIRLS LLM] Google 伺服器回傳 ${response.status} 高負載，1 秒後進行第 ${attempt} 次重試...`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        continue;
+      }
+
+      return response;
+    } catch (err: any) {
+      clearTimeout(timer);
+      if (err.name === 'AbortError') {
+        throw new Error(`Google API 響應逾時 (${timeoutMs / 1000}秒)`);
+      }
+      if (attempt >= maxRetries) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+
+  throw new Error('Google API 調用超時或無回應');
 }
 
 /**
  * 動態探測該 API Key 當前可用且支援 generateContent 的推薦模型清單
  * 優先順序：Gemini 1.5 Flash（超快速、高穩定、每天 1,500 次免費額度、最省配額）> 1.5 Flash 8B > 2.5 Flash
+ * 嚴格上限：回傳至多 2 個模型，避免輪詢多個模型導致 504 Gateway Timeout
  */
 export async function getAvailableGeminiModels(apiKey: string, preferredModel?: string): Promise<string[]> {
-  const defaultList = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.5-flash', 'gemini-3.8-flash'];
-  if (preferredModel) {
-    const cleanPreferred = preferredModel.trim();
-    if (cleanPreferred && !defaultList.includes(cleanPreferred)) {
-      defaultList.unshift(cleanPreferred);
-    } else if (cleanPreferred) {
-      const idx = defaultList.indexOf(cleanPreferred);
-      defaultList.splice(idx, 1);
-      defaultList.unshift(cleanPreferred);
-    }
-  }
+  const defaultList = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.5-flash'];
+  const preferred = (preferredModel || 'gemini-1.5-flash').trim();
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
+
     if (res.ok) {
       const data = await res.json();
       const activeNames: string[] = (data.models || [])
         .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
         .map((m: any) => m.name.replace(/^models\//, ''));
 
-      const preferredOrder = [
-        preferredModel,
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-8b',
-        'gemini-2.5-flash',
-        'gemini-3.8-flash',
-      ].filter(Boolean) as string[];
-
-      const matched = preferredOrder.filter((m) => activeNames.includes(m));
-      if (matched.length > 0) return matched;
-
-      // 若沒有命中偏好清單，優先挑選含有 flash 的可用模型
-      const anyFlash = activeNames.filter((n) => n.includes('flash'));
-      if (anyFlash.length > 0) return anyFlash;
-
-      if (activeNames.length > 0) return activeNames.slice(0, 3);
+      const candidates: string[] = [];
+      if (activeNames.includes(preferred)) {
+        candidates.push(preferred);
+      }
+      for (const m of defaultList) {
+        if (m !== preferred && activeNames.includes(m) && candidates.length < 2) {
+          candidates.push(m);
+        }
+      }
+      if (candidates.length > 0) return candidates;
     }
   } catch (err) {
-    // 網路異常或探測受阻，直接回退預設候選梯隊
+    // 探測逾時或異常，回退預設
   }
-  return defaultList;
+
+  return [preferred, preferred === 'gemini-1.5-flash' ? 'gemini-1.5-flash-8b' : 'gemini-1.5-flash'];
 }
 
 function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
