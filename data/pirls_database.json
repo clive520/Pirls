@@ -97,6 +97,44 @@
       "school": "鹿陽國小",
       "id": "usr_1793239746980_7s7k1",
       "createdAt": "2026-10-29T02:09:06.980Z"
+    },
+    "usr_1793245117171_1yc4c": {
+      "username": "teacher_cascade_1793245117099",
+      "passwordHash": "$2a$10$b92JmkTauVvLJ3e92doi2OybvF6v5BQtcCkq.bcUJYDnGMYw5aQUq",
+      "displayName": "階層登入測試老師",
+      "role": "teacher",
+      "status": "active",
+      "school": "臺北市階層國小",
+      "id": "usr_1793245117171_1yc4c",
+      "createdAt": "2026-10-29T03:38:37.171Z"
+    },
+    "stu_1793245117243_fr50s": {
+      "id": "stu_1793245117243_fr50s",
+      "username": "stu_cas_01_renamed_1793245117099",
+      "passwordHash": "$2a$10$yAXhdrl1x4ucAc3Zlevz0.V4iIVZ47aC/4fhNNTt6KakDSkulzOc.",
+      "displayName": "王大同 (改名)",
+      "role": "student",
+      "status": "active",
+      "teacherId": "usr_1793245117171_1yc4c",
+      "classId": "cls_1793245117173_hozi",
+      "className": "四年階層班",
+      "seatNumber": 8,
+      "gradeLevel": 4,
+      "createdAt": "2026-10-29T03:38:37.243Z"
+    },
+    "stu_1793245117303_lz3qw": {
+      "id": "stu_1793245117303_lz3qw",
+      "username": "stu_cas_02_1793245117099",
+      "passwordHash": "$2a$10$C8nIaFOBhWcw5UYtifabWej2JpnEyGjFV7m0CzaYETHxkSUnd4Db2",
+      "displayName": "李小美",
+      "role": "student",
+      "status": "active",
+      "teacherId": "usr_1793245117171_1yc4c",
+      "classId": "cls_1793245117173_hozi",
+      "className": "四年階層班",
+      "seatNumber": 2,
+      "gradeLevel": 4,
+      "createdAt": "2026-10-29T03:38:37.303Z"
     }
   },
   "classes": {
@@ -123,6 +161,14 @@
       "teacherId": "usr_1793188060743_7v3zb",
       "studentCount": 0,
       "createdAt": "2026-10-28T11:47:40.756Z"
+    },
+    "cls_1793245117173_hozi": {
+      "id": "cls_1793245117173_hozi",
+      "name": "四年階層班",
+      "gradeLevel": 4,
+      "teacherId": "usr_1793245117171_1yc4c",
+      "studentCount": 2,
+      "createdAt": "2026-10-29T03:38:37.173Z"
     }
   },
   "testPapers": {

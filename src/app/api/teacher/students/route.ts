@@ -107,3 +107,35 @@ export async function DELETE(req: NextRequest) {
 
   return NextResponse.json({ success: true, message: '學生帳號已成功刪除' });
 }
+
+export async function PUT(req: NextRequest) {
+  const teacher = await checkTeacher(req);
+  if (!teacher) {
+    return NextResponse.json({ error: '無教師存取權限' }, { status: 403 });
+  }
+
+  const body = await req.json();
+  const { studentId, displayName, seatNumber, username, newPassword } = body;
+
+  if (!studentId) {
+    return NextResponse.json({ error: '請指定學生 ID' }, { status: 400 });
+  }
+
+  const { updateStudentInfo } = await import('@/lib/db');
+  const res = await updateStudentInfo(studentId, {
+    displayName,
+    seatNumber,
+    username,
+    plainPassword: newPassword,
+  });
+
+  if (!res.success) {
+    return NextResponse.json({ error: res.error || '更新學生資料失敗' }, { status: 400 });
+  }
+
+  return NextResponse.json({
+    success: true,
+    message: `學生【${res.student?.displayName}】的帳號資料與密碼已成功更新！`,
+    student: res.student,
+  });
+}

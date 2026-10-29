@@ -27,6 +27,16 @@ export default function TeacherDashboardPage() {
   const [studentNamesInput, setStudentNamesInput] = useState('');
   const [createdStudentSlips, setCreatedStudentSlips] = useState<any[]>([]);
 
+  // 編輯學生帳號密碼彈窗狀態
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [editDisplayName, setEditDisplayName] = useState('');
+  const [editSeatNumber, setEditSeatNumber] = useState<number | string>(1);
+  const [editUsername, setEditUsername] = useState('');
+  const [editNewPassword, setEditNewPassword] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
+
   // 取得當前使用者與班級清單
   const initData = async (targetClassId?: string) => {
     try {
@@ -202,6 +212,50 @@ export default function TeacherDashboardPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // 打開編輯學生彈窗
+  const handleOpenEditModal = (student: any) => {
+    setEditingStudent(student);
+    setEditDisplayName(student.displayName || '');
+    setEditSeatNumber(student.seatNumber || 1);
+    setEditUsername(student.username || '');
+    setEditNewPassword('');
+    setEditError('');
+    setShowEditModal(true);
+  };
+
+  // 儲存編輯學生
+  const handleSaveStudentEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+    setEditLoading(true);
+    setEditError('');
+
+    try {
+      const res = await fetch('/api/teacher/students', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: editingStudent.id,
+          displayName: editDisplayName,
+          seatNumber: Number(editSeatNumber),
+          username: editUsername,
+          newPassword: editNewPassword.trim() ? editNewPassword.trim() : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShowEditModal(false);
+        await fetchClassStudents(selectedClassId);
+      } else {
+        setEditError(data.error || '更新學生資料失敗');
+      }
+    } catch (err: any) {
+      setEditError(err.message || '網路通訊錯誤');
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -409,7 +463,15 @@ export default function TeacherDashboardPage() {
                         <td className="py-3.5 px-6 text-xs text-slate-400">
                           {new Date(s.createdAt).toLocaleDateString('zh-TW')}
                         </td>
-                        <td className="py-3.5 px-6 text-right">
+                        <td className="py-3.5 px-6 text-right space-x-3 whitespace-nowrap">
+                          <button
+                            onClick={() => handleOpenEditModal(s)}
+                            className="text-xs text-sky-600 hover:text-sky-800 hover:underline font-bold inline-flex items-center space-x-1"
+                            title="修改姓名、座號、帳號或重設密碼"
+                          >
+                            <KeyRound className="w-3.5 h-3.5" />
+                            <span>編輯帳密</span>
+                          </button>
                           <button
                             onClick={() => handleDeleteStudent(s.id, s.displayName)}
                             className="text-xs text-rose-500 hover:text-rose-700 hover:underline font-semibold"
@@ -622,6 +684,135 @@ export default function TeacherDashboardPage() {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+      {/* 編輯學生帳號密碼 Modal */}
+      {showEditModal && editingStudent && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">編輯學生帳號與密碼</h3>
+                  <p className="text-xs text-slate-500">修改學生基本資料或為忘記密碼的學生重設密碼</p>
+                </div>
+              </div>
+            </div>
+
+            {editError && (
+              <div className="mt-3 p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold">
+                {editError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveStudentEdit} className="mt-4 space-y-3.5">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-1">
+                  <label className="block text-xs font-bold text-slate-700">座號</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={99}
+                    required
+                    value={editSeatNumber}
+                    onChange={(e) => setEditSeatNumber(e.target.value)}
+                    className="mt-1 block w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-sky-500 font-bold"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-700">學生姓名</label>
+                  <input
+                    type="text"
+                    required
+                    value={editDisplayName}
+                    onChange={(e) => setEditDisplayName(e.target.value)}
+                    placeholder="例：王小明"
+                    className="mt-1 block w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-sky-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700">登入帳號</label>
+                <input
+                  type="text"
+                  required
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  placeholder="例：s401_01"
+                  className="mt-1 block w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-sky-500 font-mono"
+                />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  ＊學生若使用「老師/班級/座號」快速登入將自動比對此帳號。
+                </p>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <label className="block text-xs font-bold text-slate-800">
+                  重設密碼 <span className="text-slate-400 font-normal">（若不更換密碼請保留空白）</span>
+                </label>
+                <input
+                  type="text"
+                  value={editNewPassword}
+                  onChange={(e) => setEditNewPassword(e.target.value)}
+                  placeholder="輸入新密碼，或點擊下方快捷鍵設定"
+                  className="block w-full rounded-lg border-slate-300 border px-3 py-2 text-sm font-mono bg-white focus:ring-sky-500"
+                />
+
+                {/* 快捷填入密碼 */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[11px] text-slate-400">快捷設定：</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const seat = String(editSeatNumber).padStart(2, '0');
+                      setEditNewPassword(`pirls${seat}`);
+                    }}
+                    className="text-[11px] px-2 py-0.5 rounded bg-sky-50 text-sky-700 hover:bg-sky-100 font-semibold border border-sky-200 transition"
+                  >
+                    pirls{String(editSeatNumber).padStart(2, '0')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditNewPassword('123456')}
+                    className="text-[11px] px-2 py-0.5 rounded bg-slate-200 text-slate-700 hover:bg-slate-300 font-semibold transition"
+                  >
+                    123456
+                  </button>
+                  {editNewPassword && (
+                    <button
+                      type="button"
+                      onClick={() => setEditNewPassword('')}
+                      className="text-[11px] px-2 py-0.5 rounded text-rose-600 hover:underline"
+                    >
+                      清空
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  disabled={editLoading}
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold shadow-sm disabled:opacity-50 inline-flex items-center space-x-1.5"
+                >
+                  {editLoading ? <span>儲存中...</span> : <span>確認儲存</span>}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
