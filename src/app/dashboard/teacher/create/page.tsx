@@ -37,7 +37,7 @@ export default function TeacherCreateTestPage() {
   const [preferredModels, setPreferredModels] = useState<{ [key: string]: string }>({
     gemini: 'auto',
     openrouter: 'deepseek/deepseek-chat',
-    deepseek: 'deepseek-chat',
+    deepseek: 'deepseek-flash',
     opencode: 'deepseek-chat',
   });
   const [keyChecking, setKeyChecking] = useState(false);
@@ -651,15 +651,24 @@ export default function TeacherCreateTestPage() {
 
                       {provider === 'deepseek' && (
                         <select
-                          value={preferredModels.deepseek || 'deepseek-chat'}
+                          value={preferredModels.deepseek || 'deepseek-flash'}
                           onChange={(e) => handleModelChange('deepseek', e.target.value)}
                           className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
                         >
+                          <option value="deepseek-flash">
+                            ⚡ DeepSeek V4.1 Flash (deepseek-flash) - 推薦：最新極速小型模型、超低延遲
+                          </option>
                           <option value="deepseek-chat">
-                            ⚡ DeepSeek-V3 (deepseek-chat) - 推薦：中文理解最強、超快速且成本極低
+                            🌟 DeepSeek Chat / V3 (deepseek-chat) - 通用對話、繁體中文理解力強
+                          </option>
+                          <option value="deepseek-v4-pro">
+                            🚀 DeepSeek V4 Pro (deepseek-v4-pro) - 高階旗艦專業模型
                           </option>
                           <option value="deepseek-reasoner">
-                            🧠 DeepSeek-R1 (deepseek-reasoner) - 深度思考推理大模型
+                            🧠 DeepSeek R1 (deepseek-reasoner) - 深度思考推理大模型
+                          </option>
+                          <option value="deepseek-r1">
+                            🧠 DeepSeek R1 (deepseek-r1) - 深度推理別名
                           </option>
                         </select>
                       )}
@@ -671,7 +680,10 @@ export default function TeacherCreateTestPage() {
                           className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
                         >
                           <option value="deepseek/deepseek-chat">
-                            🌟 DeepSeek V3 (deepseek/deepseek-chat) - 推薦首選：高性價比、中文命題精準
+                            🌟 DeepSeek Chat / V3 (deepseek/deepseek-chat) - 推薦首選：高性價比、中文命題精準
+                          </option>
+                          <option value="deepseek/deepseek-r1">
+                            🧠 DeepSeek R1 (deepseek/deepseek-r1) - 深度思考推理
                           </option>
                           <option value="google/gemini-2.0-flash-001">
                             ⚡ Gemini 2.0 Flash (google/gemini-2.0-flash-001) - 極速推理

@@ -121,8 +121,8 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          model: 'deepseek-chat',
-          message: 'DeepSeek 官方 API 金鑰有效！支援 deepseek-chat (V3) 與 deepseek-reasoner (R1)。',
+          model: 'deepseek-flash',
+          message: 'DeepSeek 官方 API 金鑰有效！支援 deepseek-flash (V4.1)、deepseek-chat、deepseek-v4-pro 與 deepseek-reasoner。',
         }, { status: 200 });
       }
 

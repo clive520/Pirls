@@ -233,7 +233,7 @@ async function callOpenAICompatibleAPI(
     defaultModel = 'deepseek/deepseek-chat';
   } else if (provider === 'deepseek') {
     endpoint = 'https://api.deepseek.com/chat/completions';
-    defaultModel = 'deepseek-chat';
+    defaultModel = 'deepseek-flash';
   } else if (provider === 'opencode') {
     const base = params.customBaseUrl?.trim() || 'https://api.opencode.ai/v1';
     endpoint = base.endsWith('/chat/completions')
