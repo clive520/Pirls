@@ -147,18 +147,28 @@ async function callGeminiAPI(params: GenerateParams, apiKey: string): Promise<Te
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
+      const isGemini3 = model.includes('3.');
+      const generationConfig: any = {
+        responseMimeType: 'application/json',
+        temperature: 0.7,
+        maxOutputTokens: 8192, // 充裕的輸出空間，避免 thinking tokens 佔滿導致截斷
+      };
+
+      // 核心加速：針對 Gemini 3.x Flash 模型設定 LOW 思考等級，壓低首字延遲至極速
+      if (isGemini3) {
+        generationConfig.thinkingConfig = {
+          thinkingLevel: 'LOW',
+        };
+      }
+
       const payload = {
         contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
         systemInstruction: { parts: [{ text: systemInstruction }] },
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.7,
-          maxOutputTokens: 4096, // 4096 tokens 生成長文與題目足夠充裕
-        },
+        generationConfig,
       };
 
-      // 依託 Google Cloud Run 容器長效運算能力，放寬等待時間至 180 秒（3 分鐘）
-      const response = await fetchWithRetry(url, payload, 2, 180000);
+      // 單一模型等待 55 秒，若超時則自動切換至下一款備援模型（如 3.6-flash 或 1.5-flash）
+      const response = await fetchWithRetry(url, payload, 1, 55000);
 
       if (!response.ok) {
         const errJson = await response.json().catch(() => null);
@@ -278,9 +288,9 @@ async function callOpenAICompatibleAPI(
 }
 
 /**
- * 遇到 Google 503 (臨時高負載) 或 429 時的自動短延遲重試機制 (放寬等待時間至 180 秒)
+ * 遇到 Google 503 (臨時高負載) 或 429 時的自動短延遲重試機制
  */
-async function fetchWithRetry(url: string, payload: any, maxRetries = 2, timeoutMs = 180000): Promise<Response> {
+async function fetchWithRetry(url: string, payload: any, maxRetries = 1, timeoutMs = 55000): Promise<Response> {
   let attempt = 0;
   while (attempt < maxRetries) {
     attempt++;
@@ -299,7 +309,7 @@ async function fetchWithRetry(url: string, payload: any, maxRetries = 2, timeout
 
       // 若遇到 503 (High demand) 或 429 且還有重試次數，等待 1 秒後重試
       if ((response.status === 503 || response.status === 429) && attempt < maxRetries) {
-        console.warn(`[PIRLS LLM] Google 伺服器回傳 ${response.status} 高負載，1 秒後進行第 ${attempt} 次重試...`);
+        console.warn(`[PIRLS LLM] Google 伺服器回傳 ${response.status} 高負載，1 秒後重試...`);
         await new Promise((resolve) => setTimeout(resolve, 1000));
         continue;
       }
@@ -379,10 +389,10 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
     // 探測逾時或異常
   }
 
-  // 靜態備援清單（以官方活躍且推薦的 3.8-flash 與 3.6-flash 為主）
+  // 靜態備援清單（以官方活躍且推薦的 3.8-flash、3.6-flash 與 1.5-flash 為主）
   if (preferred && preferred !== 'auto') {
     const backup = preferred === 'gemini-3.8-flash' ? 'gemini-3.6-flash' : 'gemini-3.8-flash';
-    return [preferred, backup];
+    return [preferred, backup, 'gemini-1.5-flash'];
   }
   return ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-1.5-flash'];
 }
