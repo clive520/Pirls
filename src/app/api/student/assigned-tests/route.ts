@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
 import { getAssignedTestPapersForClass, getStudentSubmissions } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const token = req.cookies.get('pirls_token')?.value;
   if (!token) {

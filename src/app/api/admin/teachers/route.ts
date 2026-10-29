@@ -12,6 +12,8 @@ import {
 } from '@/lib/db';
 import { hashPassword } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * 嚴格檢查請求者是否具備有效的系統管理員權限
  * 必須具備 session 且在資料庫中身分為 role === 'admin' 且 status === 'active'

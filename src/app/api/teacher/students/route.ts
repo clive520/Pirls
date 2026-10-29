@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/auth';
 import { createStudentsBatch, getClassStudents, getUserByUsername } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 async function checkTeacher(req: NextRequest) {
   const token = req.cookies.get('pirls_token')?.value;
   if (!token) return null;

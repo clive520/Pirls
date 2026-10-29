@@ -29,11 +29,22 @@ declare global {
   // eslint-disable-next-line no-var
   var __pirls_db_cache: DBState | undefined;
   // eslint-disable-next-line no-var
-  var __pirls_blob_synced: boolean | undefined;
+  var __pirls_blob_last_synced: number | undefined;
 }
 
 const SEED_DB_PATH = path.resolve(process.cwd(), 'data', 'pirls_database.json');
 const BLOB_FILE_NAME = 'database/pirls_database.json';
+
+/**
+ * 判斷是否處於 Next.js 打包建置階段。建置階段絕不能上傳或覆寫生產雲端 Blob 資料。
+ */
+function isBuildPhase(): boolean {
+  return (
+    process.env.NEXT_PHASE === 'phase-production-build' ||
+    process.env.npm_lifecycle_event === 'build' ||
+    process.env.NEXT_PHASE === 'phase-export'
+  );
+}
 
 function getActiveDBPath(): string {
   const isServerless = Boolean(
@@ -49,9 +60,9 @@ function getActiveDBPath(): string {
   return SEED_DB_PATH;
 }
 
-async function fetchFromBlob(): Promise<DBState | null> {
+async function fetchFromBlob(): Promise<{ data: DBState | null; exists: boolean }> {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) return null;
+  if (!token) return { data: null, exists: false };
 
   try {
     const { blobs } = await list({ prefix: BLOB_FILE_NAME, token });
@@ -67,16 +78,21 @@ async function fetchFromBlob(): Promise<DBState | null> {
         if (!data.classes) data.classes = {};
         if (!data.testPapers) data.testPapers = {};
         if (!data.submissions) data.submissions = {};
-        return data;
+        return { data, exists: true };
       }
+      return { data: null, exists: true };
     }
+    return { data: null, exists: false };
   } catch (err) {
     console.warn('[DB] Blob fetch note:', err);
+    return { data: null, exists: false };
   }
-  return null;
 }
 
 async function syncToBlob(state: DBState): Promise<void> {
+  // 建置階段嚴格禁止向雲端發送上傳覆寫請求
+  if (isBuildPhase()) return;
+
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token) return;
 
@@ -87,33 +103,44 @@ async function syncToBlob(state: DBState): Promise<void> {
       allowOverwrite: true,
       token,
     });
+    globalThis.__pirls_blob_last_synced = Date.now();
   } catch (err) {
     console.warn('[DB] Blob sync warning:', err);
   }
 }
 
 async function syncCloudOnBoot(): Promise<void> {
-  if (globalThis.__pirls_blob_synced) return;
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) {
-    globalThis.__pirls_blob_synced = true;
+  // 建置階段不執行雲端同步
+  if (isBuildPhase()) return;
+
+  const now = Date.now();
+  // 快取有效期間（5 秒內免重複抓取），保證各 Serverless 容器間即時同步
+  if (globalThis.__pirls_db_cache && globalThis.__pirls_blob_last_synced && now - globalThis.__pirls_blob_last_synced < 5000) {
     return;
   }
+
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    globalThis.__pirls_blob_last_synced = now;
+    return;
+  }
+
   try {
-    const cloud = await fetchFromBlob();
+    const { data: cloud, exists } = await fetchFromBlob();
     if (cloud) {
       globalThis.__pirls_db_cache = cloud;
+      globalThis.__pirls_blob_last_synced = now;
       try {
         fs.writeFileSync(getActiveDBPath(), JSON.stringify(cloud, null, 2), 'utf-8');
       } catch {}
-    } else {
+    } else if (!exists && !isBuildPhase()) {
+      // 僅在雲端完全沒有該 Blob 檔案時（初次啟動），才寫入本地初始資料
       const seed = ensureLocalDB();
-      syncToBlob(seed).catch(() => {});
+      await syncToBlob(seed);
+      globalThis.__pirls_blob_last_synced = now;
     }
   } catch (err) {
     console.warn('[DB] syncCloudOnBoot error:', err);
-  } finally {
-    globalThis.__pirls_blob_synced = true;
   }
 }
 
@@ -598,9 +625,13 @@ export async function createClass(
   return newClass;
 }
 
-export async function getTeacherClasses(teacherId: string): Promise<ClassRoom[]> {
+export async function getTeacherClasses(teacherId: string, role?: string): Promise<ClassRoom[]> {
   await syncCloudOnBoot();
   const state = ensureLocalDB();
+  if (role === 'admin') {
+    // 系統管理員可檢視與管理全校所有班級（含自己建立的班級）
+    return Object.values(state.classes);
+  }
   return Object.values(state.classes).filter((c) => c.teacherId === teacherId);
 }
 

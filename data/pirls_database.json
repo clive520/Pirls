@@ -135,9 +135,55 @@
       "seatNumber": 2,
       "gradeLevel": 4,
       "createdAt": "2026-10-29T03:38:37.303Z"
+    },
+    "usr_1793245857639_optvr": {
+      "username": "teacher_cascade_1793245857564",
+      "passwordHash": "$2a$10$iiOVKa167UUPTGOAsItbx.ODDwbrK97rktFOKqNrCwmGLTqToh2yu",
+      "displayName": "階層登入測試老師",
+      "role": "teacher",
+      "status": "active",
+      "school": "臺北市階層國小",
+      "id": "usr_1793245857639_optvr",
+      "createdAt": "2026-10-29T03:50:57.639Z"
+    },
+    "stu_1793245857710_w82g4": {
+      "id": "stu_1793245857710_w82g4",
+      "username": "stu_cas_01_renamed_1793245857564",
+      "passwordHash": "$2a$10$EymWaTGnyVJxHu7.l5GRhu28/sJhyTnuKmnNg4En8orO545vStmAi",
+      "displayName": "王大同 (改名)",
+      "role": "student",
+      "status": "active",
+      "teacherId": "usr_1793245857639_optvr",
+      "classId": "cls_1793245857641_f1tp",
+      "className": "四年階層班",
+      "seatNumber": 8,
+      "gradeLevel": 4,
+      "createdAt": "2026-10-29T03:50:57.710Z"
+    },
+    "stu_1793245857767_pyzwr": {
+      "id": "stu_1793245857767_pyzwr",
+      "username": "stu_cas_02_1793245857564",
+      "passwordHash": "$2a$10$VMwAt/4kTYG7oT1OYsI4F.QmGKCPYCdMjwUlzavD9ZAYs60tuAmZW",
+      "displayName": "李小美",
+      "role": "student",
+      "status": "active",
+      "teacherId": "usr_1793245857639_optvr",
+      "classId": "cls_1793245857641_f1tp",
+      "className": "四年階層班",
+      "seatNumber": 2,
+      "gradeLevel": 4,
+      "createdAt": "2026-10-29T03:50:57.767Z"
     }
   },
   "classes": {
+    "cls_1793240000000_602": {
+      "id": "cls_1793240000000_602",
+      "name": "六年級二班",
+      "gradeLevel": 6,
+      "teacherId": "usr_1793239746980_7s7k1",
+      "studentCount": 0,
+      "createdAt": "2026-10-29T02:30:00.000Z"
+    },
     "cls_1793180762488_hiiv": {
       "id": "cls_1793180762488_hiiv",
       "name": "四年六班",
@@ -169,6 +215,14 @@
       "teacherId": "usr_1793245117171_1yc4c",
       "studentCount": 2,
       "createdAt": "2026-10-29T03:38:37.173Z"
+    },
+    "cls_1793245857641_f1tp": {
+      "id": "cls_1793245857641_f1tp",
+      "name": "四年階層班",
+      "gradeLevel": 4,
+      "teacherId": "usr_1793245857639_optvr",
+      "studentCount": 2,
+      "createdAt": "2026-10-29T03:50:57.641Z"
     }
   },
   "testPapers": {

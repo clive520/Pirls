@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/auth';
 import { createClass, getTeacherClasses } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 async function checkTeacher(req: NextRequest) {
   const token = req.cookies.get('pirls_token')?.value;
   if (!token) return null;
@@ -16,7 +18,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: '無教師存取權限' }, { status: 403 });
   }
 
-  const classes = await getTeacherClasses(teacher.userId);
+  const classes = await getTeacherClasses(teacher.userId, teacher.role);
   return NextResponse.json({ classes });
 }
 

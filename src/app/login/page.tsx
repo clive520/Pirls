@@ -416,23 +416,7 @@ export default function LoginPage() {
             </form>
           )}
 
-          {/* 系統預設提示卡片 */}
-          <div className="mt-6 pt-5 border-t border-slate-200 text-xs text-slate-500 space-y-2 bg-slate-50 p-4 rounded-xl">
-            <div className="font-semibold text-slate-700">💡 帳號說明指引：</div>
-            <div>
-              • <strong className="text-slate-700">學生登入</strong>：免背英數帳號，依序選擇「老師 $\rightarrow$ 班級 $\rightarrow$ 座號姓名」再輸入密碼即可。
-            </div>
-            <div>
-              • <strong className="text-slate-700">預設管理員</strong>：帳號{' '}
-              <code className="text-sky-700 bg-sky-100 px-1 py-0.5 rounded font-mono">admin</code> / 密碼{' '}
-              <code className="text-sky-700 bg-sky-100 px-1 py-0.5 rounded font-mono">admin123</code>
-            </div>
-            <div>
-              • <strong className="text-slate-700">任課老師</strong>：若無帳號可點擊下方註冊，由校內管理員審核開通。
-            </div>
-          </div>
-
-          <div className="mt-5 text-center">
+          <div className="mt-6 pt-4 border-t border-slate-100 text-center">
             <Link
               href="/register"
               className="inline-flex items-center text-xs sm:text-sm font-bold text-sky-600 hover:text-sky-700"
