@@ -173,17 +173,27 @@ export default function TeacherTestPapersPage() {
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${
-                      t.textType === 'literary' ? 'bg-indigo-50 text-indigo-700' : 'bg-emerald-50 text-emerald-700'
-                    }`}>
-                      {t.textType === 'literary' ? '文學性文本' : '訊息性文本'}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${
+                        t.textType === 'literary' ? 'bg-indigo-50 text-indigo-700' : 'bg-emerald-50 text-emerald-700'
+                      }`}>
+                        {t.textType === 'literary' ? '文學性文本' : '訊息性文本'}
+                      </span>
+                      {(t.creatorId === 'admin_root_001' || t.creatorName?.includes('校本') || t.creatorName?.includes('歸檔')) && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">
+                          校本公共題庫
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xs text-slate-400">
                       國小 {t.targetGrade} 年級
                     </span>
                   </div>
 
                   <h3 className="text-base font-bold text-slate-900 mt-2 line-clamp-1">{t.title}</h3>
+                  <div className="text-[11px] text-slate-400 mt-0.5">
+                    出題者：<span className="text-slate-600 font-medium">{t.creatorName || '系統公共'}</span>
+                  </div>
                   <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
                     {t.themeSummary || t.articleContent.substring(0, 60) + '...'}
                   </p>

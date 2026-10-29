@@ -37,6 +37,7 @@ interface TeacherItem {
   classCount: number;
   studentCount: number;
   submissionCount: number;
+  paperCount: number;
 }
 
 interface TransferTarget {
@@ -574,7 +575,7 @@ export default function AdminDashboardPage() {
                         <p className="text-xs text-slate-400 font-mono mt-0.5">帳號: {t.username}</p>
 
                         {/* 統計摘要條 */}
-                        <div className="mt-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-[11px] grid grid-cols-3 text-center">
+                        <div className="mt-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-[11px] grid grid-cols-4 text-center">
                           <div>
                             <span className="text-slate-400 block text-[10px]">班級數</span>
                             <strong className="text-slate-700 font-bold">{t.classCount}</strong>
@@ -583,9 +584,13 @@ export default function AdminDashboardPage() {
                             <span className="text-slate-400 block text-[10px]">學生數</span>
                             <strong className="text-slate-700 font-bold">{t.studentCount}</strong>
                           </div>
-                          <div>
+                          <div className="border-r border-slate-200/60">
                             <span className="text-slate-400 block text-[10px]">測驗作答</span>
                             <strong className="text-slate-700 font-bold">{t.submissionCount}</strong>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">教學文章</span>
+                            <strong className="text-indigo-600 font-bold">{t.paperCount || 0}</strong>
                           </div>
                         </div>
                       </div>
@@ -674,19 +679,38 @@ export default function AdminDashboardPage() {
             {/* 資料盤點說明框 */}
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-700 space-y-1">
               <div className="font-bold text-slate-800">該教師目前名下擁有的資料規模：</div>
-              <div className="grid grid-cols-3 gap-2 text-center pt-1 font-medium">
+              <div className="grid grid-cols-4 gap-2 text-center pt-1 font-medium">
                 <div className="bg-white p-2 rounded-xl border border-slate-200">
                   <span className="text-slate-400 block text-[10px]">班級數</span>
-                  <strong className="text-indigo-600 text-base">{selectedTeacherForDelete.classCount}</strong> 個
+                  <strong className="text-indigo-600 text-sm">{selectedTeacherForDelete.classCount}</strong> 個
                 </div>
                 <div className="bg-white p-2 rounded-xl border border-slate-200">
                   <span className="text-slate-400 block text-[10px]">學生總數</span>
-                  <strong className="text-indigo-600 text-base">{selectedTeacherForDelete.studentCount}</strong> 位
+                  <strong className="text-indigo-600 text-sm">{selectedTeacherForDelete.studentCount}</strong> 位
                 </div>
                 <div className="bg-white p-2 rounded-xl border border-slate-200">
-                  <span className="text-slate-400 block text-[10px]">測驗作答記錄</span>
-                  <strong className="text-indigo-600 text-base">{selectedTeacherForDelete.submissionCount}</strong> 份
+                  <span className="text-slate-400 block text-[10px]">測驗作答</span>
+                  <strong className="text-indigo-600 text-sm">{selectedTeacherForDelete.submissionCount}</strong> 份
                 </div>
+                <div className="bg-white p-2 rounded-xl border border-slate-200">
+                  <span className="text-slate-400 block text-[10px]">教材文章</span>
+                  <strong className="text-emerald-600 text-sm">{selectedTeacherForDelete.paperCount || 0}</strong> 篇
+                </div>
+              </div>
+            </div>
+
+            {/* 方案 A 校本資產保護制度公告 */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50/80 via-teal-50/70 to-indigo-50/60 border border-emerald-200 text-xs text-slate-800 flex items-start space-x-2.5">
+              <BookOpen className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <strong className="font-bold text-emerald-950 block">
+                  📚 校本教材資產保護機制（方案 A 已生效）：
+                </strong>
+                <p className="text-[11px] leading-relaxed text-slate-700">
+                  無論選擇轉移班級或連帶刪除班級學生，該教師建立的{' '}
+                  <strong className="text-emerald-800 font-bold">{selectedTeacherForDelete.paperCount || 0} 篇 PIRLS 文章與題本</strong>
+                  均會<strong>全數安全保留</strong>，並自動歸檔至「全校公共題庫」，由系統管理員代管，保留教學成果且確保學生歷史評量診斷書永遠完整可查！
+                </p>
               </div>
             </div>
 

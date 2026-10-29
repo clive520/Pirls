@@ -58,6 +58,19 @@ export async function DELETE(
     return NextResponse.json({ error: '無存取權限' }, { status: 403 });
   }
 
+  const testPaper = await getTestPaperById(params.id);
+  if (!testPaper) {
+    return NextResponse.json({ error: '找不到該試卷' }, { status: 404 });
+  }
+
+  // 僅建立者本人或最高管理員可刪除試卷；校本公共題庫不可隨意刪除
+  if (testPaper.creatorId !== teacher.userId && teacher.role !== 'admin') {
+    return NextResponse.json(
+      { error: '您無法刪除其他教師或已歸檔為校本公共題庫之試卷' },
+      { status: 403 }
+    );
+  }
+
   const success = await deleteTestPaper(params.id);
   return NextResponse.json({ success });
 }

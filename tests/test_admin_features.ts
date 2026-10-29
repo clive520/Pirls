@@ -65,7 +65,7 @@ async function testAdminFlow() {
   // Re-approve for deletion tests
   await updateUserStatus(t1.id, 'active');
 
-  console.log('\n=== Step 6: Create class & student under teacher 1 ===');
+  console.log('\n=== Step 6: Create class & student & test paper under teacher 1 ===');
   const cls = await createClass(t1.id, '四年八班', 4);
   const students = await createStudentsBatch(t1.id, cls.id, [
     {
@@ -76,7 +76,23 @@ async function testAdminFlow() {
       gradeLevel: 4,
     },
   ]);
-  console.log('Created class and student:', cls.name, students[0].displayName);
+  const { createTestPaper, getTestPaperById } = await import('../src/lib/db');
+  const paper = await createTestPaper({
+    title: '海龜的冒險旅程',
+    targetGrade: 4,
+    textType: 'literary',
+    themeSummary: '透過小海龜的海洋冒險，培養愛護海洋與堅持到底的毅力。',
+    wordCount: 880,
+    articleContent: '海龜在晨光中游向深藍色的大海...',
+    paragraphs: [{ paragraphNumber: 1, text: '海龜在晨光中游向深藍色的大海...' }],
+    questions: [],
+    totalPoints: 10,
+    creatorId: t1.id,
+    creatorName: t1.displayName,
+    isPublic: false,
+    timeLimitMinutes: 40,
+  });
+  console.log('Created class, student, and test paper:', cls.name, students[0].displayName, paper.title);
 
   console.log('\n=== Step 7: Create teacher 2 and test transfer deletion ===');
   const t2 = await createUser({
@@ -97,8 +113,10 @@ async function testAdminFlow() {
 
   const transferredCls = await getTeacherClasses(t2.id);
   console.log('Transferred classes count under Teacher 2:', transferredCls.length);
+  const paperAfterTransfer = await getTestPaperById(paper.id);
+  console.log('Paper creator transferred to Teacher 2:', paperAfterTransfer?.creatorId === t2.id ? 'PASS' : 'FAIL');
 
-  console.log('\n=== Step 8: Test cascade deletion on Teacher 2 ===');
+  console.log('\n=== Step 8: Test cascade deletion on Teacher 2 (方案 A: 文章永久歸檔校本公共題庫) ===');
   const cascadeRes = await deleteTeacher(t2.id, {
     deleteMode: 'cascade',
   });
@@ -107,8 +125,13 @@ async function testAdminFlow() {
 
   const t2After = await getUserById(t2.id);
   const studentAfter = await getUserById(students[0].id);
+  const paperAfterCascade = await getTestPaperById(paper.id);
+
   console.log('Teacher 2 deleted:', t2After === null ? 'PASS' : 'FAIL');
   console.log('Student deleted by cascade:', studentAfter === null ? 'PASS' : 'FAIL');
+  console.log('Paper preserved under admin_root_001:', paperAfterCascade?.creatorId === 'admin_root_001' ? 'PASS' : 'FAIL');
+  console.log('Paper marked as public in school library:', paperAfterCascade?.isPublic === true ? 'PASS' : 'FAIL');
+  console.log('Paper creatorName updated with archived tag:', paperAfterCascade?.creatorName?.includes('校本公共題庫') ? 'PASS' : 'FAIL');
 
   console.log('\n=== Step 9: Verify getTeachersWithStats ===');
   const stats = await getTeachersWithStats();

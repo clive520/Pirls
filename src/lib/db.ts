@@ -340,6 +340,7 @@ export interface TeacherWithStats {
   classCount: number;
   studentCount: number;
   submissionCount: number;
+  paperCount: number; // 該教師建立的文章與題本總數 (方案 A 校本資產)
 }
 
 export async function getTeachersWithStats() {
@@ -378,11 +379,22 @@ export async function getTeachersWithStats() {
     }
   }
 
+  // 統計教師建立的文章與試卷數量 (校本資產)
+  const teacherPapersMap = new Map<string, string[]>();
+  for (const t of Object.values(state.testPapers)) {
+    if (t.creatorId) {
+      const list = teacherPapersMap.get(t.creatorId) || [];
+      list.push(t.id);
+      teacherPapersMap.set(t.creatorId, list);
+    }
+  }
+
   const usersList = Object.values(state.users);
 
   const getStats = (u: User): TeacherWithStats => {
     const classIds = teacherClassesMap.get(u.id) || [];
     const studentIds = teacherStudentsMap.get(u.id) || [];
+    const paperIds = teacherPapersMap.get(u.id) || [];
     let submissionCount = 0;
     for (const sid of studentIds) {
       submissionCount += studentSubmissionsMap.get(sid) || 0;
@@ -399,6 +411,7 @@ export async function getTeachersWithStats() {
       classCount: classIds.length,
       studentCount: studentIds.length,
       submissionCount,
+      paperCount: paperIds.length,
     };
   };
 
@@ -489,10 +502,11 @@ export async function deleteTeacher(
       s.teacherId = options.targetTeacherId;
     }
 
-    // 3. 轉移試卷
+    // 3. 轉移試卷與文章（方案 A：校本資產保護，完整移交新任教師）
     for (const t of Object.values(state.testPapers)) {
       if (t.creatorId === teacherId) {
         t.creatorId = options.targetTeacherId;
+        t.creatorName = `${teacher.displayName} (由 ${targetTeacher.displayName} 接手)`;
       }
     }
 
@@ -529,14 +543,15 @@ export async function deleteTeacher(
       delete state.classes[c.id];
     }
 
-    // 處理試卷：若為公開試卷移交系統預設管理員保留題庫；若為私人試卷則刪除
+    // 4. 方案 A：校本教學資產保護 — 教師所建立的文章與題本「全數安全保留」，轉為全校公共題庫！
+    let preservedPapersCount = 0;
     for (const [tid, tp] of Object.entries(state.testPapers)) {
       if (tp.creatorId === teacherId) {
-        if (tp.isPublic) {
-          tp.creatorId = 'admin_root_001';
-        } else {
-          delete state.testPapers[tid];
-        }
+        tp.creatorId = 'admin_root_001';
+        tp.creatorName = `${teacher.displayName}（已歸檔校本公共題庫）`;
+        tp.isPublic = true; // 設為全校公共題庫與開放練習，供全校師生調用
+        tp.assignedClassIds = []; // 清空已刪除班級之綁定
+        preservedPapersCount++;
       }
     }
 
@@ -548,7 +563,7 @@ export async function deleteTeacher(
 
     return {
       success: true,
-      message: `已連帶徹底刪除【${teacher.displayName}】及其名下 ${teacherClasses.length} 個班級、${teacherStudents.length} 位學生與 ${deletedSubmissionsCount} 份測驗作答成績。`,
+      message: `已徹底刪除【${teacher.displayName}】及其名下 ${teacherClasses.length} 個班級、${teacherStudents.length} 位學生與 ${deletedSubmissionsCount} 份測驗作答成績；依據校本教材資產管理規範（方案 A），該教師建立的 ${preservedPapersCount} 篇閱讀文章與題本已全數安全保留，並自動歸檔至「全校公共題庫」！`,
     };
   }
 
