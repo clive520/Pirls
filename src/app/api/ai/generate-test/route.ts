@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
 import { generatePIRLSTestPaper } from '@/lib/llm-adapter';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 允許長文與 14 題四層次題目深層生成 (上限 60 秒)
+
 export async function POST(req: NextRequest) {
   try {
     const token = req.cookies.get('pirls_token')?.value;
@@ -36,7 +39,7 @@ export async function POST(req: NextRequest) {
       textType: textType || 'literary',
       questionCountMode: questionCountMode || 'standard',
       includeDiagram: Boolean(includeDiagram),
-      apiKey,
+      apiKey: apiKey?.trim() || undefined,
       creatorId: session.userId,
       creatorName: session.displayName,
     });
@@ -46,6 +49,9 @@ export async function POST(req: NextRequest) {
       testPaper,
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || '生成失敗' }, { status: 500 });
+    console.error('PIRLS 出題 API 發生錯誤:', error);
+    return NextResponse.json({
+      error: error.message || '生成失敗，請確認 API Key 是否有效或網路連線正常',
+    }, { status: 500 });
   }
 }

@@ -26,6 +26,35 @@ export default function TeacherCreateTestPage() {
   const [questionCountMode, setQuestionCountMode] = useState<'standard' | 'compact'>('standard');
   const [includeDiagram, setIncludeDiagram] = useState(true);
   const [apiKey, setApiKey] = useState('');
+  const [keyChecking, setKeyChecking] = useState(false);
+  const [keyStatus, setKeyStatus] = useState<{ ok: boolean; message: string } | null>(null);
+
+  // 驗證 Google API Key
+  const handleVerifyKey = async () => {
+    if (!apiKey.trim()) {
+      setKeyStatus({ ok: false, message: '請先在下方輸入 Google API Key' });
+      return;
+    }
+    setKeyChecking(true);
+    setKeyStatus(null);
+    try {
+      const res = await fetch('/api/ai/verify-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: apiKey.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setKeyStatus({ ok: true, message: data.message });
+      } else {
+        setKeyStatus({ ok: false, message: data.error || '金鑰驗證失敗' });
+      }
+    } catch (err: any) {
+      setKeyStatus({ ok: false, message: err.message || '連線逾時，無法驗證金鑰' });
+    } finally {
+      setKeyChecking(false);
+    }
+  };
 
   // 模式 B: 貼入文本欄位
   const [pastedTitle, setPastedTitle] = useState('');
@@ -201,9 +230,15 @@ export default function TeacherCreateTestPage() {
             </div>
 
             {errorMsg && (
-              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center space-x-2">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                <span>{errorMsg}</span>
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-start space-x-3 shadow-sm">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-bold text-red-900">AI 命題生成未成功</p>
+                  <p className="text-xs text-red-700 leading-relaxed break-all">{errorMsg}</p>
+                  <p className="text-[11px] text-red-600">
+                    💡 建議：請確認所填寫的 Google API Key 是否有效，或點擊下方「測試金鑰有效性」確認權限與額度。若暫無可用金鑰，可將金鑰欄位清空體驗內建的高品質示範題本。
+                  </p>
+                </div>
               </div>
             )}
 
@@ -362,19 +397,68 @@ export default function TeacherCreateTestPage() {
                   </div>
                 </div>
 
-                {/* API Key 選填欄位 */}
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-bold text-slate-700">Google Gemini API Key (選填)</label>
-                    <span className="text-[11px] text-sky-600">若未填寫，系統將自動調用高品質離線示範題庫</span>
+                {/* API Key 選填欄位與連線測試按鈕 */}
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold text-slate-700 flex items-center space-x-1">
+                      <span>Google Gemini API Key</span>
+                      <span className="text-[10px] text-slate-400 font-normal">(選填)</span>
+                    </label>
+                    <span className="text-[11px] text-sky-600">若未填寫，將使用離線示範題庫</span>
                   </div>
-                  <input
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="AIzaSy... (若在伺服器環境變數已設定則不需填寫)"
-                    className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-mono"
-                  />
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="password"
+                      value={apiKey}
+                      onChange={(e) => {
+                        setApiKey(e.target.value);
+                        setKeyStatus(null);
+                      }}
+                      placeholder="AIzaSy... (貼上您的 Google AI Studio API Key)"
+                      className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-mono focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyKey}
+                      disabled={keyChecking || !apiKey.trim()}
+                      className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold inline-flex items-center space-x-1.5 transition disabled:opacity-50"
+                    >
+                      {keyChecking ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-sky-600" />
+                          <span>連線檢測中...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>測試金鑰有效性</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* 驗證狀態反饋 */}
+                  {keyStatus && (
+                    <div
+                      className={`p-2.5 rounded-lg text-xs flex items-start space-x-2 ${
+                        keyStatus.ok
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : 'bg-red-50 text-red-800 border border-red-200'
+                      }`}
+                    >
+                      {keyStatus.ok ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                      )}
+                      <span className="break-all leading-relaxed">{keyStatus.message}</span>
+                    </div>
+                  )}
+
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    💡 提示：支援 <code className="text-slate-700 font-mono">gemini-2.0-flash</code> 與 <code className="text-slate-700 font-mono">gemini-1.5-flash</code>，已配置 8,192 Tokens 與 60 秒深層推理，可穩定產出 14 題四層次完整題本。
+                  </p>
                 </div>
               </div>
 

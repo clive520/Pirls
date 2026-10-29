@@ -25,95 +25,269 @@ export async function generatePIRLSTestPaper(params: GenerateParams): Promise<Te
   const apiKey = params.apiKey || process.env.GEMINI_API_KEY;
 
   if (apiKey) {
-    try {
-      return await callGeminiAPI(params, apiKey);
-    } catch (err) {
-      console.warn('Gemini API 調用失敗或逾時，自動轉入高品質示範生成引擎:', err);
-    }
+    // 當使用者提供 API Key 時，必須真正呼叫 Google Gemini，若出錯必須拋出真實異常，絕不可靜默退回預設題本
+    return await callGeminiAPI(params, apiKey);
   }
 
-  // 離線/未帶金鑰時的高品質示範生成器
+  // 僅在完全未填寫 API Key 時，提供高品質離線示範題本
   return generateMockAuthenticPIRLSTest(params);
 }
 
 /**
- * 串接 Google Gemini API
+ * 串接 Google Gemini API (支援雙模型自動備援 + 8192 Token 完整生成)
  */
 async function callGeminiAPI(params: GenerateParams, apiKey: string): Promise<TestPaper> {
   const isLiterary = params.textType === 'literary';
   const targetCount = params.questionCountMode === 'standard' ? 14 : 8;
 
-  const systemInstruction = `你是一位 IEA PIRLS (國際閱讀素養進展研究) 命題專家。
-請依據台灣國小 ${params.targetGrade} 年級程度，以繁體中文 (台灣正體) 生成一篇 800~1,200 字的文章，並提煉 ${targetCount} 道嚴格符合 PIRLS 四層次與官方評卷規準的試卷。
-輸出必須為嚴格的 JSON 格式，不要包含任何額外解說。`;
+  const schemaExample = `{
+  "title": "文章標題",
+  "themeSummary": "文章主旨與核心素養摘要",
+  "wordCount": 950,
+  "articleContent": "完整文章內容...",
+  "paragraphs": [
+    { "paragraphNumber": 1, "text": "【第一段】..." },
+    { "paragraphNumber": 2, "text": "【第二段】..." }
+  ],
+  "questions": [
+    {
+      "questionNumber": 1,
+      "processLevel": "retrieve",
+      "processLevelNumber": 1,
+      "type": "multiple_choice",
+      "prompt": "選擇題題目敘述",
+      "points": 1,
+      "correctAnswerLabel": "B",
+      "options": [
+        { "label": "A", "text": "選項A敘述", "isCorrect": false, "explanation": "解析A" },
+        { "label": "B", "text": "選項B敘述", "isCorrect": true, "explanation": "解析B" },
+        { "label": "C", "text": "選項C敘述", "isCorrect": false, "explanation": "解析C" },
+        { "label": "D", "text": "選項D敘述", "isCorrect": false, "explanation": "解析D" }
+      ]
+    },
+    {
+      "questionNumber": 2,
+      "processLevel": "inference",
+      "processLevelNumber": 2,
+      "type": "constructed_response",
+      "prompt": "問答題題目敘述",
+      "points": 2,
+      "rubric": {
+        "maxScore": 2,
+        "criteria": [
+          { "score": 2, "code": "20", "description": "滿分給分規準描述", "keyEvidenceNeeded": ["要點1", "要點2"] },
+          { "score": 1, "code": "10", "description": "部分給分規準描述", "keyEvidenceNeeded": ["要點1"] },
+          { "score": 0, "code": "79", "description": "不給分描述", "keyEvidenceNeeded": [] }
+        ],
+        "sampleFullCreditAnswer": "學生滿分範例回答"
+      }
+    }
+  ]
+}`;
+
+  const systemInstruction = `你是一位享譽國際的 IEA PIRLS (國際閱讀素養進展研究) 命題專家與心理計量學家。
+請依據台灣國小 ${params.targetGrade} 年級閱讀能力基準，以繁體中文 (台灣正體) 生成一篇全新、生動、高品質的文章，並設計 ${targetCount} 道四層次試題。
+
+【命題規準與認知歷程要求】：
+1. 認知歷程分佈嚴格遵循 PIRLS 官方黃金比例：
+   - 第 1 層次：直接提取 (retrieve / processLevelNumber: 1) 約佔 25% (選擇題為主)
+   - 第 2 層次：直接推論 (infer / processLevelNumber: 2) 約佔 35% (包含選擇題與簡答題)
+   - 第 3 層次：詮釋與整合 (integrate / processLevelNumber: 3) 約佔 25% (問答題為主，需跨段落歸納)
+   - 第 4 層次：檢驗與評估 (evaluate / processLevelNumber: 4) 約佔 15% (評估作者寫作手法、圖文關係或觀點)
+2. 題型分佈：選擇題 (multiple_choice, 1分) 與 問答簡答題 (constructed_response, 1~3分) 各約 50%。
+3. 問答題評分規準：必須嚴格比照 IEA 官方雙位數代碼 (20/10/79 或 10/79)，列出具體給分依據與滿分示範答案。
+4. 輸出格式規範：
+   必須嚴格輸出純 JSON 格式，架構參考如下，請勿包裹 Markdown 代碼區塊或任何問候語：
+${schemaExample}`;
 
   const userPrompt = params.mode === 'theme'
-    ? `主題：${params.theme || '動物保護與勇氣'}
-文體類別：${isLiterary ? '文學性經驗（敘事故事）' : '訊息性文本（科普/說明文）'}
+    ? `【出題請求】
+主題：${params.theme || '動物保護與勇氣'}
+文體類別：${isLiterary ? '文學性經驗（敘事故事/童話冒險）' : '訊息性文本（自然科普/生態/說明文）'}
 年級：國小 ${params.targetGrade} 年級
-題量：共 ${targetCount} 題 (包含選擇題 50% 與 簡答題 50%，配分包含 1分、2分列舉、3分綜合題，並附 IEA 雙位數代碼規準)`
-    : `請根據以下自選文章提煉 PIRLS 題本：
-標題：${params.pastedTitle || '自選閱讀材料'}
-內文：
+題量：共 ${targetCount} 題
+文章長度：約 800~1,200 字，分段清晰 (每段開頭標示【第一段】、【第二段】等)
+請即刻生成符合上述 PIRLS 規範之完整 JSON 試卷。`
+    : `【自選文章提煉 PIRLS 題本】
+文章標題：${params.pastedTitle || '自選閱讀材料'}
+適用年級：國小 ${params.targetGrade} 年級
+文體類別：${isLiterary ? '文學性文本' : '訊息性文本'}
+題量：共 ${targetCount} 題
+原始文章內容：
 ${params.pastedText}
-年級：國小 ${params.targetGrade} 年級
-題量：共 ${targetCount} 題`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+請依據上述自選文章提煉符合 PIRLS 四層次規範與給分規準之完整 JSON 試卷。`;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      systemInstruction: { parts: [{ text: systemInstruction }] },
-      generationConfig: {
-        responseMimeType: 'application/json',
-        temperature: 0.7,
-      },
-    }),
-  });
+  // 雙模型策略：優先使用極速最新 gemini-2.0-flash，若受阻或專案未開通則自動降級為 gemini-1.5-flash
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  let lastError: Error | null = null;
 
-  if (!response.ok) {
-    throw new Error(`Gemini API 回應錯誤: ${response.statusText}`);
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+          systemInstruction: { parts: [{ text: systemInstruction }] },
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.7,
+            maxOutputTokens: 8192, // 確保 14 道四層次完整題本不被截斷
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => null);
+        const googleMsg = errJson?.error?.message || response.statusText;
+        const statusCode = response.status;
+        throw new Error(`Google Gemini [${model}] 錯誤 (${statusCode}): ${googleMsg}`);
+      }
+
+      const data = await response.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawText) {
+        const finishReason = data.candidates?.[0]?.finishReason;
+        throw new Error(`Google Gemini [${model}] 未能回傳有效文本 (結束原因: ${finishReason || '未知'})`);
+      }
+
+      // 清理 Markdown 代碼圍欄
+      let cleaned = rawText.trim();
+      if (cleaned.startsWith('```json')) {
+        cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      const parsed = JSON.parse(cleaned);
+      return formatToTestPaper(parsed, params);
+    } catch (err: any) {
+      console.warn(`[PIRLS LLM] 模型 ${model} 調用失敗:`, err.message);
+      lastError = err;
+      // 若是 API Key 無效，無須再嘗試其他模型，立即拋出清楚錯誤
+      if (err.message.includes('API key not valid') || err.message.includes('API_KEY_INVALID')) {
+        throw new Error(`Google API Key 無效，請檢查您的金鑰是否正確輸入。(${err.message})`);
+      }
+    }
   }
 
-  const data = await response.json();
-  const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!rawText) throw new Error('Gemini API 未回傳有效文字');
-
-  const parsed = JSON.parse(rawText);
-  return formatToTestPaper(parsed, params);
+  throw lastError || new Error('Google Gemini API 調用失敗，請確認 API Key 是否具有有效配額。');
 }
 
 function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
   const now = new Date().toISOString();
+
+  // 1. 段落防呆處理
+  const rawParagraphs = parsed.paragraphs || [];
+  let paragraphs: { paragraphNumber: number; text: string }[] = [];
+
+  if (Array.isArray(rawParagraphs) && rawParagraphs.length > 0) {
+    if (typeof rawParagraphs[0] === 'string') {
+      paragraphs = rawParagraphs.map((text: string, idx: number) => ({
+        paragraphNumber: idx + 1,
+        text,
+      }));
+    } else {
+      paragraphs = rawParagraphs.map((p: any, idx: number) => ({
+        paragraphNumber: p.paragraphNumber || idx + 1,
+        text: p.text || p.content || '',
+      }));
+    }
+  }
+
+  const rawArticleContent = parsed.articleContent || parsed.content || parsed.article || '';
+  if (paragraphs.length === 0 && rawArticleContent) {
+    const splitParas = rawArticleContent.split('\n\n').filter((p: string) => p.trim().length > 0);
+    paragraphs = splitParas.map((text: string, idx: number) => ({
+      paragraphNumber: idx + 1,
+      text,
+    }));
+  }
+
+  const articleContent = rawArticleContent || paragraphs.map((p) => p.text).join('\n\n');
+
+  // 2. 題目防呆與認知歷程正規化
+  const rawQuestions = parsed.questions || [];
+  const questions: TestQuestion[] = rawQuestions.map((q: any, i: number) => {
+    let processLevel: CognitiveProcess = 'retrieve';
+    let processLevelNumber = 1;
+    const pl = String(q.processLevel || '').toLowerCase();
+    const pln = Number(q.processLevelNumber);
+
+    if (pln === 2 || pl.includes('infer')) {
+      processLevel = 'inference';
+      processLevelNumber = 2;
+    } else if (pln === 3 || pl.includes('interpret') || pl.includes('integrate')) {
+      processLevel = 'interpret';
+      processLevelNumber = 3;
+    } else if (pln === 4 || pl.includes('evaluate')) {
+      processLevel = 'evaluate';
+      processLevelNumber = 4;
+    } else {
+      processLevel = 'retrieve';
+      processLevelNumber = 1;
+    }
+
+    const isMC = q.type === 'multiple_choice' || (!q.type && Array.isArray(q.options) && q.options.length > 0);
+
+    return {
+      id: `q_${Date.now()}_${i + 1}`,
+      questionNumber: q.questionNumber || i + 1,
+      processLevel,
+      processLevelNumber,
+      type: isMC ? 'multiple_choice' : 'constructed_response',
+      subtype: isMC ? 'single_choice' : 'single_cr',
+      prompt: q.prompt || q.question || `第 ${i + 1} 題`,
+      points: Number(q.points) || (isMC ? 1 : 2),
+      options: isMC
+        ? (q.options || []).map((opt: any, optIdx: number) => ({
+            label: opt.label || String.fromCharCode(65 + optIdx),
+            text: opt.text || opt.content || String(opt),
+            isCorrect: Boolean(opt.isCorrect || opt.correct || opt.label === q.correctAnswerLabel),
+            explanation: opt.explanation || '',
+          }))
+        : undefined,
+      correctAnswerLabel: isMC
+        ? q.correctAnswerLabel || (q.options?.find((o: any) => o.isCorrect)?.label) || 'A'
+        : undefined,
+      rubric: !isMC
+        ? {
+            maxScore: Number(q.points) || 2,
+            criteria: q.rubric?.criteria || [
+              {
+                score: Number(q.points) || 2,
+                code: '20',
+                description: q.rubric?.fullScoreCriteria || '能完整且精確回答問題核心要點。',
+                keyEvidenceNeeded: [],
+              },
+              {
+                score: 0,
+                code: '79',
+                description: q.rubric?.noScoreCriteria || '回答錯誤、未作答或與題意完全無關。',
+                keyEvidenceNeeded: [],
+              },
+            ],
+            sampleFullCreditAnswer: q.rubric?.sampleFullCreditAnswer || q.sampleAnswer || '參見給分規準說明。',
+          }
+        : undefined,
+    };
+  });
+
   return {
     id: 'test_' + Date.now(),
     title: parsed.title || parsed.article_title || 'PIRLS 閱讀測驗',
     targetGrade: params.targetGrade,
     textType: params.textType,
     themeSummary: parsed.themeSummary || parsed.summary || '閱讀素養評量',
-    wordCount: parsed.wordCount || 950,
-    articleContent: parsed.articleContent || parsed.content || '',
-    paragraphs: parsed.paragraphs || [
-      { paragraphNumber: 1, text: parsed.articleContent || '' },
-    ],
+    wordCount: Number(parsed.wordCount) || articleContent.length || 950,
+    articleContent,
+    paragraphs,
     illustrations: parsed.illustrations || [],
-    questions: (parsed.questions || []).map((q: any, i: number) => ({
-      id: `q_${Date.now()}_${i + 1}`,
-      questionNumber: i + 1,
-      processLevel: q.processLevel || 'retrieve',
-      processLevelNumber: q.processLevelNumber || 1,
-      type: q.type || 'multiple_choice',
-      subtype: q.subtype || 'single_choice',
-      prompt: q.prompt,
-      points: q.points || 1,
-      options: q.options,
-      correctAnswerLabel: q.correctAnswerLabel,
-      rubric: q.rubric,
-    })),
-    totalPoints: (parsed.questions || []).reduce((sum: number, q: any) => sum + (q.points || 1), 0),
+    questions,
+    totalPoints: questions.reduce((sum, q) => sum + (q.points || 1), 0),
     creatorId: params.creatorId,
     creatorName: params.creatorName,
     isPublic: false,
