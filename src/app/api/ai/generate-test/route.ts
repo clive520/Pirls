@@ -33,6 +33,14 @@ export async function POST(req: NextRequest) {
       preferredModel,
     } = body;
 
+    let finalProvider = provider || 'gemini';
+    const trimmedKey = apiKey?.trim() || '';
+
+    // 雙重保險防呆：若金鑰為 OpenRouter 格式 (sk-or-v1-) 但 provider 誤選為 gemini，自動修正為 openrouter
+    if (trimmedKey.startsWith('sk-or-v1-') && finalProvider === 'gemini') {
+      finalProvider = 'openrouter';
+    }
+
     const testPaper = await generatePIRLSTestPaper({
       mode: mode || 'theme',
       theme,
@@ -42,8 +50,8 @@ export async function POST(req: NextRequest) {
       textType: textType || 'literary',
       questionCountMode: questionCountMode || 'standard',
       includeDiagram: Boolean(includeDiagram),
-      provider: provider || 'gemini',
-      apiKey: apiKey?.trim() || undefined,
+      provider: finalProvider,
+      apiKey: trimmedKey || undefined,
       customBaseUrl: customBaseUrl?.trim() || undefined,
       preferredModel: preferredModel || 'auto',
       creatorId: session.userId,

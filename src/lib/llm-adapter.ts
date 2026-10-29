@@ -248,7 +248,7 @@ async function callOpenAICompatibleAPI(
 
   if (provider === 'openrouter') {
     endpoint = 'https://openrouter.ai/api/v1/chat/completions';
-    headers['HTTP-Referer'] = 'https://pirls-learning-system.vercel.app';
+    headers['HTTP-Referer'] = 'https://pirls-ii5od75k6a-de.a.run.app';
     headers['X-Title'] = 'PIRLS AI Assessment System';
     defaultModel = 'deepseek/deepseek-chat';
   } else if (provider === 'deepseek') {

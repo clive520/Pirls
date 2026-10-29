@@ -82,6 +82,17 @@ export default function TeacherCreateTestPage() {
   };
 
   const handleKeyChange = (prov: string, val: string) => {
+    const trimmed = val.trim();
+    // 智慧金鑰格式辨識與自動切換（若非 openrouter 標籤貼入 sk-or-v1- 開頭，自動切換至 openrouter）
+    if (trimmed.startsWith('sk-or-v1-') && prov !== 'openrouter') {
+      const updated = { ...apiKeys, openrouter: trimmed };
+      setApiKeys(updated);
+      setProvider('openrouter');
+      setKeyStatus({ ok: true, message: '💡 偵測到 OpenRouter 專屬金鑰 (sk-or-v1-...)，已自動切換至「OpenRouter」提供商！' });
+      saveVault('openrouter', updated, customBaseUrl, preferredModels);
+      return;
+    }
+
     const updated = { ...apiKeys, [prov]: val };
     setApiKeys(updated);
     setKeyStatus(null);
