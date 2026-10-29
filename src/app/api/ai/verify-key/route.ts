@@ -48,17 +48,21 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await modelsRes.json().catch(() => ({ models: [] }));
-    const availableModels = (data.models || [])
-      .map((m: any) => m.name.replace(/^models\//, ''));
+    const availableModels: string[] = (data.models || [])
+      .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+      .map((m: any) => m.name.replace(/^models\//, ''))
+      .filter((n: string) => !n.includes('2.0') && !n.includes('2.5')); // 嚴格過濾已下線的 2.0 與已停用新戶的 2.5
 
-    // 確認目標模型或 1.5-flash 是否在授權清單內
-    const isTargetAvailable = availableModels.some((name: string) => name.includes('flash'));
-    const matchedModel = availableModels.find((n: string) => n.includes(preferredModel)) || 'gemini-1.5-flash';
+    const topModel = availableModels.find((n) => n.includes('3.8-flash')) 
+      || availableModels.find((n) => n.includes('3.6-flash'))
+      || availableModels[0] 
+      || 'gemini-3.8-flash';
 
     return NextResponse.json({
       success: true,
-      model: matchedModel,
-      message: `API 金鑰有效！已成功驗證 Google Gemini 授權（支援 ${matchedModel}，享每天 1,500 次免費呼叫）。`,
+      model: topModel,
+      availableModels: availableModels.slice(0, 3),
+      message: `API 金鑰有效！已成功驗證 Google Gemini 授權（官方建議活躍模型：${topModel}）。`,
     }, { status: 200 });
 
   } catch (error: any) {

@@ -26,7 +26,7 @@ export default function TeacherCreateTestPage() {
   const [questionCountMode, setQuestionCountMode] = useState<'standard' | 'compact'>('standard');
   const [includeDiagram, setIncludeDiagram] = useState(true);
   const [apiKey, setApiKey] = useState('');
-  const [preferredModel, setPreferredModel] = useState('gemini-1.5-flash');
+  const [preferredModel, setPreferredModel] = useState('auto');
   const [keyChecking, setKeyChecking] = useState(false);
   const [keyStatus, setKeyStatus] = useState<{ ok: boolean; message: string } | null>(null);
 
@@ -465,14 +465,17 @@ export default function TeacherCreateTestPage() {
                       }}
                       className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
                     >
+                      <option value="auto">
+                        🤖 智慧自動選擇（強烈推薦：系統自動偵測並調用您帳號中最新、支援且不塞車的官方 Flash 模型）
+                      </option>
+                      <option value="gemini-3.8-flash">
+                        ⚡ Gemini 3.8 Flash（Google 官方主力推薦 Flash 模型）
+                      </option>
+                      <option value="gemini-3.6-flash">
+                        🍃 Gemini 3.6 Flash（極速備援模型，低負載、無塞車）
+                      </option>
                       <option value="gemini-1.5-flash">
-                        ⚡ Gemini 1.5 Flash（官方首選推薦：極速、高穩定、每天 1,500 次免費呼叫，最省額度）
-                      </option>
-                      <option value="gemini-1.5-flash-8b">
-                        🍃 Gemini 1.5 Flash 8B（超輕量 8B 模型：低延遲、高吞吐、資源消耗最低）
-                      </option>
-                      <option value="gemini-2.5-flash">
-                        🚀 Gemini 2.5 Flash（新一代 Flash：若需更高語意理解度）
+                        🏛️ Gemini 1.5 Flash（舊專案相容模型）
                       </option>
                     </select>
                   </div>

@@ -226,13 +226,23 @@ async function fetchWithRetry(url: string, payload: any, maxRetries = 2, timeout
 }
 
 /**
+ * Google 官方活躍 Flash 模型優先序（過濾已淘汰的 2.0 與已不對新用戶開放的 2.5）
+ */
+const ACTIVE_FLASH_PRIORITY = [
+  'gemini-3.8-flash',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-8b',
+];
+
+/**
  * 動態探測該 API Key 當前可用且支援 generateContent 的推薦模型清單
- * 優先順序：Gemini 1.5 Flash（超快速、高穩定、每天 1,500 次免費額度、最省配額）> 1.5 Flash 8B > 2.5 Flash
+ * 優先順序：Gemini 3.8 Flash > 3.6 Flash > 3.5 Flash Lite
  * 嚴格上限：回傳至多 2 個模型，避免輪詢多個模型導致 504 Gateway Timeout
  */
 export async function getAvailableGeminiModels(apiKey: string, preferredModel?: string): Promise<string[]> {
-  const defaultList = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.5-flash'];
-  const preferred = (preferredModel || 'gemini-1.5-flash').trim();
+  const preferred = (preferredModel || '').trim();
 
   try {
     const controller = new AbortController();
@@ -246,24 +256,38 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
       const data = await res.json();
       const activeNames: string[] = (data.models || [])
         .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
-        .map((m: any) => m.name.replace(/^models\//, ''));
+        .map((m: any) => m.name.replace(/^models\//, ''))
+        // 嚴格過濾已被 Google 官方淘汰或標記為不對新用戶開放的模型（如 2.0 與 2.5）
+        .filter((name: string) => !name.includes('2.0') && !name.includes('2.5'));
 
       const candidates: string[] = [];
-      if (activeNames.includes(preferred)) {
+
+      // 若老師指定了有效且可用的模型，作為第 1 候選
+      if (preferred && preferred !== 'auto' && activeNames.includes(preferred)) {
         candidates.push(preferred);
       }
-      for (const m of defaultList) {
-        if (m !== preferred && activeNames.includes(m) && candidates.length < 2) {
+
+      // 依官方活躍優先級填入（最多 2 款模型，避免逾時）
+      for (const m of ACTIVE_FLASH_PRIORITY) {
+        if (!candidates.includes(m) && activeNames.includes(m) && candidates.length < 2) {
           candidates.push(m);
         }
       }
+
+      // 若上述偏好沒對應到，從 activeNames 挑選任何含有 flash 的活躍模型
+      if (candidates.length === 0) {
+        const anyFlash = activeNames.filter((n) => n.includes('flash'));
+        if (anyFlash.length > 0) candidates.push(...anyFlash.slice(0, 2));
+      }
+
       if (candidates.length > 0) return candidates;
     }
   } catch (err) {
-    // 探測逾時或異常，回退預設
+    // 探測逾時或異常
   }
 
-  return [preferred, preferred === 'gemini-1.5-flash' ? 'gemini-1.5-flash-8b' : 'gemini-1.5-flash'];
+  // 靜態備援清單（以 Google 目前主力 3.8-flash 與 3.6-flash 為主）
+  return ['gemini-3.8-flash', 'gemini-3.6-flash'];
 }
 
 function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
