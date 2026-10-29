@@ -640,7 +640,7 @@ export async function createStudentsBatch(
   classId: string,
   students: Array<{
     username: string;
-    plainPassword: string;
+    plainPassword?: string;
     displayName: string;
     seatNumber: number;
     gradeLevel: number;
@@ -652,7 +652,9 @@ export async function createStudentsBatch(
   const targetClass = state.classes[classId];
 
   for (const s of students) {
-    const pwdHash = await hashPassword(s.plainPassword);
+    // 預設建立 6 碼亂數數字密碼
+    const initialPlain = s.plainPassword?.trim() || Math.floor(100000 + Math.random() * 900000).toString();
+    const pwdHash = await hashPassword(initialPlain);
     const id = 'stu_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     const studentUser: User = {
       id,
@@ -666,6 +668,7 @@ export async function createStudentsBatch(
       className: targetClass ? targetClass.name : undefined,
       seatNumber: s.seatNumber,
       gradeLevel: s.gradeLevel,
+      initialPassword: initialPlain,
       createdAt: new Date().toISOString(),
     };
     state.users[id] = studentUser;
@@ -684,9 +687,46 @@ export async function createStudentsBatch(
 export async function getClassStudents(classId: string): Promise<User[]> {
   await syncCloudOnBoot();
   const state = ensureLocalDB();
-  return Object.values(state.users)
+  let needSave = false;
+  const list = Object.values(state.users)
     .filter((u) => u.classId === classId)
     .sort((a, b) => (a.seatNumber || 0) - (b.seatNumber || 0));
+
+  for (const s of list) {
+    if (!s.initialPassword) {
+      // 學生尚無記錄初始密碼時，自動生成 6 碼亂數數字密碼並同步更新雜湊
+      const random6 = Math.floor(100000 + Math.random() * 900000).toString();
+      s.initialPassword = random6;
+      s.passwordHash = await hashPassword(random6);
+      needSave = true;
+    }
+  }
+
+  if (needSave) {
+    saveLocalDB(state);
+    await syncToBlob(state);
+  }
+
+  return list;
+}
+
+export async function batchResetClassPasswords(classId: string): Promise<{ success: boolean; count: number }> {
+  await syncCloudOnBoot();
+  const state = ensureLocalDB();
+  const classStudents = Object.values(state.users).filter((u) => u.classId === classId && u.role === 'student');
+  if (classStudents.length === 0) {
+    return { success: false, count: 0 };
+  }
+
+  for (const s of classStudents) {
+    const random6Digits = Math.floor(100000 + Math.random() * 900000).toString();
+    s.initialPassword = random6Digits;
+    s.passwordHash = await hashPassword(random6Digits);
+  }
+
+  saveLocalDB(state);
+  await syncToBlob(state);
+  return { success: true, count: classStudents.length };
 }
 
 export async function deleteStudent(studentId: string): Promise<boolean> {
@@ -744,7 +784,9 @@ export async function updateStudentInfo(
   }
 
   if (updates.plainPassword && updates.plainPassword.trim()) {
-    student.passwordHash = await hashPassword(updates.plainPassword.trim());
+    const plain = updates.plainPassword.trim();
+    student.passwordHash = await hashPassword(plain);
+    student.initialPassword = plain;
   }
 
   saveLocalDB(state);

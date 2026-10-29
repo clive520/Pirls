@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck } from 'lucide-react';
+import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw } from 'lucide-react';
 
 export default function TeacherDashboardPage() {
   const router = useRouter();
@@ -165,11 +165,12 @@ export default function TeacherDashboardPage() {
       for (let i = 0; i < lines.length; i++) {
         const seat = batchStartSeat + i;
         const seatStr = seat.toString().padStart(2, '0');
+        const random6Digits = Math.floor(100000 + Math.random() * 900000).toString();
         studentBatch.push({
           seatNumber: seat,
           username: `${batchPrefix}_${seatStr}`,
           displayName: lines[i],
-          plainPassword: `pirls${seatStr}`,
+          plainPassword: random6Digits,
           gradeLevel,
         });
       }
@@ -177,11 +178,12 @@ export default function TeacherDashboardPage() {
       for (let i = 0; i < batchCount; i++) {
         const seat = batchStartSeat + i;
         const seatStr = seat.toString().padStart(2, '0');
+        const random6Digits = Math.floor(100000 + Math.random() * 900000).toString();
         studentBatch.push({
           seatNumber: seat,
           username: `${batchPrefix}_${seatStr}`,
           displayName: `${currentCls?.name} ${seat}號`,
-          plainPassword: `pirls${seatStr}`,
+          plainPassword: random6Digits,
           gradeLevel,
         });
       }
@@ -212,6 +214,35 @@ export default function TeacherDashboardPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // 為全班學生重設為 6 碼隨機數字密碼
+  const handleBatchResetPasswords = async () => {
+    if (!selectedClassId) return;
+    const cls = classes.find((c) => c.id === selectedClassId);
+    if (!confirm(`確定要為「${cls?.name || '本班'}」全體學生重新生成 6 位數亂數密碼嗎？\n生成後原舊密碼將失效，您可以直接列印最新的帳號密碼卡發放給學生。`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/teacher/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reset_all_passwords',
+          classId: selectedClassId,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || '全班密碼已重設！');
+        await fetchClassStudents(selectedClassId);
+      } else {
+        alert(data.error || '重設失敗');
+      }
+    } catch (err: any) {
+      alert(err.message || '網路通訊錯誤');
     }
   };
 
@@ -416,13 +447,31 @@ export default function TeacherDashboardPage() {
                 </p>
               </div>
               {students.length > 0 && (
-                <button
-                  onClick={() => window.print()}
-                  className="px-3.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold inline-flex items-center space-x-1.5 transition"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>列印本班名冊</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                  <Link
+                    href={`/print/student-cards/${selectedClassId}`}
+                    target="_blank"
+                    className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold inline-flex items-center space-x-1.5 shadow-sm transition"
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>🖨️ 列印帳密卡 (附 QR Code)</span>
+                  </Link>
+                  <button
+                    onClick={handleBatchResetPasswords}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold inline-flex items-center space-x-1 transition"
+                    title="重新為全班生成 6 碼隨機數字密碼"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
+                    <span>重設全班密碼</span>
+                  </button>
+                  <button
+                    onClick={() => window.print()}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold inline-flex items-center space-x-1 transition"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>列印名冊</span>
+                  </button>
+                </div>
               )}
             </div>
 
@@ -442,6 +491,7 @@ export default function TeacherDashboardPage() {
                       <th className="py-3 px-6">座號</th>
                       <th className="py-3 px-6">學生姓名</th>
                       <th className="py-3 px-6">登入帳號</th>
+                      <th className="py-3 px-6">登入密碼</th>
                       <th className="py-3 px-6">年級</th>
                       <th className="py-3 px-6">帳號狀態</th>
                       <th className="py-3 px-6">建立日期</th>
@@ -454,6 +504,11 @@ export default function TeacherDashboardPage() {
                         <td className="py-3.5 px-6 font-bold text-slate-900">{s.seatNumber} 號</td>
                         <td className="py-3.5 px-6 text-slate-800 font-bold">{s.displayName}</td>
                         <td className="py-3.5 px-6 font-mono text-xs text-sky-700 bg-sky-50/50 rounded">{s.username}</td>
+                        <td className="py-3.5 px-6 font-mono text-xs">
+                          <span className="font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded tracking-wider">
+                            {s.initialPassword || '******'}
+                          </span>
+                        </td>
                         <td className="py-3.5 px-6 text-slate-600">{s.gradeLevel} 年級</td>
                         <td className="py-3.5 px-6">
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">
@@ -566,10 +621,18 @@ export default function TeacherDashboardPage() {
                   ))}
                 </div>
 
-                <div className="flex justify-end pt-2">
+                <div className="flex items-center justify-between pt-2">
+                  <Link
+                    href={`/print/student-cards/${selectedClassId}`}
+                    target="_blank"
+                    className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-sm inline-flex items-center space-x-1.5"
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>🖨️ 立即列印新帳密卡 (附 QR Code)</span>
+                  </Link>
                   <button
                     onClick={() => setShowBatchModal(false)}
-                    className="px-5 py-2 rounded-xl bg-sky-600 text-white font-bold text-sm shadow-sm"
+                    className="px-5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs"
                   >
                     完成並關閉
                   </button>
@@ -766,6 +829,16 @@ export default function TeacherDashboardPage() {
                 {/* 快捷填入密碼 */}
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   <span className="text-[11px] text-slate-400">快捷設定：</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const random6 = Math.floor(100000 + Math.random() * 900000).toString();
+                      setEditNewPassword(random6);
+                    }}
+                    className="text-[11px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold border border-emerald-200 transition"
+                  >
+                    🎲 產生 6 碼亂數密碼
+                  </button>
                   <button
                     type="button"
                     onClick={() => {

@@ -173,6 +173,46 @@
       "seatNumber": 2,
       "gradeLevel": 4,
       "createdAt": "2026-10-29T03:50:57.767Z"
+    },
+    "usr_1793246665156_grbt4": {
+      "username": "t_card_1793246665087",
+      "passwordHash": "$2a$10$WLP/gevOXTE6UFYscfGWcOU4kYp9LoiHhVA4oZu6m1I/QLN8srPMK",
+      "displayName": "卡片測試老師",
+      "role": "teacher",
+      "status": "active",
+      "school": "鹿陽國小",
+      "id": "usr_1793246665156_grbt4",
+      "createdAt": "2026-10-29T04:04:25.156Z"
+    },
+    "stu_1793246665226_duqc0": {
+      "id": "stu_1793246665226_duqc0",
+      "username": "stu_rand_01_1793246665087",
+      "passwordHash": "$2a$10$Cl/2uaZKyt3wjtUzuazbdOpLCgfvn2wjh5fh5NFSMStxILhWMVoES",
+      "displayName": "林小明",
+      "role": "student",
+      "status": "active",
+      "teacherId": "usr_1793246665156_grbt4",
+      "classId": "cls_1793246665158_mchn",
+      "className": "六年級測試班",
+      "seatNumber": 1,
+      "gradeLevel": 6,
+      "initialPassword": "424275",
+      "createdAt": "2026-10-29T04:04:25.226Z"
+    },
+    "stu_1793246665283_wejnm": {
+      "id": "stu_1793246665283_wejnm",
+      "username": "stu_rand_02_1793246665087",
+      "passwordHash": "$2a$10$bDpiG21B2Jr7gKwUNivp.O/Y0GbXz4QOCjfQg73ItQg7AMCBUFIdG",
+      "displayName": "張小華",
+      "role": "student",
+      "status": "active",
+      "teacherId": "usr_1793246665156_grbt4",
+      "classId": "cls_1793246665158_mchn",
+      "className": "六年級測試班",
+      "seatNumber": 2,
+      "gradeLevel": 6,
+      "initialPassword": "715051",
+      "createdAt": "2026-10-29T04:04:25.283Z"
     }
   },
   "classes": {
@@ -223,6 +263,14 @@
       "teacherId": "usr_1793245857639_optvr",
       "studentCount": 2,
       "createdAt": "2026-10-29T03:50:57.641Z"
+    },
+    "cls_1793246665158_mchn": {
+      "id": "cls_1793246665158_mchn",
+      "name": "六年級測試班",
+      "gradeLevel": 6,
+      "teacherId": "usr_1793246665156_grbt4",
+      "studentCount": 2,
+      "createdAt": "2026-10-29T04:04:25.158Z"
     }
   },
   "testPapers": {

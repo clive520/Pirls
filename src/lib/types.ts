@@ -14,6 +14,7 @@ export interface User {
   className?: string; // 班級名稱 (e.g. 四年甲班)
   seatNumber?: number; // 座號
   gradeLevel?: number; // 3-6 年級
+  initialPassword?: string; // 學生初始或重設之明碼（供教師備忘與列印帳密卡片）
   createdAt: string;
 }
 

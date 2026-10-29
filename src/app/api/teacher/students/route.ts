@@ -38,6 +38,20 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
+
+  // 支援全班密碼一鍵重設為 6 碼隨機數字
+  if (body.action === 'reset_all_passwords') {
+    if (!body.classId) {
+      return NextResponse.json({ error: '請指定班級 ID' }, { status: 400 });
+    }
+    const { batchResetClassPasswords } = await import('@/lib/db');
+    const result = await batchResetClassPasswords(body.classId);
+    return NextResponse.json({
+      success: true,
+      message: `已成功為全班 ${result.count} 位學生重新產生 6 碼亂數密碼！`,
+    });
+  }
+
   const { classId, gradeLevel, students } = body;
 
   if (!classId || !Array.isArray(students) || students.length === 0) {
@@ -63,9 +77,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 學生初始密碼：預設為 6 碼亂數數字密碼
+    const initialPassword = s.plainPassword?.trim() || Math.floor(100000 + Math.random() * 900000).toString();
+
     validBatch.push({
       username,
-      plainPassword: s.plainPassword || 'pirls1234',
+      plainPassword: initialPassword,
       displayName: s.displayName?.trim() || `學生 ${s.seatNumber} 號`,
       seatNumber: s.seatNumber,
       gradeLevel: gradeLevel || 4,

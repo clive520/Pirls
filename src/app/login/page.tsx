@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   BookOpen,
@@ -37,8 +37,9 @@ interface DirectoryTeacher {
   classes: DirectoryClass[];
 }
 
-export default function LoginPage() {
+function LoginFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // 登入方式切換：'student' (學生班級座號快速登入) | 'account' (一般帳密登入)
   const [activeTab, setActiveTab] = useState<'student' | 'account'>('student');
@@ -77,6 +78,17 @@ export default function LoginPage() {
     }
     loadDirectory();
   }, []);
+
+  // 支援 QR Code 掃描帶入參數自動選取
+  useEffect(() => {
+    const qTeacherId = searchParams.get('teacherId');
+    const qClassId = searchParams.get('classId');
+    const qUsername = searchParams.get('username');
+
+    if (qTeacherId) setSelectedTeacherId(qTeacherId);
+    if (qClassId) setSelectedClassId(qClassId);
+    if (qUsername) setSelectedStudentUsername(qUsername);
+  }, [searchParams, teachers]);
 
   // 當前選取的老師與班級物件
   const currentTeacher = teachers.find((t) => t.id === selectedTeacherId);
@@ -487,5 +499,22 @@ export default function LoginPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+          <div className="text-center space-y-2">
+            <div className="w-8 h-8 border-2 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs text-slate-500 font-bold">載入 PIRLS 登入平臺中...</p>
+          </div>
+        </div>
+      }
+    >
+      <LoginFormContent />
+    </Suspense>
   );
 }
