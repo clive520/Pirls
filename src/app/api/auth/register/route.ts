@@ -23,13 +23,13 @@ export async function POST(req: NextRequest) {
       passwordHash,
       displayName: displayName.trim(),
       role: 'teacher',
-      status: 'active', // 註冊即直接開通，讓教師可即刻登入建立班級與學生
+      status: 'pending', // 註冊後為待審核狀態，需經由系統管理員審核開通後方可正式登入
       school: school?.trim() || '未填寫',
     });
 
     return NextResponse.json({
       success: true,
-      message: '教師帳號已成功建立！您現在可以立即登入系統，建立班級與學生帳號。',
+      message: '教師註冊申請已成功送出！請等待系統管理員審核核准後，方可登入建立班級與管理評量。',
       userId: newUser.id,
     });
   } catch (error: any) {

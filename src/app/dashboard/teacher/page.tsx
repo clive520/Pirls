@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound } from 'lucide-react';
+import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck } from 'lucide-react';
 
 export default function TeacherDashboardPage() {
   const router = useRouter();
@@ -255,6 +255,15 @@ export default function TeacherDashboardPage() {
             </div>
           </div>
           <div className="flex items-center space-x-2.5">
+            {currentUser?.role === 'admin' && (
+              <Link
+                href="/dashboard/admin"
+                className="inline-flex items-center space-x-1 px-3 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold transition shadow-2xs"
+              >
+                <ShieldCheck className="w-4 h-4 text-purple-600" />
+                <span className="hidden sm:inline">系統管理員中心</span>
+              </Link>
+            )}
             <Link
               href="/dashboard/teacher/create"
               className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white text-xs font-bold shadow-sm hover:from-sky-700 hover:to-indigo-700 transition"

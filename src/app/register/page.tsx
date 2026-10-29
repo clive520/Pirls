@@ -60,7 +60,7 @@ export default function RegisterPage() {
           建立教師教學帳號
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600">
-          填寫基本資料即可立即開通，登入後即可建立班級與學生帳號！
+          填寫教學帳號資料送出申請，經系統管理員審核開通後即可登入使用！
         </p>
       </div>
 

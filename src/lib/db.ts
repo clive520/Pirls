@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { put, list, getDownloadUrl } from '@vercel/blob';
-import { User, ClassRoom, UserStatus, TestPaper, ExamSubmission } from './types';
+import { User, ClassRoom, UserRole, UserStatus, TestPaper, ExamSubmission } from './types';
 import { hashPassword } from './auth';
 
 /**
@@ -257,16 +257,54 @@ export async function createUser(data: Omit<User, 'id' | 'createdAt'>): Promise<
   return newUser;
 }
 
+export function countActiveAdmins(state: DBState): number {
+  return Object.values(state.users).filter(
+    (u) => u.role === 'admin' && u.status === 'active'
+  ).length;
+}
+
+export async function updateUserRole(
+  userId: string,
+  newRole: UserRole
+): Promise<{ success: boolean; error?: string }> {
+  await syncCloudOnBoot();
+  const state = ensureLocalDB();
+  const user = state.users[userId];
+  if (!user) return { success: false, error: '找不到該使用者' };
+
+  // 若要將管理員降級，必須確認系統內至少還有另一位活躍管理員
+  if (user.role === 'admin' && newRole !== 'admin') {
+    if (countActiveAdmins(state) <= 1) {
+      return {
+        success: false,
+        error: '系統至少必須保留一位系統管理員，無法解除最後一位管理員權限！',
+      };
+    }
+  }
+
+  user.role = newRole;
+  saveLocalDB(state);
+  await syncToBlob(state);
+  return { success: true };
+}
+
 export async function updateUserStatus(userId: string, status: UserStatus): Promise<boolean> {
   await syncCloudOnBoot();
   const state = ensureLocalDB();
-  if (state.users[userId]) {
-    state.users[userId].status = status;
-    saveLocalDB(state);
-    await syncToBlob(state);
-    return true;
+  const user = state.users[userId];
+  if (!user) return false;
+
+  // 若該使用者為管理員且被改為非 active，檢查是否會導致無管理員
+  if (user.role === 'admin' && status !== 'active') {
+    if (countActiveAdmins(state) <= 1) {
+      return false;
+    }
   }
-  return false;
+
+  user.status = status;
+  saveLocalDB(state);
+  await syncToBlob(state);
+  return true;
 }
 
 export async function listPendingTeachers(): Promise<User[]> {
@@ -283,6 +321,229 @@ export async function listApprovedTeachers(): Promise<User[]> {
   return Object.values(state.users).filter(
     (u) => u.role === 'teacher' && u.status === 'active'
   );
+}
+
+export interface TeacherWithStats {
+  id: string;
+  username: string;
+  displayName: string;
+  role: UserRole;
+  status: UserStatus;
+  school: string;
+  createdAt: string;
+  classCount: number;
+  studentCount: number;
+  submissionCount: number;
+}
+
+export async function getTeachersWithStats() {
+  await syncCloudOnBoot();
+  const state = ensureLocalDB();
+
+  // 統計班級所屬
+  const teacherClassesMap = new Map<string, string[]>();
+  for (const c of Object.values(state.classes)) {
+    const list = teacherClassesMap.get(c.teacherId) || [];
+    list.push(c.id);
+    teacherClassesMap.set(c.teacherId, list);
+  }
+
+  // 統計學生所屬 (直接依 teacherId 或依 classId)
+  const teacherStudentsMap = new Map<string, string[]>();
+  for (const u of Object.values(state.users)) {
+    if (u.role === 'student') {
+      let tId = u.teacherId;
+      if (!tId && u.classId && state.classes[u.classId]) {
+        tId = state.classes[u.classId].teacherId;
+      }
+      if (tId) {
+        const list = teacherStudentsMap.get(tId) || [];
+        list.push(u.id);
+        teacherStudentsMap.set(tId, list);
+      }
+    }
+  }
+
+  // 統計學生個人作答數
+  const studentSubmissionsMap = new Map<string, number>();
+  for (const sub of Object.values(state.submissions)) {
+    if (sub.studentId) {
+      studentSubmissionsMap.set(sub.studentId, (studentSubmissionsMap.get(sub.studentId) || 0) + 1);
+    }
+  }
+
+  const usersList = Object.values(state.users);
+
+  const getStats = (u: User): TeacherWithStats => {
+    const classIds = teacherClassesMap.get(u.id) || [];
+    const studentIds = teacherStudentsMap.get(u.id) || [];
+    let submissionCount = 0;
+    for (const sid of studentIds) {
+      submissionCount += studentSubmissionsMap.get(sid) || 0;
+    }
+
+    return {
+      id: u.id,
+      username: u.username,
+      displayName: u.displayName,
+      role: u.role,
+      status: u.status,
+      school: u.school || '未填寫',
+      createdAt: u.createdAt,
+      classCount: classIds.length,
+      studentCount: studentIds.length,
+      submissionCount,
+    };
+  };
+
+  const pendingTeachers = usersList
+    .filter((u) => u.role === 'teacher' && u.status === 'pending')
+    .map(getStats);
+
+  const approvedTeachers = usersList
+    .filter((u) => u.role === 'teacher' && (u.status === 'active' || u.status === 'suspended'))
+    .map(getStats);
+
+  const admins = usersList
+    .filter((u) => u.role === 'admin')
+    .map(getStats);
+
+  const availableTransferTargets = usersList
+    .filter((u) => (u.role === 'teacher' || u.role === 'admin') && u.status === 'active')
+    .map((u) => ({
+      id: u.id,
+      username: u.username,
+      displayName: u.displayName,
+      school: u.school || '未填寫',
+      role: u.role,
+    }));
+
+  return {
+    pendingTeachers,
+    approvedTeachers,
+    admins,
+    availableTransferTargets,
+  };
+}
+
+export async function deleteTeacher(
+  teacherId: string,
+  options: { deleteMode: 'transfer' | 'cascade'; targetTeacherId?: string }
+): Promise<{ success: boolean; message: string; error?: string }> {
+  await syncCloudOnBoot();
+  const state = ensureLocalDB();
+  const teacher = state.users[teacherId];
+  if (!teacher) {
+    return { success: false, error: '找不到該教師帳號', message: '' };
+  }
+
+  // 若該教師為管理員，檢查是否為最後一位活躍管理員
+  if (teacher.role === 'admin') {
+    if (countActiveAdmins(state) <= 1) {
+      return {
+        success: false,
+        error: '該帳號為系統目前最後一位系統管理員，系統至少必須保留一位管理員，無法刪除！',
+        message: '',
+      };
+    }
+  }
+
+  // 取得該教師名下的班級與學生
+  const teacherClasses = Object.values(state.classes).filter((c) => c.teacherId === teacherId);
+  const teacherClassIds = new Set(teacherClasses.map((c) => c.id));
+
+  const teacherStudents = Object.values(state.users).filter(
+    (u) => u.teacherId === teacherId || (u.classId && teacherClassIds.has(u.classId))
+  );
+  const teacherStudentIds = new Set(teacherStudents.map((s) => s.id));
+
+  if (options.deleteMode === 'transfer') {
+    if (!options.targetTeacherId) {
+      return { success: false, error: '請指定接手該班級與學生的新任教師', message: '' };
+    }
+    if (options.targetTeacherId === teacherId) {
+      return { success: false, error: '接手教師不能是即將被刪除的教師本人', message: '' };
+    }
+
+    const targetTeacher = state.users[options.targetTeacherId];
+    if (!targetTeacher) {
+      return { success: false, error: '指定的接手教師不存在', message: '' };
+    }
+
+    // 1. 轉移班級
+    for (const c of teacherClasses) {
+      c.teacherId = options.targetTeacherId;
+    }
+
+    // 2. 轉移學生
+    for (const s of teacherStudents) {
+      s.teacherId = options.targetTeacherId;
+    }
+
+    // 3. 轉移試卷
+    for (const t of Object.values(state.testPapers)) {
+      if (t.creatorId === teacherId) {
+        t.creatorId = options.targetTeacherId;
+      }
+    }
+
+    // 4. 刪除原教師帳號
+    delete state.users[teacherId];
+
+    saveLocalDB(state);
+    await syncToBlob(state);
+
+    return {
+      success: true,
+      message: `已成功將【${teacher.displayName}】名下的 ${teacherClasses.length} 個班級、${teacherStudents.length} 位學生及相關試卷與成績移交給【${targetTeacher.displayName}】，並刪除原教師帳號。`,
+    };
+  } else if (options.deleteMode === 'cascade') {
+    // 連帶刪除該教師名下所有班級、學生與作答成績
+    let deletedSubmissionsCount = 0;
+    for (const [subId, sub] of Object.entries(state.submissions)) {
+      if (
+        (sub.studentId && teacherStudentIds.has(sub.studentId)) ||
+        (sub.classId && teacherClassIds.has(sub.classId))
+      ) {
+        delete state.submissions[subId];
+        deletedSubmissionsCount++;
+      }
+    }
+
+    // 刪除學生
+    for (const s of teacherStudents) {
+      delete state.users[s.id];
+    }
+
+    // 刪除班級
+    for (const c of teacherClasses) {
+      delete state.classes[c.id];
+    }
+
+    // 處理試卷：若為公開試卷移交系統預設管理員保留題庫；若為私人試卷則刪除
+    for (const [tid, tp] of Object.entries(state.testPapers)) {
+      if (tp.creatorId === teacherId) {
+        if (tp.isPublic) {
+          tp.creatorId = 'admin_root_001';
+        } else {
+          delete state.testPapers[tid];
+        }
+      }
+    }
+
+    // 刪除教師自身
+    delete state.users[teacherId];
+
+    saveLocalDB(state);
+    await syncToBlob(state);
+
+    return {
+      success: true,
+      message: `已連帶徹底刪除【${teacher.displayName}】及其名下 ${teacherClasses.length} 個班級、${teacherStudents.length} 位學生與 ${deletedSubmissionsCount} 份測驗作答成績。`,
+    };
+  }
+
+  return { success: false, error: '未知的刪除處置模式', message: '' };
 }
 
 export async function createClass(
