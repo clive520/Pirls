@@ -107,6 +107,7 @@ function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, targetCou
    你必須「直接以 { 開頭，以 } 結尾」，輸出純合法 JSON 格式。
    嚴禁在 JSON 之前輸出任何開場白、故事摘要、引言或客套話！第一字必須是 {。
    嚴禁在 JSON 之後輸出任何補充說明或結尾語！最後一字必須是 }。
+5. 引號規範：故事內之人物對話或引文，請一律使用中文全形引號「」與『』，嚴禁在字串內使用未跳脫的半形雙引號，以維護 JSON 語法完全合法。
    完整 JSON 架構參考如下：
 ${schemaExample}`;
 
@@ -262,7 +263,7 @@ async function callOpenAICompatibleAPI(
         ],
         response_format: { type: 'json_object' },
         temperature: 0.7,
-        max_tokens: 4096,
+        max_tokens: 8192,
       }),
     }).finally(() => clearTimeout(timer));
 

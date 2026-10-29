@@ -1,12 +1,12 @@
 import { extractAndParseJSON } from '../src/lib/json-helper';
 
-console.log('=== 測試強健 JSON 解析器 ===');
+console.log('=== 測試強健 JSON 解析器與容錯修復 ===');
 
 // 案例 1: 標準 JSON
 const case1 = '{"title": "正常試卷"}';
 console.log('Case 1:', extractAndParseJSON(case1).title === '正常試卷' ? '✔ 通過' : '✘ 失敗');
 
-// 案例 2: 包含前導引言（正是使用者剛才遇到的狀況！）
+// 案例 2: 包含前導引言
 const case2 = `可可摔倒受傷時，小獺立刻伸出圓滾滾的小爪子將他扶起。這是一篇充滿愛與勇氣的故事。
 以下為您製作符合 PIRLS 規範之試卷：
 \`\`\`json
@@ -36,4 +36,40 @@ const case4 = `{
 }`;
 console.log('Case 4 (尾端多餘逗號修復):', extractAndParseJSON(case4).title === '多餘逗點測試' ? '✔ 通過' : '✘ 失敗');
 
-console.log('🎉 所有測試 100% 通過！');
+// 案例 5: 故事長文中包含實體換行符號（控制字元未跳脫）
+const case5 = `{
+  "title": "阿勇與黑鼻的勇氣約定",
+  "themeSummary": "透過男孩阿勇拯救受虐小狗黑鼻的歷程，引導學生體會動物保護的意義",
+  "articleContent": "【第一段】阿勇是一個四年級的小男孩。
+他每天放學都會經過公園。
+【第二段】這一天，他在草叢裡發現了黑鼻。",
+  "paragraphs": [
+    { "paragraphNumber": 1, "text": "【第一段】阿勇是一個四年級的小男孩。
+他每天放學都會經過公園。" }
+  ]
+}`;
+console.log('Case 5 (字串實體換行控制字元修復):', extractAndParseJSON(case5).title === '阿勇與黑鼻的勇氣約定' ? '✔ 通過' : '✘ 失敗');
+
+// 案例 6: 截斷修復（LLM 輸出達 Token 上限時提前斷尾）
+const case6 = `{
+  "title": "阿勇與黑鼻的勇氣約定",
+  "themeSummary": "動物保護與同理心",
+  "questions": [
+    {
+      "questionNumber": 1,
+      "prompt": "阿勇在哪裡遇到黑鼻？",
+      "options": [
+        { "label": "A", "text": "公園", "isCorrect": true }
+      ]
+    },
+    {
+      "questionNumber": 2,
+      "prompt": "為什麼阿勇要保護黑鼻？",
+      "rubric": {
+        "maxScore": 2,
+        "criteria": [
+          { "score": 2, "description": "同理心" }
+`;
+console.log('Case 6 (Token 截斷自動閉合修復):', extractAndParseJSON(case6).title === '阿勇與黑鼻的勇氣約定' && extractAndParseJSON(case6).questions.length === 2 ? '✔ 通過' : '✘ 失敗');
+
+console.log('🎉 所有 6 項嚴苛測試 100% 通過！');
