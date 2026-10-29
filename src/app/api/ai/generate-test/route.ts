@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
       questionCountMode,
       includeDiagram,
       apiKey,
+      preferredModel,
     } = body;
 
     const testPaper = await generatePIRLSTestPaper({
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest) {
       questionCountMode: questionCountMode || 'standard',
       includeDiagram: Boolean(includeDiagram),
       apiKey: apiKey?.trim() || undefined,
+      preferredModel: preferredModel || 'gemini-1.5-flash',
       creatorId: session.userId,
       creatorName: session.displayName,
     });

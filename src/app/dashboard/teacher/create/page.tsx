@@ -26,6 +26,7 @@ export default function TeacherCreateTestPage() {
   const [questionCountMode, setQuestionCountMode] = useState<'standard' | 'compact'>('standard');
   const [includeDiagram, setIncludeDiagram] = useState(true);
   const [apiKey, setApiKey] = useState('');
+  const [preferredModel, setPreferredModel] = useState('gemini-1.5-flash');
   const [keyChecking, setKeyChecking] = useState(false);
   const [keyStatus, setKeyStatus] = useState<{ ok: boolean; message: string } | null>(null);
 
@@ -41,7 +42,10 @@ export default function TeacherCreateTestPage() {
       const res = await fetch('/api/ai/verify-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: apiKey.trim() }),
+        body: JSON.stringify({
+          apiKey: apiKey.trim(),
+          preferredModel,
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -84,6 +88,7 @@ export default function TeacherCreateTestPage() {
           questionCountMode,
           includeDiagram,
           apiKey: apiKey.trim() || undefined,
+          preferredModel,
         }),
       });
 
@@ -397,8 +402,8 @@ export default function TeacherCreateTestPage() {
                   </div>
                 </div>
 
-                {/* API Key 選填欄位與連線測試按鈕 */}
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                {/* API Key 與模型選擇欄位 */}
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-bold text-slate-700 flex items-center space-x-1">
                       <span>Google Gemini API Key</span>
@@ -438,6 +443,40 @@ export default function TeacherCreateTestPage() {
                     </button>
                   </div>
 
+                  {/* 模型選擇下拉選單 */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-xs font-bold text-slate-700">選擇語言模型 (以快速、省額度為導向)</label>
+                      <a
+                        href="https://ai.google.dev/gemini-api/docs/models?hl=zh-tw"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] text-sky-600 hover:underline inline-flex items-center space-x-0.5"
+                      >
+                        <span>Google 官方模型規格說明</span>
+                        <span>↗</span>
+                      </a>
+                    </div>
+                    <select
+                      value={preferredModel}
+                      onChange={(e) => {
+                        setPreferredModel(e.target.value);
+                        setKeyStatus(null);
+                      }}
+                      className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                    >
+                      <option value="gemini-1.5-flash">
+                        ⚡ Gemini 1.5 Flash（官方首選推薦：極速、高穩定、每天 1,500 次免費呼叫，最省額度）
+                      </option>
+                      <option value="gemini-1.5-flash-8b">
+                        🍃 Gemini 1.5 Flash 8B（超輕量 8B 模型：低延遲、高吞吐、資源消耗最低）
+                      </option>
+                      <option value="gemini-2.5-flash">
+                        🚀 Gemini 2.5 Flash（新一代 Flash：若需更高語意理解度）
+                      </option>
+                    </select>
+                  </div>
+
                   {/* 驗證狀態反饋 */}
                   {keyStatus && (
                     <div
@@ -457,7 +496,7 @@ export default function TeacherCreateTestPage() {
                   )}
 
                   <p className="text-[11px] text-slate-500 leading-relaxed">
-                    💡 提示：支援 <code className="text-slate-700 font-mono">gemini-2.0-flash</code> 與 <code className="text-slate-700 font-mono">gemini-1.5-flash</code>，已配置 8,192 Tokens 與 60 秒深層推理，可穩定產出 14 題四層次完整題本。
+                    💡 依據 Google 官方文件：<code className="text-slate-700 font-mono">gemini-1.5-flash</code> 系列在免費方案下享有每日最高 1,500 次呼叫 (1,500 RPD) 與每分鐘 100 萬 Tokens 限額，專為高效率、低成本任務量身打造。
                   </p>
                 </div>
               </div>

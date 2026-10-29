@@ -17,6 +17,7 @@ interface GenerateParams {
   questionCountMode: 'standard' | 'compact'; // standard: 12~14 題, compact: 8 題
   includeDiagram?: boolean;
   apiKey?: string;
+  preferredModel?: string; // 偏好模型（預設 gemini-1.5-flash：快速、省額度）
   creatorId: string;
   creatorName: string;
 }
@@ -118,8 +119,8 @@ ${params.pastedText}
 
 請依據上述自選文章提煉符合 PIRLS 四層次規範與給分規準之完整 JSON 試卷。`;
 
-  // 雙模型策略：優先使用極速最新 gemini-2.0-flash，若受阻或專案未開通則自動降級為 gemini-1.5-flash
-  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  // 動態獲取該 API Key 可用的模型，預設優先採用快速且最節省額度的 Gemini 1.5 Flash
+  const models = await getAvailableGeminiModels(apiKey, params.preferredModel);
   let lastError: Error | null = null;
 
   for (const model of models) {
@@ -175,6 +176,54 @@ ${params.pastedText}
   }
 
   throw lastError || new Error('Google Gemini API 調用失敗，請確認 API Key 是否具有有效配額。');
+}
+
+/**
+ * 動態探測該 API Key 當前可用且支援 generateContent 的推薦模型清單
+ * 優先順序：Gemini 1.5 Flash（超快速、高穩定、每天 1,500 次免費額度、最省配額）> 1.5 Flash 8B > 2.5 Flash
+ */
+export async function getAvailableGeminiModels(apiKey: string, preferredModel?: string): Promise<string[]> {
+  const defaultList = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.5-flash', 'gemini-3.8-flash'];
+  if (preferredModel) {
+    const cleanPreferred = preferredModel.trim();
+    if (cleanPreferred && !defaultList.includes(cleanPreferred)) {
+      defaultList.unshift(cleanPreferred);
+    } else if (cleanPreferred) {
+      const idx = defaultList.indexOf(cleanPreferred);
+      defaultList.splice(idx, 1);
+      defaultList.unshift(cleanPreferred);
+    }
+  }
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    if (res.ok) {
+      const data = await res.json();
+      const activeNames: string[] = (data.models || [])
+        .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+        .map((m: any) => m.name.replace(/^models\//, ''));
+
+      const preferredOrder = [
+        preferredModel,
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-8b',
+        'gemini-2.5-flash',
+        'gemini-3.8-flash',
+      ].filter(Boolean) as string[];
+
+      const matched = preferredOrder.filter((m) => activeNames.includes(m));
+      if (matched.length > 0) return matched;
+
+      // 若沒有命中偏好清單，優先挑選含有 flash 的可用模型
+      const anyFlash = activeNames.filter((n) => n.includes('flash'));
+      if (anyFlash.length > 0) return anyFlash;
+
+      if (activeNames.length > 0) return activeNames.slice(0, 3);
+    }
+  } catch (err) {
+    // 網路異常或探測受阻，直接回退預設候選梯隊
+  }
+  return defaultList;
 }
 
 function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
