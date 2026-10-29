@@ -625,7 +625,7 @@ export default function TeacherCreateTestPage() {
                     <div>
                       <div className="flex justify-between items-center mb-1">
                         <label className="text-xs font-bold text-slate-700">語言模型選擇</label>
-                        <span className="text-[10px] text-slate-400">已配置 45 秒長文生成與自動超時防護</span>
+                        <span className="text-[10px] text-slate-400">已配置 Google Cloud 原生長效運算防護（180秒）</span>
                       </div>
 
                       {provider === 'gemini' && (
@@ -635,16 +635,19 @@ export default function TeacherCreateTestPage() {
                           className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
                         >
                           <option value="auto">
-                            🤖 智慧自動選擇（強烈推薦：自動匹配帳號中最活躍且不塞車的官方 Flash 模型）
+                            🤖 智慧自動選擇（推薦：優先匹配帳號中最快且繁中理解頂尖的 Gemini 2.5 / 2.0 Flash）
                           </option>
-                          <option value="gemini-3.8-flash">
-                            ⚡ Gemini 3.8 Flash（Google 官方目前主力推薦 Flash 模型）
+                          <option value="gemini-2.5-flash">
+                            ⚡ Gemini 2.5 Flash（Google 最新主力 Flash 模型，超高速、繁中語感佳）
                           </option>
-                          <option value="gemini-3.6-flash">
-                            🍃 Gemini 3.6 Flash（極速備援模型，低負載、無塞車）
+                          <option value="gemini-2.0-flash">
+                            🚀 Gemini 2.0 Flash（極速生成、穩定低延遲）
                           </option>
                           <option value="gemini-1.5-flash">
-                            🏛️ Gemini 1.5 Flash（舊版專案相容模型）
+                            🏛️ Gemini 1.5 Flash（經典穩定相容模型）
+                          </option>
+                          <option value="gemini-2.5-pro">
+                            🧠 Gemini 2.5 Pro（旗艦深度推理，適合精細閱讀題目）
                           </option>
                         </select>
                       )}
@@ -721,7 +724,7 @@ export default function TeacherCreateTestPage() {
                   )}
 
                   <p className="text-[11px] text-slate-500 leading-relaxed">
-                    💡 提示：所有 API 金鑰均僅保存在您當前裝置的瀏覽器快顯儲存中，不會跨帳號外流。系統已將生成等待時間放寬至 45 秒，並具備自動短延遲重試防線。
+                    💡 提示：所有 API 金鑰均僅保存在您當前裝置的瀏覽器快顯儲存中，不會跨帳號外流。系統依託 Google Cloud Run 容器長效運算架構，已將生成防護放寬至 180 秒（3 分鐘），充分支援長篇四層次 8~14 題之完整深度推論。
                   </p>
                 </div>
               </div>

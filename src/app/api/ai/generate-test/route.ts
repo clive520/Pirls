@@ -3,7 +3,7 @@ import { verifySessionToken } from '@/lib/jwt';
 import { generatePIRLSTestPaper } from '@/lib/llm-adapter';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // 允許長文與多題目四層次完整生成
+export const maxDuration = 300; // Google Cloud Run 容器支援高達 600 秒長效運算，允許長文與多題目四層次深度生成
 
 export async function POST(req: NextRequest) {
   try {

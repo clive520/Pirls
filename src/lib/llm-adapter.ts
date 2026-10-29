@@ -132,14 +132,14 @@ ${params.pastedText}
 }
 
 /**
- * 串接 Google Gemini API (放寬超時至 45 秒 + 雙模型自動備援)
+ * 串接 Google Gemini API (放寬超時至 180 秒 + 官方最新模型自動備援)
  */
 async function callGeminiAPI(params: GenerateParams, apiKey: string): Promise<TestPaper> {
   const isLiterary = params.textType === 'literary';
   const targetCount = params.questionCountMode === 'standard' ? 14 : 8;
   const { systemInstruction, userPrompt } = buildPIRLSPrompt(params, isLiterary, targetCount);
 
-  // 動態獲取該 API Key 可用的模型（嚴格限制最多 2 款：偏好模型 + 1 款省額度備援）
+  // 動態獲取該 API Key 可用的模型（優先匹配 2.5/2.0/1.5 Flash）
   const models = await getAvailableGeminiModels(apiKey, params.preferredModel);
   let lastError: Error | null = null;
 
@@ -157,8 +157,8 @@ async function callGeminiAPI(params: GenerateParams, apiKey: string): Promise<Te
         },
       };
 
-      // 方向 A：放寬等待時間至 45 秒，支援 503 自動重試
-      const response = await fetchWithRetry(url, payload, 2, 45000);
+      // 依託 Google Cloud Run 容器長效運算能力，放寬等待時間至 180 秒（3 分鐘）
+      const response = await fetchWithRetry(url, payload, 2, 180000);
 
       if (!response.ok) {
         const errJson = await response.json().catch(() => null);
@@ -237,7 +237,7 @@ async function callOpenAICompatibleAPI(
     : defaultModel;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 45000); // 45 秒逾時保護
+  const timer = setTimeout(() => controller.abort(), 180000); // 180 秒（3 分鐘）長效運算防護
 
   try {
     const response = await fetch(endpoint, {
@@ -271,16 +271,16 @@ async function callOpenAICompatibleAPI(
     return formatToTestPaper(parsed, params);
   } catch (err: any) {
     if (err.name === 'AbortError') {
-      throw new Error(`[${provider.toUpperCase()}] API 響應逾時 (45秒)，請稍後再試。`);
+      throw new Error(`[${provider.toUpperCase()}] API 響應逾時 (180秒)，請稍後再試。`);
     }
     throw err;
   }
 }
 
 /**
- * 遇到 Google 503 (臨時高負載) 或 429 時的自動短延遲重試機制 (方向 A：放寬等待時間至 45 秒)
+ * 遇到 Google 503 (臨時高負載) 或 429 時的自動短延遲重試機制 (放寬等待時間至 180 秒)
  */
-async function fetchWithRetry(url: string, payload: any, maxRetries = 2, timeoutMs = 45000): Promise<Response> {
+async function fetchWithRetry(url: string, payload: any, maxRetries = 2, timeoutMs = 180000): Promise<Response> {
   let attempt = 0;
   while (attempt < maxRetries) {
     attempt++;
@@ -319,27 +319,27 @@ async function fetchWithRetry(url: string, payload: any, maxRetries = 2, timeout
 }
 
 /**
- * Google 官方活躍 Flash 模型優先序（過濾已淘汰的 2.0 與已不對新用戶開放的 2.5）
+ * Google 官方活躍 Flash 模型優先序（優先使用高速且繁中理解頂尖的 Gemini 2.5 / 2.0 / 1.5 Flash）
  */
 const ACTIVE_FLASH_PRIORITY = [
-  'gemini-3.8-flash',
-  'gemini-3.6-flash',
-  'gemini-3.5-flash-lite',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
   'gemini-1.5-flash',
+  'gemini-2.5-pro',
+  'gemini-1.5-pro',
   'gemini-1.5-flash-8b',
 ];
 
 /**
  * 動態探測該 API Key 當前可用且支援 generateContent 的推薦模型清單
- * 優先順序：Gemini 3.8 Flash > 3.6 Flash > 3.5 Flash Lite
- * 嚴格上限：回傳至多 2 個模型，避免輪詢多個模型導致 504 Gateway Timeout
+ * 優先順序：Gemini 2.5 Flash > 2.0 Flash > 1.5 Flash
  */
 export async function getAvailableGeminiModels(apiKey: string, preferredModel?: string): Promise<string[]> {
   const preferred = (preferredModel || '').trim();
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
       signal: controller.signal,
@@ -349,9 +349,7 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
       const data = await res.json();
       const activeNames: string[] = (data.models || [])
         .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
-        .map((m: any) => m.name.replace(/^models\//, ''))
-        // 嚴格過濾已被 Google 官方淘汰或標記為不對新用戶開放的模型（如 2.0 與 2.5）
-        .filter((name: string) => !name.includes('2.0') && !name.includes('2.5'));
+        .map((m: any) => m.name.replace(/^models\//, ''));
 
       const candidates: string[] = [];
 
@@ -380,12 +378,12 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
     // 探測逾時或異常
   }
 
-  // 靜態備援清單（若指定模型則優先調用，否則以 3.8-flash 與 3.6-flash 為主）
+  // 靜態備援清單（以官方活躍且快速的 2.5-flash 與 2.0-flash 為主）
   if (preferred && preferred !== 'auto') {
-    const backup = preferred === 'gemini-3.8-flash' ? 'gemini-3.6-flash' : 'gemini-3.8-flash';
+    const backup = preferred === 'gemini-2.5-flash' ? 'gemini-2.0-flash' : 'gemini-2.5-flash';
     return [preferred, backup];
   }
-  return ['gemini-3.8-flash', 'gemini-3.6-flash'];
+  return ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
 }
 
 function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {

@@ -54,13 +54,13 @@ export async function POST(req: NextRequest) {
         const data = await modelsRes.json().catch(() => ({ models: [] }));
         const availableModels: string[] = (data.models || [])
           .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
-          .map((m: any) => m.name.replace(/^models\//, ''))
-          .filter((n: string) => !n.includes('2.0') && !n.includes('2.5'));
+          .map((m: any) => m.name.replace(/^models\//, ''));
 
-        const topModel = availableModels.find((n) => n.includes('3.8-flash')) 
-          || availableModels.find((n) => n.includes('3.6-flash'))
-          || availableModels[0] 
-          || 'gemini-3.8-flash';
+        const topModel = availableModels.find((n) => n.includes('2.5-flash'))
+          || availableModels.find((n) => n.includes('2.0-flash'))
+          || availableModels.find((n) => n.includes('1.5-flash'))
+          || availableModels[0]
+          || 'gemini-2.5-flash';
 
         return NextResponse.json({
           success: true,
