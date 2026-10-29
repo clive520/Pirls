@@ -635,19 +635,16 @@ export default function TeacherCreateTestPage() {
                           className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
                         >
                           <option value="auto">
-                            🤖 智慧自動選擇（推薦：優先匹配帳號中最快且繁中理解頂尖的 Gemini 2.5 / 2.0 Flash）
+                            🤖 智慧自動選擇（強烈推薦：自動匹配 Google 官方最新活躍的 Flash 模型）
                           </option>
-                          <option value="gemini-2.5-flash">
-                            ⚡ Gemini 2.5 Flash（Google 最新主力 Flash 模型，超高速、繁中語感佳）
+                          <option value="gemini-3.8-flash">
+                            ⚡ Gemini 3.8 Flash（Google 官方目前主力推薦 Flash 模型）
                           </option>
-                          <option value="gemini-2.0-flash">
-                            🚀 Gemini 2.0 Flash（極速生成、穩定低延遲）
+                          <option value="gemini-3.6-flash">
+                            🍃 Gemini 3.6 Flash（極速備援模型，低負載、無塞車）
                           </option>
                           <option value="gemini-1.5-flash">
-                            🏛️ Gemini 1.5 Flash（經典穩定相容模型）
-                          </option>
-                          <option value="gemini-2.5-pro">
-                            🧠 Gemini 2.5 Pro（旗艦深度推理，適合精細閱讀題目）
+                            🏛️ Gemini 1.5 Flash（舊版相容模型）
                           </option>
                         </select>
                       )}

@@ -319,20 +319,19 @@ async function fetchWithRetry(url: string, payload: any, maxRetries = 2, timeout
 }
 
 /**
- * Google 官方活躍 Flash 模型優先序（優先使用高速且繁中理解頂尖的 Gemini 2.5 / 2.0 / 1.5 Flash）
+ * Google 官方活躍 Flash 模型優先序（依 Google 2026 官方規範：優先採用 gemini-3.8-flash 與 3.6-flash）
  */
 const ACTIVE_FLASH_PRIORITY = [
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
+  'gemini-3.8-flash',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash-lite',
   'gemini-1.5-flash',
-  'gemini-2.5-pro',
-  'gemini-1.5-pro',
   'gemini-1.5-flash-8b',
 ];
 
 /**
  * 動態探測該 API Key 當前可用且支援 generateContent 的推薦模型清單
- * 優先順序：Gemini 2.5 Flash > 2.0 Flash > 1.5 Flash
+ * 優先順序：Gemini 3.8 Flash > 3.6 Flash > 3.5 Flash Lite
  */
 export async function getAvailableGeminiModels(apiKey: string, preferredModel?: string): Promise<string[]> {
   const preferred = (preferredModel || '').trim();
@@ -349,7 +348,9 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
       const data = await res.json();
       const activeNames: string[] = (data.models || [])
         .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
-        .map((m: any) => m.name.replace(/^models\//, ''));
+        .map((m: any) => m.name.replace(/^models\//, ''))
+        // 嚴格過濾已被 Google 官方標記為不對新用戶開放的模型（如 2.0 與 2.5 系列，避免 404 報錯）
+        .filter((name: string) => !name.includes('2.0') && !name.includes('2.5'));
 
       const candidates: string[] = [];
 
@@ -378,12 +379,12 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
     // 探測逾時或異常
   }
 
-  // 靜態備援清單（以官方活躍且快速的 2.5-flash 與 2.0-flash 為主）
+  // 靜態備援清單（以官方活躍且推薦的 3.8-flash 與 3.6-flash 為主）
   if (preferred && preferred !== 'auto') {
-    const backup = preferred === 'gemini-2.5-flash' ? 'gemini-2.0-flash' : 'gemini-2.5-flash';
+    const backup = preferred === 'gemini-3.8-flash' ? 'gemini-3.6-flash' : 'gemini-3.8-flash';
     return [preferred, backup];
   }
-  return ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+  return ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-1.5-flash'];
 }
 
 function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
