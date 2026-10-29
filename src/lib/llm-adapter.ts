@@ -1,4 +1,5 @@
 import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration } from './types';
+import { extractAndParseJSON } from './json-helper';
 
 /**
  * PIRLS 多模型適配引擎 (LLM Adapter)
@@ -102,8 +103,11 @@ function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, targetCou
    - 第 4 層次：檢驗與評估 (evaluate / processLevelNumber: 4) 約佔 15% (評估作者寫作手法、圖文關係或觀點)
 2. 題型分佈：選擇題 (multiple_choice, 1分) 與 問答簡答題 (constructed_response, 1~3分) 各約 50%。
 3. 問答題評分規準：必須嚴格比照 IEA 官方雙位數代碼 (20/10/79 或 10/79)，列出具體給分依據與滿分示範答案。
-4. 輸出格式規範：
-   必須嚴格輸出純 JSON 格式，架構參考如下，請勿包裹 Markdown 代碼區塊或任何問候語：
+4. 輸出格式規範（極度關鍵）：
+   你必須「直接以 { 開頭，以 } 結尾」，輸出純合法 JSON 格式。
+   嚴禁在 JSON 之前輸出任何開場白、故事摘要、引言或客套話！第一字必須是 {。
+   嚴禁在 JSON 之後輸出任何補充說明或結尾語！最後一字必須是 }。
+   完整 JSON 架構參考如下：
 ${schemaExample}`;
 
   const userPrompt = params.mode === 'theme'
@@ -170,15 +174,8 @@ async function callGeminiAPI(params: GenerateParams, apiKey: string): Promise<Te
         throw new Error(`Google Gemini [${model}] 未能回傳有效文本 (結束原因: ${finishReason || '未知'})`);
       }
 
-      // 清理 Markdown 代碼圍欄
-      let cleaned = rawText.trim();
-      if (cleaned.startsWith('```json')) {
-        cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-      } else if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
-
-      const parsed = JSON.parse(cleaned);
+      // 強健解析 JSON（自動過濾前導故事文字、引言與修復語法瑕疵）
+      const parsed = extractAndParseJSON(rawText);
       return formatToTestPaper(parsed, params);
     } catch (err: any) {
       console.warn(`[PIRLS LLM] 模型 ${model} 調用失敗:`, err.message);
@@ -269,14 +266,8 @@ async function callOpenAICompatibleAPI(
     const rawText = data.choices?.[0]?.message?.content;
     if (!rawText) throw new Error(`[${provider.toUpperCase()}] 未回傳有效文字內容`);
 
-    let cleaned = rawText.trim();
-    if (cleaned.startsWith('```json')) {
-      cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-
-    const parsed = JSON.parse(cleaned);
+    // 強健解析 JSON（自動過濾前導引言與修復語法瑕疵）
+    const parsed = extractAndParseJSON(rawText);
     return formatToTestPaper(parsed, params);
   } catch (err: any) {
     if (err.name === 'AbortError') {

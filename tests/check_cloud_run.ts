@@ -35,6 +35,9 @@ async function checkCloudRunServices() {
       console.log(`執行狀態: ${JSON.stringify(svc.conditions?.map((c: any) => ({ type: c.type, state: c.state })))}`);
       console.log(`----------------------------------------`);
     }
+
+    // 查詢最近的 Cloud Build
+    await checkCloudBuilds(client, projectId);
   } catch (err: any) {
     console.error('查詢 Cloud Run 失敗:', err.message);
     if (err.response?.data) {
