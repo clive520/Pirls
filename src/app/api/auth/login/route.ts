@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '帳號或密碼錯誤' }, { status: 401 });
     }
 
-    // 檢查教師審核狀態
-    if (user.role === 'teacher' && user.status === 'pending') {
+    // 檢查帳號審核狀態
+    if (user.status === 'pending') {
       return NextResponse.json(
         { error: '您的教師帳號尚在審核中，經由管理員核准後方可正式登入使用！' },
         { status: 403 }

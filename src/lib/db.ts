@@ -274,7 +274,10 @@ export async function updateUserRole(
 
   // 若要將管理員降級，必須確認系統內至少還有另一位活躍管理員
   if (user.role === 'admin' && newRole !== 'admin') {
-    if (countActiveAdmins(state) <= 1) {
+    const otherActiveAdmins = Object.values(state.users).filter(
+      (u) => u.role === 'admin' && u.status === 'active' && u.id !== userId
+    );
+    if (otherActiveAdmins.length === 0) {
       return {
         success: false,
         error: '系統至少必須保留一位系統管理員，無法解除最後一位管理員權限！',
@@ -294,9 +297,12 @@ export async function updateUserStatus(userId: string, status: UserStatus): Prom
   const user = state.users[userId];
   if (!user) return false;
 
-  // 若該使用者為管理員且被改為非 active，檢查是否會導致無管理員
+  // 若該使用者為管理員且被改為非 active，檢查是否會導致無其他活躍管理員
   if (user.role === 'admin' && status !== 'active') {
-    if (countActiveAdmins(state) <= 1) {
+    const otherActiveAdmins = Object.values(state.users).filter(
+      (u) => u.role === 'admin' && u.status === 'active' && u.id !== userId
+    );
+    if (otherActiveAdmins.length === 0) {
       return false;
     }
   }
@@ -439,10 +445,13 @@ export async function deleteTeacher(
 
   // 若該教師為管理員，檢查是否為最後一位活躍管理員
   if (teacher.role === 'admin') {
-    if (countActiveAdmins(state) <= 1) {
+    const otherActiveAdmins = Object.values(state.users).filter(
+      (u) => u.role === 'admin' && u.status === 'active' && u.id !== teacherId
+    );
+    if (otherActiveAdmins.length === 0) {
       return {
         success: false,
-        error: '該帳號為系統目前最後一位系統管理員，系統至少必須保留一位管理員，無法刪除！',
+        error: '該帳號為系統目前最後一位活躍系統管理員，系統至少必須保留一位管理員，無法刪除！',
         message: '',
       };
     }
