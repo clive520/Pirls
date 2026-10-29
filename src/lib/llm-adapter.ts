@@ -47,6 +47,7 @@ export async function generatePIRLSTestPaper(params: GenerateParams): Promise<Te
  * 構建標準 PIRLS 命題提示詞與結構規範
  */
 function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, targetCount: number) {
+  const includeDiagram = params.includeDiagram !== false;
   const schemaExample = `{
   "title": "文章標題",
   "themeSummary": "文章主旨與核心素養摘要",
@@ -55,6 +56,15 @@ function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, targetCou
   "paragraphs": [
     { "paragraphNumber": 1, "text": "【第一段】..." },
     { "paragraphNumber": 2, "text": "【第二段】..." }
+  ],
+  "illustrations": [
+    {
+      "id": "ill_1",
+      "paragraphNumber": 1,
+      "caption": "圖 1：情境示意或資訊圖表說明",
+      "type": "svg_diagram",
+      "svgCode": "<svg viewBox='0 0 500 240' xmlns='http://www.w3.org/2000/svg'><rect width='500' height='240' fill='#f0f9ff' rx='12'/><text x='250' y='120' text-anchor='middle' fill='#0369a1' font-size='16' font-weight='bold'>情境圖表內容</text></svg>"
+    }
   ],
   "questions": [
     {
@@ -108,6 +118,13 @@ function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, targetCou
    嚴禁在 JSON 之前輸出任何開場白、故事摘要、引言或客套話！第一字必須是 {。
    嚴禁在 JSON 之後輸出任何補充說明或結尾語！最後一字必須是 }。
 5. 引號規範：故事內之人物對話或引文，請一律使用中文全形引號「」與『』，嚴禁在字串內使用未跳脫的半形雙引號，以維護 JSON 語法完全合法。
+6. 【PIRLS 多模態圖文閱讀插圖 (SVG 向量圖)】：
+   ${includeDiagram ? `本次任務已啟用「PIRLS 多模態圖文互證閱讀」，你「必須」在 "illustrations" 陣列中產出 1 幅切合文章主題的精美教育型 SVG 向量圖表：
+   - 若為文學性文本：繪製故事情境插畫、主角冒險路徑、心理歷程圖或場景空間圖。
+   - 若為訊息性文本：繪製資訊圖解、生物構造圖、生態食物網、時序演進或流程架構圖。
+   - 語法與安全：type 必須為 "svg_diagram"，svgCode 為完整的 <svg viewBox='0 0 500 240' xmlns='http://www.w3.org/2000/svg'>...</svg> 代碼。
+   - 為維護 JSON 格式完整性，svgCode 內所有屬性請優先使用「單引號」（例如：<rect fill='#0284c7' rx='12'/>），包含柔和背景色、向量幾何圖形與清晰中文標籤 (<text>)。
+   - 在第 3 或第 4 層次試題中，至少設計 1 題引導學生結合「圖 1」進行圖文互證的深度理解。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
    完整 JSON 架構參考如下：
 ${schemaExample}`;
 
@@ -118,12 +135,14 @@ ${schemaExample}`;
 年級：國小 ${params.targetGrade} 年級
 題量：共 ${targetCount} 題
 文章長度：約 800~1,200 字，分段清晰 (每段開頭標示【第一段】、【第二段】等)
+${includeDiagram ? '多模態插圖：請務必在 illustrations 欄位生成 1 幅切合主題的精緻 SVG 向量圖（含幾何圖形、文字標籤與說明），以利學生進行圖文互證閱讀。' : '插圖需求：不需生成插圖，illustrations 填空陣列 []。'}
 請即刻生成符合上述 PIRLS 規範之完整 JSON 試卷。`
     : `【自選文章提煉 PIRLS 題本】
 文章標題：${params.pastedTitle || '自選閱讀材料'}
 適用年級：國小 ${params.targetGrade} 年級
 文體類別：${isLiterary ? '文學性文本' : '訊息性文本'}
 題量：共 ${targetCount} 題
+${includeDiagram ? '多模態插圖：請務必在 illustrations 欄位生成 1 幅切合文本內容的精緻 SVG 向量資訊圖表，以利學生進行圖文對照閱讀。' : '插圖需求：不需生成插圖，illustrations 填空陣列 []。'}
 原始文章內容：
 ${params.pastedText}
 
@@ -497,6 +516,53 @@ function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
     };
   });
 
+  // 3. 插圖防呆、SVG 標準化與智慧保底生成 (方案 A: PIRLS 多模態向量圖)
+  const shouldIncludeDiagram = params.includeDiagram !== false;
+  const rawIllustrations = parsed.illustrations || [];
+  let illustrations: ArticleIllustration[] = [];
+
+  if (Array.isArray(rawIllustrations)) {
+    const list: ArticleIllustration[] = [];
+    for (let idx = 0; idx < rawIllustrations.length; idx++) {
+      const ill = rawIllustrations[idx];
+      let svgCode = ill?.svgCode || ill?.svg || '';
+      if (typeof svgCode === 'string' && svgCode.trim().length > 0) {
+        if (!svgCode.includes('xmlns=')) {
+          svgCode = svgCode.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+        }
+        if (!svgCode.includes('viewBox=')) {
+          svgCode = svgCode.replace('<svg', '<svg viewBox="0 0 500 240"');
+        }
+        list.push({
+          id: ill.id || `ill_${Date.now()}_${idx + 1}`,
+          paragraphNumber: Number(ill.paragraphNumber) || 1,
+          caption: ill.caption || `圖 ${idx + 1}：文章情境示意圖`,
+          type: 'svg_diagram',
+          svgCode,
+        });
+      }
+    }
+    illustrations = list;
+  }
+
+  // 若出題時勾選了插圖但模型未輸出，自動生成與文章主題契合的智慧 SVG 插圖
+  if (shouldIncludeDiagram && illustrations.length === 0) {
+    const isLit = params.textType === 'literary';
+    illustrations = [
+      {
+        id: `ill_auto_${Date.now()}`,
+        paragraphNumber: 1,
+        caption: `圖 1：【${parsed.title || '文章主題'}】${isLit ? '故事情境導引圖' : '多模態知識概念圖'}`,
+        type: 'svg_diagram',
+        svgCode: generateSmartFallbackSVG(
+          parsed.title || params.theme || 'PIRLS 閱讀測驗',
+          parsed.themeSummary || '多模態圖文互證素養',
+          isLit
+        ),
+      },
+    ];
+  }
+
   return {
     id: 'test_' + Date.now(),
     title: parsed.title || parsed.article_title || 'PIRLS 閱讀測驗',
@@ -506,7 +572,7 @@ function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
     wordCount: Number(parsed.wordCount) || articleContent.length || 950,
     articleContent,
     paragraphs,
-    illustrations: parsed.illustrations || [],
+    illustrations,
     questions,
     totalPoints: questions.reduce((sum, q) => sum + (q.points || 1), 0),
     creatorId: params.creatorId,
@@ -516,6 +582,32 @@ function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
     createdAt: now,
     updatedAt: now,
   };
+}
+
+/**
+ * 智慧保底 SVG 向量圖生成器（當 AI 未能回傳完整 SVG 時，保障試卷多模態圖文互證不開天窗）
+ */
+function generateSmartFallbackSVG(title: string, summary: string, isLiterary: boolean): string {
+  const bg = isLiterary ? '#f0fdf4' : '#f0f9ff';
+  const border = isLiterary ? '#86efac' : '#7dd3fc';
+  const primary = isLiterary ? '#15803d' : '#0284c7';
+  const badgeBg = isLiterary ? '#dcfce7' : '#e0f2fe';
+  const badgeText = isLiterary ? '#166534' : '#0369a1';
+  const icon = isLiterary ? '🌳 📖' : '🔬 📊';
+  const cleanTitle = (title || '閱讀素材').replace(/["'<>]/g, '').slice(0, 18);
+  const cleanSummary = (summary || '探索閱讀新視界').replace(/["'<>]/g, '').slice(0, 36);
+
+  return `<svg viewBox='0 0 500 220' xmlns='http://www.w3.org/2000/svg' class='w-full h-auto rounded-2xl'>
+    <rect width='500' height='220' fill='${bg}' rx='16' stroke='${border}' stroke-width='2'/>
+    <rect x='24' y='20' width='130' height='28' rx='14' fill='${badgeBg}'/>
+    <text x='89' y='39' fill='${badgeText}' font-size='12' font-weight='bold' text-anchor='middle' font-family='sans-serif'>PIRLS 多模態圖表</text>
+    <circle cx='70' cy='125' r='42' fill='#ffffff' stroke='${border}' stroke-width='2'/>
+    <text x='70' y='135' font-size='32' text-anchor='middle'>${icon}</text>
+    <text x='136' y='110' font-size='18' font-weight='bold' fill='#0f172a' font-family='sans-serif'>${cleanTitle}</text>
+    <text x='136' y='138' font-size='13' fill='#475569' font-family='sans-serif'>${cleanSummary}...</text>
+    <line x1='136' y1='158' x2='460' y2='158' stroke='${border}' stroke-width='1.5' stroke-dasharray='4 4'/>
+    <text x='136' y='182' font-size='11' fill='${primary}' font-family='sans-serif' font-weight='500'>✦ 結合圖文資訊進行跨段落推論與素養評估</text>
+  </svg>`;
 }
 
 /**
