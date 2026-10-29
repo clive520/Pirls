@@ -27,7 +27,9 @@ export async function POST(req: NextRequest) {
       textType,
       questionCountMode,
       includeDiagram,
+      provider,
       apiKey,
+      customBaseUrl,
       preferredModel,
     } = body;
 
@@ -40,8 +42,10 @@ export async function POST(req: NextRequest) {
       textType: textType || 'literary',
       questionCountMode: questionCountMode || 'standard',
       includeDiagram: Boolean(includeDiagram),
+      provider: provider || 'gemini',
       apiKey: apiKey?.trim() || undefined,
-      preferredModel: preferredModel || 'gemini-1.5-flash',
+      customBaseUrl: customBaseUrl?.trim() || undefined,
+      preferredModel: preferredModel || 'auto',
       creatorId: session.userId,
       creatorName: session.displayName,
     });

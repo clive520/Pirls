@@ -7,7 +7,9 @@ import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration } from '
  * 確保系統在任何情況下皆可即時產出 12~14 題符合 PIRLS 官方真實題本規格之試卷。
  */
 
-interface GenerateParams {
+export type AIProvider = 'gemini' | 'openrouter' | 'deepseek' | 'opencode';
+
+export interface GenerateParams {
   mode: 'theme' | 'paste';
   theme?: string;
   pastedText?: string;
@@ -16,18 +18,24 @@ interface GenerateParams {
   textType: 'literary' | 'informational';
   questionCountMode: 'standard' | 'compact'; // standard: 12~14 題, compact: 8 題
   includeDiagram?: boolean;
+  provider?: AIProvider;
   apiKey?: string;
-  preferredModel?: string; // 偏好模型（預設 gemini-1.5-flash：快速、省額度）
+  customBaseUrl?: string;
+  preferredModel?: string; // 偏好模型
   creatorId: string;
   creatorName: string;
 }
 
 export async function generatePIRLSTestPaper(params: GenerateParams): Promise<TestPaper> {
+  const provider = params.provider || 'gemini';
   const apiKey = params.apiKey || process.env.GEMINI_API_KEY;
 
   if (apiKey) {
-    // 當使用者提供 API Key 時，必須真正呼叫 Google Gemini，若出錯必須拋出真實異常，絕不可靜默退回預設題本
-    return await callGeminiAPI(params, apiKey);
+    if (provider === 'gemini') {
+      return await callGeminiAPI(params, apiKey);
+    } else {
+      return await callOpenAICompatibleAPI(params, provider, apiKey);
+    }
   }
 
   // 僅在完全未填寫 API Key 時，提供高品質離線示範題本
@@ -35,12 +43,9 @@ export async function generatePIRLSTestPaper(params: GenerateParams): Promise<Te
 }
 
 /**
- * 串接 Google Gemini API (支援雙模型自動備援 + 8192 Token 完整生成)
+ * 構建標準 PIRLS 命題提示詞與結構規範
  */
-async function callGeminiAPI(params: GenerateParams, apiKey: string): Promise<TestPaper> {
-  const isLiterary = params.textType === 'literary';
-  const targetCount = params.questionCountMode === 'standard' ? 14 : 8;
-
+function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, targetCount: number) {
   const schemaExample = `{
   "title": "文章標題",
   "themeSummary": "文章主旨與核心素養摘要",
@@ -103,7 +108,7 @@ ${schemaExample}`;
 
   const userPrompt = params.mode === 'theme'
     ? `【出題請求】
-主題：${params.theme || '動物保護與勇氣'}
+主題：${params.theme || '守時的重要與自律'}
 文體類別：${isLiterary ? '文學性經驗（敘事故事/童話冒險）' : '訊息性文本（自然科普/生態/說明文）'}
 年級：國小 ${params.targetGrade} 年級
 題量：共 ${targetCount} 題
@@ -119,7 +124,18 @@ ${params.pastedText}
 
 請依據上述自選文章提煉符合 PIRLS 四層次規範與給分規準之完整 JSON 試卷。`;
 
-  // 動態獲取該 API Key 可用的模型（嚴格限制最多 2 款：偏好模型 + 1 款省額度備援，防止多模型累積逾時）
+  return { systemInstruction, userPrompt };
+}
+
+/**
+ * 串接 Google Gemini API (放寬超時至 45 秒 + 雙模型自動備援)
+ */
+async function callGeminiAPI(params: GenerateParams, apiKey: string): Promise<TestPaper> {
+  const isLiterary = params.textType === 'literary';
+  const targetCount = params.questionCountMode === 'standard' ? 14 : 8;
+  const { systemInstruction, userPrompt } = buildPIRLSPrompt(params, isLiterary, targetCount);
+
+  // 動態獲取該 API Key 可用的模型（嚴格限制最多 2 款：偏好模型 + 1 款省額度備援）
   const models = await getAvailableGeminiModels(apiKey, params.preferredModel);
   let lastError: Error | null = null;
 
@@ -133,12 +149,12 @@ ${params.pastedText}
         generationConfig: {
           responseMimeType: 'application/json',
           temperature: 0.7,
-          maxOutputTokens: 4096, // 4096 tokens 生成長文與 14 題足夠充裕，且 6~10 秒內即可高速完成
+          maxOutputTokens: 4096, // 4096 tokens 生成長文與題目足夠充裕
         },
       };
 
-      // 支援單次 18 秒超時與 503 臨時高負載重試
-      const response = await fetchWithRetry(url, payload, 2, 18000);
+      // 方向 A：放寬等待時間至 45 秒，支援 503 自動重試
+      const response = await fetchWithRetry(url, payload, 2, 45000);
 
       if (!response.ok) {
         const errJson = await response.json().catch(() => null);
@@ -177,7 +193,7 @@ ${params.pastedText}
   // 若錯誤包含 503 High demand，包裝為友善指引
   if (lastError && (lastError.message.includes('503') || lastError.message.includes('high demand'))) {
     throw new Error(
-      `Google 雲端伺服器臨時高負載 (503 High Demand)：Google 當前運算節點正在排隊，這並非金鑰或額度問題。請稍候 3~5 秒再次點擊「開始生成」，或切換至「Gemini 1.5 Flash」模型。`
+      `Google 雲端伺服器臨時高負載 (503 High Demand)：Google 當前運算節點正在排隊，這並非金鑰或額度問題。請稍候數秒再次點擊「開始生成」，或切換為其他 AI 引擎（如 DeepSeek / OpenRouter）。`
     );
   }
 
@@ -185,9 +201,95 @@ ${params.pastedText}
 }
 
 /**
- * 遇到 Google 503 (臨時高負載) 或 429 時的自動短延遲重試機制 (每輪調用上限 18 秒)
+ * 串接 OpenAI 相容介面（支援 OpenRouter、DeepSeek、OpenCode GO）
  */
-async function fetchWithRetry(url: string, payload: any, maxRetries = 2, timeoutMs = 18000): Promise<Response> {
+async function callOpenAICompatibleAPI(
+  params: GenerateParams,
+  provider: AIProvider,
+  apiKey: string
+): Promise<TestPaper> {
+  const isLiterary = params.textType === 'literary';
+  const targetCount = params.questionCountMode === 'standard' ? 14 : 8;
+  const { systemInstruction, userPrompt } = buildPIRLSPrompt(params, isLiterary, targetCount);
+
+  let endpoint = '';
+  let defaultModel = '';
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`,
+  };
+
+  if (provider === 'openrouter') {
+    endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+    headers['HTTP-Referer'] = 'https://pirls-learning-system.vercel.app';
+    headers['X-Title'] = 'PIRLS AI Assessment System';
+    defaultModel = 'deepseek/deepseek-chat';
+  } else if (provider === 'deepseek') {
+    endpoint = 'https://api.deepseek.com/chat/completions';
+    defaultModel = 'deepseek-chat';
+  } else if (provider === 'opencode') {
+    const base = params.customBaseUrl?.trim() || 'https://api.opencode.ai/v1';
+    endpoint = base.endsWith('/chat/completions')
+      ? base
+      : `${base.replace(/\/+$/, '')}/chat/completions`;
+    defaultModel = 'deepseek-chat';
+  }
+
+  const model = (params.preferredModel && params.preferredModel !== 'auto')
+    ? params.preferredModel
+    : defaultModel;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 45000); // 45 秒逾時保護
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      signal: controller.signal,
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemInstruction },
+          { role: 'user', content: userPrompt },
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.7,
+        max_tokens: 4096,
+      }),
+    }).finally(() => clearTimeout(timer));
+
+    if (!response.ok) {
+      const errJson = await response.json().catch(() => null);
+      const msg = errJson?.error?.message || errJson?.message || response.statusText;
+      throw new Error(`[${provider.toUpperCase()}] 服務器回應錯誤 (${response.status}): ${msg}`);
+    }
+
+    const data = await response.json();
+    const rawText = data.choices?.[0]?.message?.content;
+    if (!rawText) throw new Error(`[${provider.toUpperCase()}] 未回傳有效文字內容`);
+
+    let cleaned = rawText.trim();
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    const parsed = JSON.parse(cleaned);
+    return formatToTestPaper(parsed, params);
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      throw new Error(`[${provider.toUpperCase()}] API 響應逾時 (45秒)，請稍後再試。`);
+    }
+    throw err;
+  }
+}
+
+/**
+ * 遇到 Google 503 (臨時高負載) 或 429 時的自動短延遲重試機制 (方向 A：放寬等待時間至 45 秒)
+ */
+async function fetchWithRetry(url: string, payload: any, maxRetries = 2, timeoutMs = 45000): Promise<Response> {
   let attempt = 0;
   while (attempt < maxRetries) {
     attempt++;
@@ -262,12 +364,13 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
 
       const candidates: string[] = [];
 
-      // 若老師指定了有效且可用的模型，作為第 1 候選
-      if (preferred && preferred !== 'auto' && activeNames.includes(preferred)) {
-        candidates.push(preferred);
+      // 若老師指定了特定模型，優先作為第 1 候選（精確匹配或別名前綴匹配）
+      if (preferred && preferred !== 'auto') {
+        const matched = activeNames.find((n) => n === preferred || n.startsWith(`${preferred}-`));
+        candidates.push(matched || preferred);
       }
 
-      // 依官方活躍優先級填入（最多 2 款模型，避免逾時）
+      // 依官方活躍優先級填入備援（至多 2 款模型，避免多次重試累積逾時）
       for (const m of ACTIVE_FLASH_PRIORITY) {
         if (!candidates.includes(m) && activeNames.includes(m) && candidates.length < 2) {
           candidates.push(m);
@@ -286,7 +389,11 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
     // 探測逾時或異常
   }
 
-  // 靜態備援清單（以 Google 目前主力 3.8-flash 與 3.6-flash 為主）
+  // 靜態備援清單（若指定模型則優先調用，否則以 3.8-flash 與 3.6-flash 為主）
+  if (preferred && preferred !== 'auto') {
+    const backup = preferred === 'gemini-3.8-flash' ? 'gemini-3.6-flash' : 'gemini-3.8-flash';
+    return [preferred, backup];
+  }
   return ['gemini-3.8-flash', 'gemini-3.6-flash'];
 }
 

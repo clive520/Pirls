@@ -25,15 +25,103 @@ export default function TeacherCreateTestPage() {
   const [textType, setTextType] = useState<'literary' | 'informational'>('literary');
   const [questionCountMode, setQuestionCountMode] = useState<'standard' | 'compact'>('standard');
   const [includeDiagram, setIncludeDiagram] = useState(true);
-  const [apiKey, setApiKey] = useState('');
-  const [preferredModel, setPreferredModel] = useState('auto');
+  // 多 AI 提供商與金鑰本地記憶庫
+  const [provider, setProvider] = useState<'gemini' | 'openrouter' | 'deepseek' | 'opencode'>('gemini');
+  const [apiKeys, setApiKeys] = useState<{ [key: string]: string }>({
+    gemini: '',
+    openrouter: '',
+    deepseek: '',
+    opencode: '',
+  });
+  const [customBaseUrl, setCustomBaseUrl] = useState('https://api.opencode.ai/v1');
+  const [preferredModels, setPreferredModels] = useState<{ [key: string]: string }>({
+    gemini: 'auto',
+    openrouter: 'deepseek/deepseek-chat',
+    deepseek: 'deepseek-chat',
+    opencode: 'deepseek-chat',
+  });
   const [keyChecking, setKeyChecking] = useState(false);
   const [keyStatus, setKeyStatus] = useState<{ ok: boolean; message: string } | null>(null);
 
-  // 驗證 Google API Key
+  // 頁面載入時自動從 localStorage 讀取已存金鑰
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('pirls_ai_vault');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.provider) setProvider(parsed.provider);
+        if (parsed.apiKeys) setApiKeys(parsed.apiKeys);
+        if (parsed.customBaseUrl) setCustomBaseUrl(parsed.customBaseUrl);
+        if (parsed.preferredModels) setPreferredModels(parsed.preferredModels);
+      }
+    } catch (e) {
+      console.warn('讀取本地金鑰失敗', e);
+    }
+  }, []);
+
+  // 更新設定並持久化儲存至瀏覽器 localStorage
+  const saveVault = (
+    newProvider: 'gemini' | 'openrouter' | 'deepseek' | 'opencode',
+    newKeys: { [key: string]: string },
+    newBaseUrl: string,
+    newModels: { [key: string]: string }
+  ) => {
+    try {
+      localStorage.setItem(
+        'pirls_ai_vault',
+        JSON.stringify({
+          provider: newProvider,
+          apiKeys: newKeys,
+          customBaseUrl: newBaseUrl,
+          preferredModels: newModels,
+        })
+      );
+    } catch (e) {
+      console.warn('寫入本地金鑰失敗', e);
+    }
+  };
+
+  const handleKeyChange = (prov: string, val: string) => {
+    const updated = { ...apiKeys, [prov]: val };
+    setApiKeys(updated);
+    setKeyStatus(null);
+    saveVault(provider, updated, customBaseUrl, preferredModels);
+  };
+
+  const handleModelChange = (prov: string, val: string) => {
+    const updated = { ...preferredModels, [prov]: val };
+    setPreferredModels(updated);
+    setKeyStatus(null);
+    saveVault(provider, apiKeys, customBaseUrl, updated);
+  };
+
+  const handleBaseUrlChange = (val: string) => {
+    setCustomBaseUrl(val);
+    setKeyStatus(null);
+    saveVault(provider, apiKeys, val, preferredModels);
+  };
+
+  const handleProviderChange = (p: 'gemini' | 'openrouter' | 'deepseek' | 'opencode') => {
+    setProvider(p);
+    setKeyStatus(null);
+    saveVault(p, apiKeys, customBaseUrl, preferredModels);
+  };
+
+  const handleClearKeys = () => {
+    if (confirm('確定要清除此瀏覽器暫存的所有 AI 金鑰設定嗎？')) {
+      const emptyKeys = { gemini: '', openrouter: '', deepseek: '', opencode: '' };
+      setApiKeys(emptyKeys);
+      localStorage.removeItem('pirls_ai_vault');
+      setKeyStatus(null);
+      alert('已成功清除瀏覽器金鑰暫存');
+    }
+  };
+
+  // 驗證當前提供商的 API Key
   const handleVerifyKey = async () => {
-    if (!apiKey.trim()) {
-      setKeyStatus({ ok: false, message: '請先在下方輸入 Google API Key' });
+    const currentKey = (apiKeys[provider] || '').trim();
+    if (!currentKey) {
+      setKeyStatus({ ok: false, message: `請先輸入 ${provider.toUpperCase()} API Key` });
       return;
     }
     setKeyChecking(true);
@@ -43,8 +131,10 @@ export default function TeacherCreateTestPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          apiKey: apiKey.trim(),
-          preferredModel,
+          provider,
+          apiKey: currentKey,
+          customBaseUrl,
+          preferredModel: preferredModels[provider] || 'auto',
         }),
       });
       const data = await res.json();
@@ -75,6 +165,7 @@ export default function TeacherCreateTestPage() {
     setErrorMsg('');
 
     try {
+      const currentKey = (apiKeys[provider] || '').trim();
       const res = await fetch('/api/ai/generate-test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -87,8 +178,10 @@ export default function TeacherCreateTestPage() {
           textType,
           questionCountMode,
           includeDiagram,
-          apiKey: apiKey.trim() || undefined,
-          preferredModel,
+          provider,
+          apiKey: currentKey || undefined,
+          customBaseUrl: customBaseUrl.trim() || undefined,
+          preferredModel: preferredModels[provider] || 'auto',
         }),
       });
 
@@ -402,82 +495,211 @@ export default function TeacherCreateTestPage() {
                   </div>
                 </div>
 
-                {/* API Key 與模型選擇欄位 */}
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700 flex items-center space-x-1">
-                      <span>Google Gemini API Key</span>
-                      <span className="text-[10px] text-slate-400 font-normal">(選填)</span>
-                    </label>
-                    <span className="text-[11px] text-sky-600">若未填寫，將使用離線示範題庫</span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="password"
-                      value={apiKey}
-                      onChange={(e) => {
-                        setApiKey(e.target.value);
-                        setKeyStatus(null);
-                      }}
-                      placeholder="AIzaSy... (貼上您的 Google AI Studio API Key)"
-                      className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-mono focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleVerifyKey}
-                      disabled={keyChecking || !apiKey.trim()}
-                      className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold inline-flex items-center space-x-1.5 transition disabled:opacity-50"
-                    >
-                      {keyChecking ? (
-                        <>
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-sky-600" />
-                          <span>連線檢測中...</span>
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>測試金鑰有效性</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* 模型選擇下拉選單 */}
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-xs font-bold text-slate-700">選擇語言模型 (以快速、省額度為導向)</label>
-                      <a
-                        href="https://ai.google.dev/gemini-api/docs/models?hl=zh-tw"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[11px] text-sky-600 hover:underline inline-flex items-center space-x-0.5"
-                      >
-                        <span>Google 官方模型規格說明</span>
-                        <span>↗</span>
-                      </a>
+                {/* 多 AI 介面與金鑰記憶設定區 */}
+                <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
+                        <Sparkles className="w-4 h-4 text-sky-600" />
+                        <span>AI 命題引擎與 API Key 設定</span>
+                      </h3>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        支援多模型介面，API Key 自動加密保存在此瀏覽器，免除每次重新輸入的繁瑣。
+                      </p>
                     </div>
-                    <select
-                      value={preferredModel}
-                      onChange={(e) => {
-                        setPreferredModel(e.target.value);
-                        setKeyStatus(null);
-                      }}
-                      className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                    >
-                      <option value="auto">
-                        🤖 智慧自動選擇（強烈推薦：系統自動偵測並調用您帳號中最新、支援且不塞車的官方 Flash 模型）
-                      </option>
-                      <option value="gemini-3.8-flash">
-                        ⚡ Gemini 3.8 Flash（Google 官方主力推薦 Flash 模型）
-                      </option>
-                      <option value="gemini-3.6-flash">
-                        🍃 Gemini 3.6 Flash（極速備援模型，低負載、無塞車）
-                      </option>
-                      <option value="gemini-1.5-flash">
-                        🏛️ Gemini 1.5 Flash（舊專案相容模型）
-                      </option>
-                    </select>
+
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 inline-flex items-center space-x-1">
+                        <span>💾 已啟用瀏覽器本機記憶</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleClearKeys}
+                        className="text-[11px] text-slate-400 hover:text-red-600 underline transition"
+                      >
+                        清除暫存
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 4 大提供商切換 Tabs */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      { id: 'gemini', label: 'Google Gemini', sub: '免費額度高 / 官方 Flash' },
+                      { id: 'deepseek', label: 'DeepSeek', sub: '超低成本 / 中文極強' },
+                      { id: 'openrouter', label: 'OpenRouter', sub: '全能聚合 / 支援多模型' },
+                      { id: 'opencode', label: 'OpenCode GO', sub: 'OpenAI 相容網關' },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => handleProviderChange(tab.id as any)}
+                        className={`p-2.5 rounded-xl text-left border transition flex flex-col justify-between ${
+                          provider === tab.id
+                            ? 'bg-sky-50/80 border-sky-400 shadow-sm'
+                            : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className={`text-xs font-bold ${provider === tab.id ? 'text-sky-800' : 'text-slate-700'}`}>
+                          {tab.label}
+                        </span>
+                        <span className="text-[10px] text-slate-400 mt-0.5">{tab.sub}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* 提供商專屬金鑰與模型設定欄位 */}
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-3">
+                    {/* API Key 輸入列 */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-xs font-bold text-slate-700">
+                          {provider === 'gemini' && 'Google Gemini API Key'}
+                          {provider === 'deepseek' && 'DeepSeek API Key (sk-...)'}
+                          {provider === 'openrouter' && 'OpenRouter API Key (sk-or-v1-...)'}
+                          {provider === 'opencode' && 'OpenCode GO API Key'}
+                        </label>
+                        <span className="text-[11px] text-slate-400">
+                          {provider === 'gemini' && '若未填寫，將調用內建離線示範題庫'}
+                          {provider === 'deepseek' && '前往 platform.deepseek.com 獲取'}
+                          {provider === 'openrouter' && '前往 openrouter.ai/keys 獲取'}
+                          {provider === 'opencode' && '前往 opencode.ai 控制台獲取'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="password"
+                          value={apiKeys[provider] || ''}
+                          onChange={(e) => handleKeyChange(provider, e.target.value)}
+                          placeholder={
+                            provider === 'gemini'
+                              ? 'AIzaSy... (貼上 Google AI Studio Key)'
+                              : provider === 'openrouter'
+                              ? 'sk-or-v1-...'
+                              : 'sk-...'
+                          }
+                          className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-mono focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleVerifyKey}
+                          disabled={keyChecking || !(apiKeys[provider] || '').trim()}
+                          className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold inline-flex items-center space-x-1.5 transition disabled:opacity-50 flex-shrink-0"
+                        >
+                          {keyChecking ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-sky-600" />
+                              <span>連線中...</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>測試金鑰有效性</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* OpenCode GO 自訂端點 Base URL */}
+                    {provider === 'opencode' && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          API 端點 (Base URL)
+                        </label>
+                        <input
+                          type="text"
+                          value={customBaseUrl}
+                          onChange={(e) => handleBaseUrlChange(e.target.value)}
+                          placeholder="https://api.opencode.ai/v1"
+                          className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-mono focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                        />
+                        <span className="text-[10px] text-slate-400 mt-0.5 block">
+                          支援任何 OpenAI 規格相容之轉發網關或自建端點。
+                        </span>
+                      </div>
+                    )}
+
+                    {/* 各提供商模型選擇 */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-xs font-bold text-slate-700">語言模型選擇</label>
+                        <span className="text-[10px] text-slate-400">已配置 45 秒長文生成與自動超時防護</span>
+                      </div>
+
+                      {provider === 'gemini' && (
+                        <select
+                          value={preferredModels.gemini || 'auto'}
+                          onChange={(e) => handleModelChange('gemini', e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                        >
+                          <option value="auto">
+                            🤖 智慧自動選擇（強烈推薦：自動匹配帳號中最活躍且不塞車的官方 Flash 模型）
+                          </option>
+                          <option value="gemini-3.8-flash">
+                            ⚡ Gemini 3.8 Flash（Google 官方目前主力推薦 Flash 模型）
+                          </option>
+                          <option value="gemini-3.6-flash">
+                            🍃 Gemini 3.6 Flash（極速備援模型，低負載、無塞車）
+                          </option>
+                          <option value="gemini-1.5-flash">
+                            🏛️ Gemini 1.5 Flash（舊版專案相容模型）
+                          </option>
+                        </select>
+                      )}
+
+                      {provider === 'deepseek' && (
+                        <select
+                          value={preferredModels.deepseek || 'deepseek-chat'}
+                          onChange={(e) => handleModelChange('deepseek', e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                        >
+                          <option value="deepseek-chat">
+                            ⚡ DeepSeek-V3 (deepseek-chat) - 推薦：中文理解最強、超快速且成本極低
+                          </option>
+                          <option value="deepseek-reasoner">
+                            🧠 DeepSeek-R1 (deepseek-reasoner) - 深度思考推理大模型
+                          </option>
+                        </select>
+                      )}
+
+                      {provider === 'openrouter' && (
+                        <select
+                          value={preferredModels.openrouter || 'deepseek/deepseek-chat'}
+                          onChange={(e) => handleModelChange('openrouter', e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                        >
+                          <option value="deepseek/deepseek-chat">
+                            🌟 DeepSeek V3 (deepseek/deepseek-chat) - 推薦首選：高性價比、中文命題精準
+                          </option>
+                          <option value="google/gemini-2.0-flash-001">
+                            ⚡ Gemini 2.0 Flash (google/gemini-2.0-flash-001) - 極速推理
+                          </option>
+                          <option value="openai/gpt-4o-mini">
+                            ✨ OpenAI GPT-4o Mini (openai/gpt-4o-mini) - 輕量平衡
+                          </option>
+                          <option value="anthropic/claude-3.5-haiku">
+                            🦅 Claude 3.5 Haiku (anthropic/claude-3.5-haiku) - 嚴謹細緻
+                          </option>
+                          <option value="meta-llama/llama-3.3-70b-instruct">
+                            🦙 Llama 3.3 70B (meta-llama/llama-3.3-70b-instruct) - 開源頂規
+                          </option>
+                        </select>
+                      )}
+
+                      {provider === 'opencode' && (
+                        <select
+                          value={preferredModels.opencode || 'deepseek-chat'}
+                          onChange={(e) => handleModelChange('opencode', e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                        >
+                          <option value="deepseek-chat">⚡ DeepSeek-V3 (deepseek-chat)</option>
+                          <option value="gpt-4o-mini">✨ GPT-4o Mini</option>
+                          <option value="claude-3-5-haiku">🦅 Claude 3.5 Haiku</option>
+                        </select>
+                      )}
+                    </div>
                   </div>
 
                   {/* 驗證狀態反饋 */}
@@ -499,7 +721,7 @@ export default function TeacherCreateTestPage() {
                   )}
 
                   <p className="text-[11px] text-slate-500 leading-relaxed">
-                    💡 依據 Google 官方文件：<code className="text-slate-700 font-mono">gemini-1.5-flash</code> 系列在免費方案下享有每日最高 1,500 次呼叫 (1,500 RPD) 與每分鐘 100 萬 Tokens 限額，專為高效率、低成本任務量身打造。
+                    💡 提示：所有 API 金鑰均僅保存在您當前裝置的瀏覽器快顯儲存中，不會跨帳號外流。系統已將生成等待時間放寬至 45 秒，並具備自動短延遲重試防線。
                   </p>
                 </div>
               </div>
