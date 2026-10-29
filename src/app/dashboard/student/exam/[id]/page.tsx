@@ -232,7 +232,15 @@ export default function StudentExamPage() {
             <div className="my-3 space-y-3">
               {testPaper.illustrations.map((ill) => (
                 <div key={ill.id} className="rounded-xl border border-slate-200 bg-slate-50 p-2 overflow-hidden shadow-inner">
-                  {ill.svgCode ? (
+                  {ill.imageUrl ? (
+                    <div className="flex justify-center p-1 bg-white rounded-lg">
+                      <img
+                        src={ill.imageUrl}
+                        alt={ill.caption || '課文插圖'}
+                        className="w-full max-h-80 object-contain rounded-lg shadow-sm"
+                      />
+                    </div>
+                  ) : ill.svgCode ? (
                     <div dangerouslySetInnerHTML={{ __html: ill.svgCode }} />
                   ) : (
                     <div className="h-36 bg-slate-200 rounded flex items-center justify-center text-xs text-slate-400">

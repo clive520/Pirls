@@ -143,12 +143,20 @@ export default function PrintTestPaperPage() {
             <div className="my-4 border border-slate-300 rounded p-4 break-inside-avoid">
               {testPaper.illustrations.map((ill) => (
                 <div key={ill.id} className="space-y-2">
-                  {ill.svgCode && (
+                  {ill.imageUrl ? (
+                    <div className="w-full flex justify-center py-2">
+                      <img
+                        src={ill.imageUrl}
+                        alt={ill.caption || '課文插圖'}
+                        className="max-w-[85%] max-h-72 object-contain rounded"
+                      />
+                    </div>
+                  ) : ill.svgCode ? (
                     <div
                       className="w-full flex justify-center overflow-hidden"
                       dangerouslySetInnerHTML={{ __html: ill.svgCode }}
                     />
-                  )}
+                  ) : null}
                   {ill.caption && (
                     <div className="text-center text-xs font-sans font-semibold text-slate-700">
                       【圖】{ill.caption}

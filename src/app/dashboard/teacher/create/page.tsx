@@ -6,9 +6,10 @@ import Link from 'next/link';
 import {
   BookOpen, Sparkles, FileText, ArrowLeft, CheckCircle2,
   RefreshCw, PlusCircle, Trash2, Save, Send, Image as ImageIcon,
-  BarChart, AlertCircle
+  BarChart, AlertCircle, Copy, Upload, Palette
 } from 'lucide-react';
-import { TestPaper, TestQuestion, CognitiveProcess } from '@/lib/types';
+import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration } from '@/lib/types';
+import { generateSmartImagePrompt } from '@/lib/llm-adapter';
 
 export default function TeacherCreateTestPage() {
   const router = useRouter();
@@ -159,6 +160,145 @@ export default function TeacherCreateTestPage() {
     } finally {
       setKeyChecking(false);
     }
+  };
+
+  // AI 圖片生圖提示詞複製狀態
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
+
+  // 客戶端圖片無損等比輕量壓縮（縮小至 1000px 以內，產出高品質約 80KB JPEG Data URL）
+  const compressAndLoadImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxWidth = 1000;
+          const maxHeight = 1000;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(e.target?.result as string);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          resolve(dataUrl);
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleCopyPrompt = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedPrompt(true);
+    setTimeout(() => setCopiedPrompt(false), 2500);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, illIdx = 0) => {
+    const file = e.target.files?.[0];
+    if (!file || !testPaper) return;
+
+    try {
+      const dataUrl = await compressAndLoadImage(file);
+      const updatedIllustrations = [...(testPaper.illustrations || [])];
+      if (updatedIllustrations[illIdx]) {
+        updatedIllustrations[illIdx] = {
+          ...updatedIllustrations[illIdx],
+          imageUrl: dataUrl,
+          type: 'illustration_url',
+        };
+      } else {
+        updatedIllustrations.push({
+          id: `ill_${Date.now()}`,
+          paragraphNumber: 1,
+          caption: `圖 1：【${testPaper.title}】課文情境插圖`,
+          type: 'illustration_url',
+          imageUrl: dataUrl,
+          imagePrompt: '',
+        });
+      }
+      setTestPaper({
+        ...testPaper,
+        illustrations: updatedIllustrations,
+      });
+    } catch (err) {
+      console.error('圖片處理失敗', err);
+      alert('圖片讀取或壓縮失敗，請重新嘗試');
+    }
+  };
+
+  const handleRemoveImage = (illIdx = 0) => {
+    if (!testPaper) return;
+    const updatedIllustrations = [...(testPaper.illustrations || [])];
+    if (updatedIllustrations[illIdx]) {
+      updatedIllustrations[illIdx] = {
+        ...updatedIllustrations[illIdx],
+        imageUrl: '',
+      };
+      setTestPaper({
+        ...testPaper,
+        illustrations: updatedIllustrations,
+      });
+    }
+  };
+
+  const handleCaptionChange = (val: string, illIdx = 0) => {
+    if (!testPaper) return;
+    const updatedIllustrations = [...(testPaper.illustrations || [])];
+    if (updatedIllustrations[illIdx]) {
+      updatedIllustrations[illIdx] = {
+        ...updatedIllustrations[illIdx],
+        caption: val,
+      };
+      setTestPaper({
+        ...testPaper,
+        illustrations: updatedIllustrations,
+      });
+    }
+  };
+
+  const handleAddIllustration = () => {
+    if (!testPaper) return;
+    const isLit = testPaper.textType === 'literary';
+    const autoPrompt = generateSmartImagePrompt(
+      testPaper.title,
+      testPaper.themeSummary || '課文情境與核心素養',
+      isLit,
+      testPaper.targetGrade || 4
+    );
+    const newIll: ArticleIllustration = {
+      id: `ill_${Date.now()}`,
+      paragraphNumber: 1,
+      caption: `圖 1：【${testPaper.title}】${isLit ? '故事核心情境插圖' : '多模態知識概念圖'}`,
+      type: 'illustration_url',
+      imageUrl: '',
+      imagePrompt: autoPrompt,
+    };
+    setTestPaper({
+      ...testPaper,
+      illustrations: [newIll],
+    });
   };
 
   // 模式 B: 貼入文本欄位
@@ -501,7 +641,7 @@ export default function TeacherCreateTestPage() {
                         onChange={(e) => setIncludeDiagram(e.target.checked)}
                         className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 w-4 h-4"
                       />
-                      <span className="ml-2 text-xs font-bold text-slate-700">自動生成 SVG 科學圖表或情境插圖</span>
+                      <span className="ml-2 text-xs font-bold text-slate-700">🎨 生成多模態配圖需求（AI 自動為文章構思中英文生圖提示詞，供複製生圖並上傳）</span>
                     </label>
                   </div>
                 </div>
@@ -826,23 +966,178 @@ export default function TeacherCreateTestPage() {
                     <span className="text-xs text-slate-400 font-mono">{testPaper.wordCount} 字</span>
                   </div>
 
-                  {/* 插圖/向量圖渲染 */}
-                  {testPaper.illustrations && testPaper.illustrations.length > 0 && (
-                    <div className="space-y-3 my-2">
-                      {testPaper.illustrations.map((ill) => (
-                        <div key={ill.id} className="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 p-2">
-                          {ill.svgCode ? (
-                            <div dangerouslySetInnerHTML={{ __html: ill.svgCode }} />
+                  {/* PIRLS 多模態課文配圖與 AI 生圖助手 */}
+                  <div className="border border-indigo-100 rounded-2xl bg-gradient-to-b from-indigo-50/40 via-white to-white p-4 space-y-3.5 shadow-sm my-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                        <Palette className="w-4 h-4 text-indigo-600" />
+                        <span>PIRLS 多模態課文配圖與生圖助手</span>
+                      </span>
+                      {testPaper.illustrations && testPaper.illustrations.some((i) => i.imageUrl) ? (
+                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          ✓ 插圖已就緒
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                          ⏳ 待上傳配圖
+                        </span>
+                      )}
+                    </div>
+
+                    {testPaper.illustrations && testPaper.illustrations.length > 0 ? (
+                      testPaper.illustrations.map((ill, illIdx) => (
+                        <div key={ill.id} className="space-y-3">
+                          {/* 1. 若已有圖片 (imageUrl) */}
+                          {ill.imageUrl ? (
+                            <div className="space-y-2">
+                              <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50 group flex justify-center p-2 shadow-inner">
+                                <img
+                                  src={ill.imageUrl}
+                                  alt={ill.caption || '課文配圖'}
+                                  className="max-h-60 w-full object-contain rounded-lg shadow-sm bg-white"
+                                />
+                              </div>
+                              {/* 圖說標題編輯 */}
+                              <div className="flex items-center space-x-2">
+                                <span className="text-[11px] font-bold text-slate-500 flex-shrink-0">圖說：</span>
+                                <input
+                                  type="text"
+                                  value={ill.caption}
+                                  onChange={(e) => handleCaptionChange(e.target.value, illIdx)}
+                                  placeholder="圖 1：情境圖說說明"
+                                  className="flex-1 text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-medium focus:ring-1 focus:ring-sky-500 focus:outline-none bg-white"
+                                />
+                              </div>
+                              {/* 換圖 / 刪圖操作列 */}
+                              <div className="flex items-center justify-between pt-1">
+                                <label className="cursor-pointer text-[11px] font-semibold text-sky-600 hover:text-sky-700 inline-flex items-center space-x-1 px-2.5 py-1 bg-sky-50 hover:bg-sky-100 rounded-lg transition border border-sky-200">
+                                  <Upload className="w-3 h-3" />
+                                  <span>更換圖片</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleImageUpload(e, illIdx)}
+                                    className="hidden"
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveImage(illIdx)}
+                                  className="text-[11px] font-semibold text-red-600 hover:text-red-700 inline-flex items-center space-x-1 px-2.5 py-1 hover:bg-red-50 rounded-lg transition"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  <span>移除此圖片</span>
+                                </button>
+                              </div>
+                            </div>
                           ) : (
-                            <div className="h-32 bg-slate-200 flex items-center justify-center text-xs text-slate-400">
-                              插圖佔位符
+                            /* 2. 尚未上傳圖片：展示 AI 繪圖提示詞與圖片上傳區塊 */
+                            <div className="space-y-3">
+                              {/* 專屬 AI 繪圖提示詞展示與複製 */}
+                              {ill.imagePrompt ? (
+                                <div className="bg-slate-900 text-slate-200 rounded-xl p-3.5 space-y-2.5 shadow-sm border border-slate-800">
+                                  <div className="flex items-center justify-between border-b border-slate-700/60 pb-2">
+                                    <span className="text-[11px] font-bold text-amber-300 flex items-center space-x-1">
+                                      <Sparkles className="w-3.5 h-3.5" />
+                                      <span>AI 為本課文構思之繪圖提示詞</span>
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopyPrompt(ill.imagePrompt!)}
+                                      className={`text-[11px] px-3 py-1 rounded-md font-bold transition flex items-center space-x-1 ${
+                                        copiedPrompt
+                                          ? 'bg-emerald-500 text-white'
+                                          : 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-sm'
+                                      }`}
+                                    >
+                                      {copiedPrompt ? (
+                                        <>
+                                          <CheckCircle2 className="w-3 h-3" />
+                                          <span>已複製到剪貼簿！</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Copy className="w-3 h-3" />
+                                          <span>一鍵複製提示詞</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  </div>
+                                  <p className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap text-slate-300 max-h-36 overflow-y-auto pr-1">
+                                    {ill.imagePrompt}
+                                  </p>
+                                  <div className="text-[10px] text-slate-400 pt-1.5 border-t border-slate-800 flex flex-wrap gap-1 items-center">
+                                    <span>推薦免費繪圖工具：</span>
+                                    <span className="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">ChatGPT (DALL-E 3)</span>
+                                    <span className="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">Bing Image Creator</span>
+                                    <span className="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">Midjourney</span>
+                                    <span className="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">Canva</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-center p-2">
+                                  <button
+                                    type="button"
+                                    onClick={handleAddIllustration}
+                                    className="text-xs text-indigo-600 hover:text-indigo-800 font-bold underline inline-flex items-center space-x-1"
+                                  >
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    <span>點擊為本課文生成 AI 繪圖提示詞</span>
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* 圖片上傳區塊 */}
+                              <div className="space-y-2">
+                                <label className="border-2 border-dashed border-sky-300 hover:border-sky-500 bg-sky-50/50 hover:bg-sky-50/90 rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-1.5 group">
+                                  <div className="w-9 h-9 rounded-full bg-sky-100 group-hover:bg-sky-200 flex items-center justify-center text-sky-600 transition shadow-sm">
+                                    <Upload className="w-4 h-4" />
+                                  </div>
+                                  <span className="text-xs font-bold text-sky-800 block">
+                                    點擊或拖曳上傳生好的圖片
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 block">
+                                    支援 JPG、PNG、WebP，系統自動進行輕量高畫質壓縮
+                                  </span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleImageUpload(e, illIdx)}
+                                    className="hidden"
+                                  />
+                                </label>
+
+                                {/* 圖說輸入框 */}
+                                <div className="flex items-center space-x-1.5 pt-1">
+                                  <span className="text-[11px] font-bold text-slate-500 flex-shrink-0">圖說：</span>
+                                  <input
+                                    type="text"
+                                    value={ill.caption}
+                                    onChange={(e) => handleCaptionChange(e.target.value, illIdx)}
+                                    placeholder="輸入圖說標題，如：圖 1：老鐘錶行門口"
+                                    className="flex-1 text-xs border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 font-medium focus:ring-1 focus:ring-sky-500 focus:outline-none bg-white"
+                                  />
+                                </div>
+                              </div>
                             </div>
                           )}
-                          <p className="text-[11px] text-center text-slate-500 mt-1 font-medium">{ill.caption}</p>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      ))
+                    ) : (
+                      /* 3. 目前試卷完全無配圖（自選貼文出題時未勾選）-> 一鍵構思提示詞按鈕 */
+                      <div className="p-3.5 rounded-xl border border-dashed border-indigo-200 bg-indigo-50/30 text-center space-y-2">
+                        <p className="text-xs font-bold text-slate-700">本篇課文目前尚未配置多模態配圖</p>
+                        <button
+                          type="button"
+                          onClick={handleAddIllustration}
+                          className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm inline-flex items-center space-x-1.5 transition"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>一鍵為自選文章生成生圖提示詞並啟用上傳</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* 內文各段落 */}
                   <div className="space-y-4 text-sm text-slate-700 leading-relaxed font-sans max-h-[650px] overflow-y-auto pr-2">

@@ -226,7 +226,15 @@ export default function PracticeTakingPage() {
             <div className="space-y-4">
               {testPaper.illustrations.map((ill) => (
                 <div key={ill.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                  {ill.type === 'svg_diagram' && ill.svgCode ? (
+                  {ill.imageUrl ? (
+                    <div className="w-full flex justify-center py-2">
+                      <img
+                        src={ill.imageUrl}
+                        alt={ill.caption || '課文插圖'}
+                        className="max-w-full h-auto max-h-96 object-contain rounded-xl shadow-sm bg-white"
+                      />
+                    </div>
+                  ) : ill.type === 'svg_diagram' && ill.svgCode ? (
                     <div
                       className="w-full overflow-x-auto flex justify-center py-2"
                       dangerouslySetInnerHTML={{ __html: ill.svgCode }}

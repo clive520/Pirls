@@ -96,6 +96,7 @@ export interface ArticleIllustration {
   type: 'svg_diagram' | 'illustration_url';
   svgCode?: string; // 支援內建渲染之 SVG 流程圖/循環圖
   imageUrl?: string;
+  imagePrompt?: string; // 供教師複製至 Midjourney / DALL-E / 繪圖 AI 的精準生圖提示詞
 }
 
 export interface TestPaper {
