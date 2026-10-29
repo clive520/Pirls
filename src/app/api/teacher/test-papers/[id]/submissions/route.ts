@@ -64,6 +64,8 @@ export async function GET(
       classPR: s.classPR,
       normPR: s.normPR,
       processScores: s.processScores,
+      isTeacherReviewed: Boolean(s.isTeacherReviewed),
+      teacherGeneralNote: s.teacherGeneralNote,
       submittedAt: s.submittedAt,
     })),
   });

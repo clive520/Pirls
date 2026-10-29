@@ -10,82 +10,6 @@
       "school": "PIRLS 國家閱卷中心",
       "createdAt": "2026-10-28T07:26:32.815Z"
     },
-    "usr_1793172392944_mxkrh": {
-      "username": "teacher_stage2_1793172392882",
-      "passwordHash": "$2a$10$TM.N8TM9KsYecdX6L0f.d.vxP0fROAI2j0cv2qpsL5EP6a7/vilvW",
-      "displayName": "陳雅惠 老師",
-      "role": "teacher",
-      "status": "active",
-      "school": "新北市板橋國小",
-      "id": "usr_1793172392944_mxkrh",
-      "createdAt": "2026-10-28T07:26:32.944Z"
-    },
-    "stu_1793172393030_y9peg": {
-      "id": "stu_1793172393030_y9peg",
-      "username": "s405_01_1793172392963",
-      "passwordHash": "$2a$10$0c3ilyaylkK4bCNNVFh/y.H1bGjcWW6F.zGbXUWeFcCuEPrW33TYW",
-      "displayName": "四年五班 1號 王小明",
-      "role": "student",
-      "status": "active",
-      "teacherId": "usr_1793172392944_mxkrh",
-      "classId": "cls_1793172392962_tr37",
-      "className": "四年五班",
-      "seatNumber": 1,
-      "gradeLevel": 4,
-      "createdAt": "2026-10-28T07:26:33.030Z"
-    },
-    "stu_1793172393090_iysb6": {
-      "id": "stu_1793172393090_iysb6",
-      "username": "s405_02_1793172392963",
-      "passwordHash": "$2a$10$ZpbnF9t9Kw0MmbFiZMcLCuTHDq0XuvZTR.zz7U3OaASy/nzB3Bh5W",
-      "displayName": "四年五班 2號 李小美",
-      "role": "student",
-      "status": "active",
-      "teacherId": "usr_1793172392944_mxkrh",
-      "classId": "cls_1793172392962_tr37",
-      "className": "四年五班",
-      "seatNumber": 2,
-      "gradeLevel": 4,
-      "createdAt": "2026-10-28T07:26:33.090Z"
-    },
-    "usr_1793172443448_pba2i": {
-      "username": "teacher_stage2_1793172443393",
-      "passwordHash": "$2a$10$Ji3UGoLw6x4LBwXFA4ksyOXHVukmiQSFDmY6nProK89DDAfjj3i32",
-      "displayName": "陳雅惠 老師",
-      "role": "teacher",
-      "status": "active",
-      "school": "新北市板橋國小",
-      "id": "usr_1793172443448_pba2i",
-      "createdAt": "2026-10-28T07:27:23.448Z"
-    },
-    "stu_1793172443525_1w0mi": {
-      "id": "stu_1793172443525_1w0mi",
-      "username": "s405_01_1793172443465",
-      "passwordHash": "$2a$10$tC1QwZHOItuEDPv0SW9pkONwhSLql8Vfu0bbXz4pS2C2qKp32nRKq",
-      "displayName": "四年五班 1號 王小明",
-      "role": "student",
-      "status": "active",
-      "teacherId": "usr_1793172443448_pba2i",
-      "classId": "cls_1793172443464_ssnh",
-      "className": "四年五班",
-      "seatNumber": 1,
-      "gradeLevel": 4,
-      "createdAt": "2026-10-28T07:27:23.525Z"
-    },
-    "stu_1793172443581_f1w6m": {
-      "id": "stu_1793172443581_f1w6m",
-      "username": "s405_02_1793172443465",
-      "passwordHash": "$2a$10$e.g/uVRpGpdVw85pGKDZBewfZ1UUNc03SE56zfUJ.r67KIsIgM6pK",
-      "displayName": "四年五班 2號 李小美",
-      "role": "student",
-      "status": "active",
-      "teacherId": "usr_1793172443448_pba2i",
-      "classId": "cls_1793172443464_ssnh",
-      "className": "四年五班",
-      "seatNumber": 2,
-      "gradeLevel": 4,
-      "createdAt": "2026-10-28T07:27:23.581Z"
-    },
     "usr_1793187774942_oluvc": {
       "username": "teacher_e2e_1793187774874",
       "passwordHash": "$2a$10$QsMXt2GhSAOVia3ycqQbou5tImWzYDpKWH8pDWOykROXESmJC2Faa",
@@ -164,163 +88,18 @@
       "id": "usr_1793188060832_k8xuw",
       "createdAt": "2026-10-28T11:47:40.832Z"
     },
-    "usr_1793190604965_u02of": {
-      "username": "teacher_stage2_1793190604907",
-      "passwordHash": "$2a$10$oObEBkloyxH16gNhUIqHAu6pCAS/mGBGxVEkuo.C.qfkJblX663gO",
-      "displayName": "陳雅惠 老師",
-      "role": "teacher",
+    "usr_1793239746980_7s7k1": {
+      "username": "clive520",
+      "passwordHash": "$2a$10$B7yOJpRnfdKD1GJ71x7pyOUeSbyQ04S6/OrXMIIJIhhwJFIFUXLtS",
+      "displayName": "高志賢",
+      "role": "admin",
       "status": "active",
-      "school": "新北市板橋國小",
-      "id": "usr_1793190604965_u02of",
-      "createdAt": "2026-10-28T12:30:04.965Z"
-    },
-    "stu_1793190605042_qxkgf": {
-      "id": "stu_1793190605042_qxkgf",
-      "username": "s405_01_1793190604983",
-      "passwordHash": "$2a$10$VOREuDCkhvrmdbwQgXhpY.Srq.pNay/xIaj1XiUhyDlvlBBldBa3a",
-      "displayName": "四年五班 1號 王小明",
-      "role": "student",
-      "status": "active",
-      "teacherId": "usr_1793190604965_u02of",
-      "classId": "cls_1793190604974_pfdw",
-      "className": "四年五班",
-      "seatNumber": 1,
-      "gradeLevel": 4,
-      "createdAt": "2026-10-28T12:30:05.042Z"
-    },
-    "stu_1793190605098_5y9b7": {
-      "id": "stu_1793190605098_5y9b7",
-      "username": "s405_02_1793190604983",
-      "passwordHash": "$2a$10$CMZBNiXaDYVIekjahasyBOMNSwcE6HoCBOutmwlQKgYydLjubVQRi",
-      "displayName": "四年五班 2號 李小美",
-      "role": "student",
-      "status": "active",
-      "teacherId": "usr_1793190604965_u02of",
-      "classId": "cls_1793190604974_pfdw",
-      "className": "四年五班",
-      "seatNumber": 2,
-      "gradeLevel": 4,
-      "createdAt": "2026-10-28T12:30:05.098Z"
-    },
-    "usr_1793190740273_vkyk7": {
-      "username": "teacher_stage2_1793190740214",
-      "passwordHash": "$2a$10$OazpBJuGsyRh7paqjFxjreA3YVXwAy18q8pJgPe.iX1JttuDYb.DG",
-      "displayName": "陳雅惠 老師",
-      "role": "teacher",
-      "status": "active",
-      "school": "新北市板橋國小",
-      "id": "usr_1793190740273_vkyk7",
-      "createdAt": "2026-10-28T12:32:20.273Z"
-    },
-    "stu_1793190740347_9im8p": {
-      "id": "stu_1793190740347_9im8p",
-      "username": "s405_01_1793190740289",
-      "passwordHash": "$2a$10$xRIkiLnobBi4nlhexOQazeolDXf3I/kXJeW7OtiSw56KfNMEk43LC",
-      "displayName": "四年五班 1號 王小明",
-      "role": "student",
-      "status": "active",
-      "teacherId": "usr_1793190740273_vkyk7",
-      "classId": "cls_1793190740283_sxbv",
-      "className": "四年五班",
-      "seatNumber": 1,
-      "gradeLevel": 4,
-      "createdAt": "2026-10-28T12:32:20.347Z"
-    },
-    "stu_1793190740410_dcw6p": {
-      "id": "stu_1793190740410_dcw6p",
-      "username": "s405_02_1793190740289",
-      "passwordHash": "$2a$10$M8irMdMm3FPdxvSYQUt8lO7768eMEc7mRr1dML212UYftxqhK7j0S",
-      "displayName": "四年五班 2號 李小美",
-      "role": "student",
-      "status": "active",
-      "teacherId": "usr_1793190740273_vkyk7",
-      "classId": "cls_1793190740283_sxbv",
-      "className": "四年五班",
-      "seatNumber": 2,
-      "gradeLevel": 4,
-      "createdAt": "2026-10-28T12:32:20.410Z"
-    },
-    "usr_1793190747718_z4pgg": {
-      "username": "teacher_e2e_1793190747620",
-      "passwordHash": "$2a$10$WNgpVbbjBiPchW3zP.zRM.CYGp9L4AnOdnBIioEOMJu1aqE9JM0sG",
-      "displayName": "林志賢 老師",
-      "role": "teacher",
-      "status": "active",
-      "schoolName": "台北市智慧實驗國小",
-      "subjectArea": "國語文與閱讀素養",
-      "id": "usr_1793190747718_z4pgg",
-      "createdAt": "2026-10-28T12:32:27.718Z"
-    },
-    "stu_1793190747795_auzbf": {
-      "id": "stu_1793190747795_auzbf",
-      "username": "s_e2e_01_1793190747620",
-      "passwordHash": "$2a$10$e83N7rKJZv1CW2s1BFzsSONq2CXTdclSsk43q9RcqBNCoYL/uPVTW",
-      "displayName": "陳大同",
-      "role": "student",
-      "status": "active",
-      "teacherId": "usr_1793190747718_z4pgg",
-      "classId": "cls_1793190747730_6qsx",
-      "className": "四年忠班",
-      "seatNumber": 1,
-      "gradeLevel": 4,
-      "createdAt": "2026-10-28T12:32:27.795Z"
-    },
-    "stu_1793190747856_r3wt1": {
-      "id": "stu_1793190747856_r3wt1",
-      "username": "s_e2e_02_1793190747620",
-      "passwordHash": "$2a$10$mNvJOTL7yqvd9b0fWZ10EemkZV8lEu4wEkV9pBpDeEhtF8b.io.H.",
-      "displayName": "李小華",
-      "role": "student",
-      "status": "active",
-      "teacherId": "usr_1793190747718_z4pgg",
-      "classId": "cls_1793190747730_6qsx",
-      "className": "四年忠班",
-      "seatNumber": 2,
-      "gradeLevel": 4,
-      "createdAt": "2026-10-28T12:32:27.856Z"
-    },
-    "stu_1793190747912_i4d6e": {
-      "id": "stu_1793190747912_i4d6e",
-      "username": "s_e2e_03_1793190747620",
-      "passwordHash": "$2a$10$GrH0ySDGeQXgBzd9sHN9E.K2poIabsfQpyqNWCxL9kdynadtU28bK",
-      "displayName": "張志明",
-      "role": "student",
-      "status": "active",
-      "teacherId": "usr_1793190747718_z4pgg",
-      "classId": "cls_1793190747730_6qsx",
-      "className": "四年忠班",
-      "seatNumber": 3,
-      "gradeLevel": 4,
-      "createdAt": "2026-10-28T12:32:27.912Z"
-    },
-    "usr_1793239009433_ned3s": {
-      "username": "test_teacher_reset_1793239009358",
-      "passwordHash": "$2a$10$v5R7hHhNw1tEaEjACTJgt.KEO1wcA8ZJr7JH/SVgEbJYxWPBOKgQm",
-      "displayName": "重設密碼測試老師",
-      "role": "teacher",
-      "status": "active",
-      "school": "測試實驗國小",
-      "id": "usr_1793239009433_ned3s",
-      "createdAt": "2026-10-29T01:56:49.433Z"
+      "school": "鹿陽國小",
+      "id": "usr_1793239746980_7s7k1",
+      "createdAt": "2026-10-29T02:09:06.980Z"
     }
   },
   "classes": {
-    "cls_1793172392962_tr37": {
-      "id": "cls_1793172392962_tr37",
-      "name": "四年五班",
-      "gradeLevel": 4,
-      "teacherId": "usr_1793172392944_mxkrh",
-      "studentCount": 2,
-      "createdAt": "2026-10-28T07:26:32.962Z"
-    },
-    "cls_1793172443464_ssnh": {
-      "id": "cls_1793172443464_ssnh",
-      "name": "四年五班",
-      "gradeLevel": 4,
-      "teacherId": "usr_1793172443448_pba2i",
-      "studentCount": 2,
-      "createdAt": "2026-10-28T07:27:23.464Z"
-    },
     "cls_1793180762488_hiiv": {
       "id": "cls_1793180762488_hiiv",
       "name": "四年六班",
@@ -344,30 +123,6 @@
       "teacherId": "usr_1793188060743_7v3zb",
       "studentCount": 0,
       "createdAt": "2026-10-28T11:47:40.756Z"
-    },
-    "cls_1793190604974_pfdw": {
-      "id": "cls_1793190604974_pfdw",
-      "name": "四年五班",
-      "gradeLevel": 4,
-      "teacherId": "usr_1793190604965_u02of",
-      "studentCount": 2,
-      "createdAt": "2026-10-28T12:30:04.974Z"
-    },
-    "cls_1793190740283_sxbv": {
-      "id": "cls_1793190740283_sxbv",
-      "name": "四年五班",
-      "gradeLevel": 4,
-      "teacherId": "usr_1793190740273_vkyk7",
-      "studentCount": 2,
-      "createdAt": "2026-10-28T12:32:20.283Z"
-    },
-    "cls_1793190747730_6qsx": {
-      "id": "cls_1793190747730_6qsx",
-      "name": "四年忠班",
-      "gradeLevel": 4,
-      "teacherId": "usr_1793190747718_z4pgg",
-      "studentCount": 3,
-      "createdAt": "2026-10-28T12:32:27.730Z"
     }
   },
   "testPapers": {
@@ -2957,15 +2712,13 @@
         }
       ],
       "totalPoints": 12,
-      "creatorId": "usr_1793190747718_z4pgg",
-      "creatorName": "林志賢 老師",
+      "creatorId": "admin_root_001",
+      "creatorName": "林志賢 老師（已歸檔校本公共題庫）",
       "isPublic": true,
       "timeLimitMinutes": 40,
       "createdAt": "2026-10-28T12:32:27.915Z",
       "updatedAt": "2026-10-28T12:32:27.922Z",
-      "assignedClassIds": [
-        "cls_1793190747730_6qsx"
-      ],
+      "assignedClassIds": [],
       "examCode": "PIRLS2026"
     },
     "test_1793237912246_34eae": {
@@ -2991,6 +2744,99 @@
       "assignedClassIds": [],
       "createdAt": "2026-10-29T01:38:32.246Z",
       "updatedAt": "2026-10-29T01:38:32.246Z"
+    },
+    "test_1793242827633_r1qnx": {
+      "title": "智慧小鎮的綠能革命",
+      "targetGrade": 4,
+      "textType": "informational",
+      "themeSummary": "透過綠能與環保科技，培養永續思辨能力。",
+      "wordCount": 920,
+      "articleContent": "智慧小鎮的居民起初依賴燃煤發電，環境受到污染。後來大家經歷了風災與空氣惡化，齊心投入太陽能與風力發電。最後大家明白了守護自然環境才是最珍貴的資產。",
+      "paragraphs": [
+        {
+          "paragraphNumber": 1,
+          "text": "智慧小鎮的居民起初依賴燃煤發電，環境受到污染。後來大家經歷了風災與空氣惡化，齊心投入太陽能與風力發電。最後大家明白了守護自然環境才是最珍貴的資產。"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1_mc",
+          "questionNumber": 1,
+          "processLevel": "retrieve",
+          "processLevelNumber": 1,
+          "type": "multiple_choice",
+          "prompt": "智慧小鎮最初依賴何種發電方式？",
+          "points": 1,
+          "options": [
+            {
+              "label": "A",
+              "text": "燃煤發電",
+              "isCorrect": true,
+              "explanation": "文中有直接陳述。"
+            },
+            {
+              "label": "B",
+              "text": "核能發電",
+              "isCorrect": false,
+              "explanation": "未提及。"
+            }
+          ],
+          "correctAnswerLabel": "A"
+        },
+        {
+          "id": "q2_cr",
+          "questionNumber": 2,
+          "processLevel": "interpret",
+          "processLevelNumber": 3,
+          "type": "constructed_response",
+          "prompt": "請說明鎮民一開始的想法是什麼？後來發生了什麼事改變了他們的想法？",
+          "points": 3,
+          "rubric": {
+            "maxScore": 3,
+            "criteria": [
+              {
+                "score": 3,
+                "description": "完整寫出前後對比與因果事件",
+                "keyEvidenceNeeded": [
+                  "燃煤污染",
+                  "風災空污",
+                  "齊心投入綠能"
+                ]
+              },
+              {
+                "score": 2,
+                "description": "寫出想法轉變但細節不足",
+                "keyEvidenceNeeded": [
+                  "燃煤",
+                  "綠能"
+                ]
+              },
+              {
+                "score": 1,
+                "description": "僅寫出一種想法",
+                "keyEvidenceNeeded": [
+                  "綠能"
+                ]
+              },
+              {
+                "score": 0,
+                "description": "未切中核心",
+                "keyEvidenceNeeded": []
+              }
+            ],
+            "sampleFullCreditAnswer": "起初依賴燃煤導致污染，後來因為經歷風災與空污，最後齊心轉向太陽能，明白了環境的重要。"
+          }
+        }
+      ],
+      "totalPoints": 4,
+      "creatorId": "teacher_test_001",
+      "creatorName": "黃老師",
+      "isPublic": false,
+      "timeLimitMinutes": 40,
+      "id": "test_1793242827633_r1qnx",
+      "assignedClassIds": [],
+      "createdAt": "2026-10-29T03:00:27.633Z",
+      "updatedAt": "2026-10-29T03:00:27.633Z"
     }
   },
   "submissions": {
@@ -4193,218 +4039,6 @@
       "id": "sub_1793187775177_g5c0t",
       "submittedAt": "2026-10-28T11:42:55.177Z"
     },
-    "sub_1793190747934_u813t": {
-      "testPaperId": "test_1793190747915_ayt1p",
-      "testPaperTitle": "守護森林的老松樹（深海尋寶探險與海洋保育）",
-      "targetGrade": 4,
-      "textType": "literary",
-      "studentId": "stu_1793190747795_auzbf",
-      "studentName": "陳大同",
-      "classId": "cls_1793190747730_6qsx",
-      "className": "四年忠班",
-      "seatNumber": 1,
-      "totalScore": 10,
-      "maxScore": 12,
-      "percentage": 83,
-      "scaleScore": 618,
-      "benchmarkKey": "high",
-      "benchmarkName": "高基準",
-      "benchmarkDescription": "具備良好的閱讀理解與推論能力。能掌握篇章核心論點與情節發展因果關係；能依據上下文進行合理推論，並能從文章中列舉兩項以上的具體文本細節佐證自己的觀點。",
-      "classPR": 67,
-      "normPR": 88,
-      "processScores": {
-        "level1": {
-          "earned": 2,
-          "total": 2,
-          "percentage": 100
-        },
-        "level2": {
-          "earned": 2,
-          "total": 2,
-          "percentage": 100
-        },
-        "level3": {
-          "earned": 4,
-          "total": 5,
-          "percentage": 80
-        },
-        "level4": {
-          "earned": 2,
-          "total": 3,
-          "percentage": 67
-        }
-      },
-      "answers": [
-        {
-          "questionId": "q_1",
-          "questionNumber": 1,
-          "type": "multiple_choice",
-          "processLevel": "retrieve",
-          "processLevelNumber": 1,
-          "points": 1,
-          "studentAnswer": "B",
-          "score": 1,
-          "maxScore": 1,
-          "isCorrect": true,
-          "code": "10",
-          "aiFeedback": {
-            "strength": "答對了！你準確找出了正確選項！",
-            "weakness": "對應第一段明確事實陳述",
-            "scaffoldingTip": "繼續保持這樣敏銳的觀察力！",
-            "evidenceFound": true,
-            "evidenceDetails": [
-              "成功選出對應選項"
-            ]
-          }
-        },
-        {
-          "questionId": "q_2",
-          "questionNumber": 2,
-          "type": "multiple_choice",
-          "processLevel": "retrieve",
-          "processLevelNumber": 1,
-          "points": 1,
-          "studentAnswer": "C",
-          "score": 1,
-          "maxScore": 1,
-          "isCorrect": true,
-          "code": "10",
-          "aiFeedback": {
-            "strength": "答對了！你準確找出了正確選項！",
-            "weakness": "對應第二段第四行明確陳述",
-            "scaffoldingTip": "繼續保持這樣敏銳的觀察力！",
-            "evidenceFound": true,
-            "evidenceDetails": [
-              "成功選出對應選項"
-            ]
-          }
-        },
-        {
-          "questionId": "q_3",
-          "questionNumber": 3,
-          "type": "multiple_choice",
-          "processLevel": "inference",
-          "processLevelNumber": 2,
-          "points": 1,
-          "studentAnswer": "B",
-          "score": 1,
-          "maxScore": 1,
-          "isCorrect": true,
-          "code": "10",
-          "aiFeedback": {
-            "strength": "答對了！你準確找出了正確選項！",
-            "weakness": "深層推論爸爸無言以行動支持的工藝精神",
-            "scaffoldingTip": "繼續保持這樣敏銳的觀察力！",
-            "evidenceFound": true,
-            "evidenceDetails": [
-              "成功選出對應選項"
-            ]
-          }
-        },
-        {
-          "questionId": "q_4",
-          "questionNumber": 4,
-          "type": "constructed_response",
-          "processLevel": "inference",
-          "processLevelNumber": 2,
-          "points": 1,
-          "studentAnswer": "因為陽光穿透海面照亮了回家的航道。",
-          "score": 1,
-          "maxScore": 1,
-          "code": "10",
-          "aiFeedback": {
-            "strength": "答得很精準！你準確看出了文章所要表達的核心原因！",
-            "weakness": "簡潔有力，切中題意。",
-            "scaffoldingTip": "繼續保持！",
-            "evidenceFound": false,
-            "evidenceDetails": []
-          }
-        },
-        {
-          "questionId": "q_5",
-          "questionNumber": 5,
-          "type": "constructed_response",
-          "processLevel": "interpret",
-          "processLevelNumber": 3,
-          "points": 2,
-          "studentAnswer": "第一點是因為看見海底珊瑚礁正在遭受破壞；第二點是因為希望能保護珍貴的小海龜不受威脅。",
-          "score": 1,
-          "maxScore": 2,
-          "code": "11",
-          "aiFeedback": {
-            "strength": "很好！你已經成功抓住了其中的核心要點與正確方向！",
-            "weakness": "稍微可惜的是，只舉出了一項線索，或者論述中缺少了具體的文章文字佐證。",
-            "scaffoldingTip": "題目通常要求舉出兩項理由或兼具原因，別忘了分點列出：1. ... 2. ... 喔！",
-            "evidenceFound": false,
-            "evidenceDetails": []
-          }
-        },
-        {
-          "questionId": "q_6",
-          "questionNumber": 6,
-          "type": "constructed_response",
-          "processLevel": "interpret",
-          "processLevelNumber": 3,
-          "points": 3,
-          "studentAnswer": "起初主角覺得深海環境十分恐怖，而且對於同伴充滿了猜忌與懷疑；後來在遭遇大風暴與火災搶救時，看見所有船員不分彼此同心協力撲救火勢、全力救樹與生態，主角深深被這份勇氣與善意感動，最後明白了團結互助的真諦，感受轉為無比的感激與敬佩。",
-          "score": 3,
-          "maxScore": 3,
-          "code": "30",
-          "aiFeedback": {
-            "strength": "太出色了！你不僅精準指出了心態前後的強烈對比，更引用了充實的文本事件作為論據，思考非常周全！",
-            "weakness": "論述層次分明、條理清晰，完全符合官方滿分標準。",
-            "scaffoldingTip": "繼續保持這種跨段落統整因果的宏觀閱讀思維！",
-            "evidenceFound": true,
-            "evidenceDetails": [
-              "經歷火災大家全力救樹"
-            ]
-          }
-        },
-        {
-          "questionId": "q_7",
-          "questionNumber": 7,
-          "type": "multiple_choice",
-          "processLevel": "evaluate",
-          "processLevelNumber": 4,
-          "points": 1,
-          "studentAnswer": "C",
-          "score": 1,
-          "maxScore": 1,
-          "isCorrect": true,
-          "code": "10",
-          "aiFeedback": {
-            "strength": "答對了！你準確找出了正確選項！",
-            "weakness": "評價修辭手法營造氛圍的效果",
-            "scaffoldingTip": "繼續保持這樣敏銳的觀察力！",
-            "evidenceFound": true,
-            "evidenceDetails": [
-              "成功選出對應選項"
-            ]
-          }
-        },
-        {
-          "questionId": "q_8",
-          "questionNumber": 8,
-          "type": "constructed_response",
-          "processLevel": "evaluate",
-          "processLevelNumber": 4,
-          "points": 2,
-          "studentAnswer": "第一點是因為看見海底珊瑚礁正在遭受破壞；第二點是因為希望能保護珍貴的小海龜不受威脅。",
-          "score": 1,
-          "maxScore": 2,
-          "code": "11",
-          "aiFeedback": {
-            "strength": "很好！你已經成功抓住了其中的核心要點與正確方向！",
-            "weakness": "稍微可惜的是，只舉出了一項線索，或者論述中缺少了具體的文章文字佐證。",
-            "scaffoldingTip": "題目通常要求舉出兩項理由或兼具原因，別忘了分點列出：1. ... 2. ... 喔！",
-            "evidenceFound": false,
-            "evidenceDetails": []
-          }
-        }
-      ],
-      "id": "sub_1793190747934_u813t",
-      "submittedAt": "2026-10-28T12:32:27.934Z"
-    },
     "sub_1793190747940_3koz0": {
       "testPaperId": "test_1793190747915_ayt1p",
       "testPaperTitle": "守護森林的老松樹（深海尋寶探險與海洋保育）",
@@ -4613,6 +4247,210 @@
       ],
       "id": "sub_1793190747940_3koz0",
       "submittedAt": "2026-10-28T12:32:27.940Z"
+    },
+    "sub_1793240715029_g4gxi": {
+      "testPaperId": "test_1793186749135_9wpgo",
+      "testPaperTitle": "黑熊的森林密碼（台灣水鹿的遷徙旅程）",
+      "targetGrade": 5,
+      "textType": "informational",
+      "studentId": "guest_1793240715029",
+      "studentName": "自主學習同學",
+      "classId": "open_practice_community",
+      "className": "開放自學體驗區",
+      "totalScore": 4,
+      "maxScore": 4,
+      "percentage": 100,
+      "scaleScore": 715,
+      "benchmarkKey": "advanced",
+      "benchmarkName": "高級基準",
+      "benchmarkDescription": "具備卓越的深層閱讀素養。能整合全篇分散的訊息，洞察隱含的主題與人物複雜的心態轉變；能全面評估作者的寫作手法、視角與語言風格，並提出具備充實文本證據的獨立見解。",
+      "classPR": 98,
+      "normPR": 98,
+      "processScores": {
+        "level1": {
+          "earned": 2,
+          "total": 2,
+          "percentage": 100
+        },
+        "level2": {
+          "earned": 1,
+          "total": 1,
+          "percentage": 100
+        },
+        "level3": {
+          "earned": 0,
+          "total": 0,
+          "percentage": 0
+        },
+        "level4": {
+          "earned": 1,
+          "total": 1,
+          "percentage": 100
+        }
+      },
+      "answers": [
+        {
+          "questionId": "q_info_1",
+          "questionNumber": 1,
+          "type": "multiple_choice",
+          "processLevel": "retrieve",
+          "processLevelNumber": 1,
+          "points": 1,
+          "studentAnswer": "B",
+          "score": 1,
+          "maxScore": 1,
+          "isCorrect": true,
+          "code": "10",
+          "aiFeedback": {
+            "strength": "答對了！你準確找出了正確選項！",
+            "weakness": "第一段第二句明確陳述",
+            "scaffoldingTip": "繼續保持這樣敏銳的觀察力！",
+            "evidenceFound": true,
+            "evidenceDetails": [
+              "成功選出對應選項"
+            ]
+          }
+        },
+        {
+          "questionId": "q_info_2",
+          "questionNumber": 2,
+          "type": "multiple_choice",
+          "processLevel": "retrieve",
+          "processLevelNumber": 1,
+          "points": 1,
+          "studentAnswer": "C",
+          "score": 1,
+          "maxScore": 1,
+          "isCorrect": true,
+          "code": "10",
+          "aiFeedback": {
+            "strength": "答對了！你準確找出了正確選項！",
+            "weakness": "對應第二段最後一句陳述",
+            "scaffoldingTip": "繼續保持這樣敏銳的觀察力！",
+            "evidenceFound": true,
+            "evidenceDetails": [
+              "成功選出對應選項"
+            ]
+          }
+        },
+        {
+          "questionId": "q_info_3",
+          "questionNumber": 3,
+          "type": "constructed_response",
+          "processLevel": "inference",
+          "processLevelNumber": 2,
+          "points": 1,
+          "studentAnswer": "台灣黑熊會將食物吃到肚子裡面，然後種子會隨著牠的糞便排出，通常是森林的造林工程師。",
+          "score": 1,
+          "maxScore": 1,
+          "code": "10",
+          "aiFeedback": {
+            "strength": "答得很精準！你準確看出了文章所要表達的核心原因！",
+            "weakness": "簡潔有力，切中題意。",
+            "scaffoldingTip": "繼續保持！",
+            "evidenceFound": false,
+            "evidenceDetails": []
+          }
+        },
+        {
+          "questionId": "q_info_4",
+          "questionNumber": 4,
+          "type": "constructed_response",
+          "processLevel": "evaluate",
+          "processLevelNumber": 4,
+          "points": 1,
+          "studentAnswer": "簡單容易，讓讀者一眼就看出台灣黑熊是如何製作建",
+          "score": 1,
+          "maxScore": 1,
+          "code": "10",
+          "aiFeedback": {
+            "strength": "答得很精準！你準確看出了文章所要表達的核心原因！",
+            "weakness": "簡潔有力，切中題意。",
+            "scaffoldingTip": "繼續保持！",
+            "evidenceFound": false,
+            "evidenceDetails": []
+          }
+        }
+      ],
+      "id": "sub_1793240715029_g4gxi",
+      "submittedAt": "2026-10-29T02:25:15.029Z"
+    },
+    "sub_1793242829154_sh6ij": {
+      "testPaperId": "test_1793242827633_r1qnx",
+      "testPaperTitle": "智慧小鎮的綠能革命",
+      "targetGrade": 4,
+      "textType": "informational",
+      "studentId": "stu_test_regrade_01",
+      "studentName": "陳小華",
+      "classId": "cls_test_001",
+      "className": "四年二班",
+      "seatNumber": 12,
+      "totalScore": 4,
+      "maxScore": 4,
+      "percentage": 100,
+      "scaleScore": 715,
+      "processScores": {
+        "level1": {
+          "earned": 1,
+          "total": 1,
+          "percentage": 100
+        },
+        "level2": {
+          "earned": 0,
+          "total": 0,
+          "percentage": 0
+        },
+        "level3": {
+          "earned": 3,
+          "total": 3,
+          "percentage": 100
+        },
+        "level4": {
+          "earned": 0,
+          "total": 0,
+          "percentage": 0
+        }
+      },
+      "answers": [
+        {
+          "questionId": "q1_mc",
+          "questionNumber": 1,
+          "type": "multiple_choice",
+          "processLevel": "retrieve",
+          "processLevelNumber": 1,
+          "points": 1,
+          "studentAnswer": "A",
+          "score": 1,
+          "maxScore": 1,
+          "isCorrect": true
+        },
+        {
+          "questionId": "q2_cr",
+          "questionNumber": 2,
+          "type": "constructed_response",
+          "processLevel": "interpret",
+          "processLevelNumber": 3,
+          "points": 3,
+          "studentAnswer": "起初大家用煤炭發電造成很臭的空氣，後來經歷可怕的風災，最後大家一起改用太陽能發電，體會到愛護地球的重要。",
+          "score": 3,
+          "maxScore": 3,
+          "originalScore": 1,
+          "isTeacherReviewed": true,
+          "teacherScore": 3,
+          "teacherComment": "小華，這題寫得很完整，有把風災與轉向太陽能的因果寫出來，老師調為 3 分！"
+        }
+      ],
+      "id": "sub_1793242829154_sh6ij",
+      "submittedAt": "2026-10-29T03:00:29.154Z",
+      "benchmarkKey": "advanced",
+      "benchmarkName": "高級基準",
+      "benchmarkDescription": "具備卓越的深層閱讀素養。能整合全篇分散的訊息，洞察隱含的主題與人物複雜的心態轉變；能全面評估作者的寫作手法、視角與語言風格，並提出具備充實文本證據的獨立見解。",
+      "normPR": 98,
+      "isTeacherReviewed": true,
+      "reviewedAt": "2026-10-29T03:00:29.833Z",
+      "reviewedBy": "黃老師 (授課導師)",
+      "teacherGeneralNote": "小華本次在詮釋整合展現了很棒的進步，繼續保持！",
+      "classPR": 50
     }
   }
 }

@@ -143,6 +143,19 @@ export interface StudentAnswer {
     evidenceFound: boolean;
     evidenceDetails: string[];
   };
+  // 教師手動閱卷與改分擴充
+  isTeacherReviewed?: boolean;
+  teacherScore?: number;
+  teacherComment?: string;
+  originalScore?: number; // 保留 AI 初評之原始分數
+  // AI 深度再閱擴充
+  aiRegraded?: boolean;
+  aiRegradeSuggestion?: {
+    suggestedScore: number;
+    reason: string;
+    evidenceFound: string[];
+    improvedFeedback?: string;
+  };
 }
 
 export interface ProcessScoreDetail {
@@ -193,4 +206,9 @@ export interface ExamSubmission {
   };
   answers: StudentAnswer[];
   submittedAt: string;
+  // 教師手動複閱與整體評估註記
+  isTeacherReviewed?: boolean;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  teacherGeneralNote?: string;
 }

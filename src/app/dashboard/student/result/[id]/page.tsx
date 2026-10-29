@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   Award, ArrowLeft, CheckCircle2, AlertCircle, Sparkles,
   BookOpen, Lightbulb, Compass, Share2, Printer, Trophy,
-  TrendingUp, Users, Globe2, ShieldCheck, Check, X, HelpCircle, FileText
+  TrendingUp, Users, Globe2, ShieldCheck, Check, X, HelpCircle, FileText, MessageSquare
 } from 'lucide-react';
 import { ExamSubmission, TestPaper } from '@/lib/types';
 import {
@@ -168,6 +168,34 @@ export default function StudentResultPage() {
             </div>
           </div>
         </div>
+
+        {/* 教師親自複閱核定與總評通知 */}
+        {submission.isTeacherReviewed && (
+          <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-purple-50 via-indigo-50 to-sky-50 border border-purple-200 text-xs text-purple-900 flex items-start space-x-3.5 shadow-xs">
+            <div className="w-10 h-10 rounded-2xl bg-purple-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 text-base shadow-sm">
+              👨‍🏫
+            </div>
+            <div className="space-y-1 flex-1">
+              <div className="flex items-center justify-between">
+                <strong className="font-bold text-sm text-purple-950">
+                  本份評量已由授課教師親自複閱核定 ({submission.reviewedBy || '授課教師'})
+                </strong>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-200/80 text-purple-800">
+                  人工複閱完成
+                </span>
+              </div>
+              {submission.teacherGeneralNote ? (
+                <p className="text-purple-900 leading-relaxed font-medium bg-white/70 p-3 rounded-xl border border-purple-100 mt-1">
+                  導師總評語：「{submission.teacherGeneralNote}」
+                </p>
+              ) : (
+                <p className="text-[11px] text-purple-700">
+                  教師已針對個別開放簡答題完成細膩審查，下方可查看老師的個別批註與核定給分。
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Stage 5: PIRLS 國際標準量尺與常模落點認證卡片 */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
@@ -413,6 +441,11 @@ export default function StudentResultPage() {
                       >
                         得分：{ans.score} / {ans.maxScore} 分
                       </span>
+                      {ans.isTeacherReviewed && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 flex items-center gap-1 border border-purple-200/60" title="經授課教師親自複核">
+                          👨‍🏫 老師複閱核定
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -704,6 +737,19 @@ export default function StudentResultPage() {
                           {ans.aiFeedback.scaffoldingTip}
                         </div>
                       </div>
+                    </div>
+                  )}
+
+                  {/* 教師親筆叮嚀與個別批註 */}
+                  {ans.teacherComment && (
+                    <div className="bg-gradient-to-r from-purple-50 via-indigo-50/50 to-white rounded-xl p-4 border border-purple-200 space-y-1 text-xs">
+                      <div className="flex items-center space-x-1.5 font-bold text-purple-950">
+                        <MessageSquare className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                        <span>👨‍🏫 授課老師親筆叮嚀與批註：</span>
+                      </div>
+                      <p className="text-purple-900 font-medium leading-relaxed pl-5 whitespace-pre-line">
+                        {ans.teacherComment}
+                      </p>
                     </div>
                   )}
                 </div>
