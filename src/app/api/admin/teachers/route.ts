@@ -8,6 +8,7 @@ import {
   updateUserStatus,
   updateUserRole,
   deleteTeacher,
+  resetUserPassword,
 } from '@/lib/db';
 import { hashPassword } from '@/lib/auth';
 
@@ -59,7 +60,14 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { teacherId, action } = body;
 
-  const validActions = ['approve', 'reject', 'reset_to_pending', 'make_admin', 'revoke_admin'];
+  const validActions = [
+    'approve',
+    'reject',
+    'reset_to_pending',
+    'make_admin',
+    'revoke_admin',
+    'reset_password',
+  ];
   if (!teacherId || !validActions.includes(action)) {
     return NextResponse.json({ error: '無效的操作指令' }, { status: 400 });
   }
@@ -112,6 +120,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: res.error || '解除管理員身分失敗' }, { status: 400 });
     }
     return NextResponse.json({ success: true, message: '已解除該員之管理員權限，恢復為一般教師。' });
+  }
+
+  if (action === 'reset_password') {
+    // 方案 1：管理員直接重設教師密碼
+    const { newPassword } = body;
+    const finalPassword =
+      newPassword && typeof newPassword === 'string' && newPassword.trim().length >= 4
+        ? newPassword.trim()
+        : 'teacher123';
+
+    const teacher = await getUserById(teacherId);
+    if (!teacher) {
+      return NextResponse.json({ error: '找不到該教師帳號' }, { status: 404 });
+    }
+
+    const success = await resetUserPassword(teacherId, finalPassword);
+    if (!success) {
+      return NextResponse.json({ error: '重設密碼失敗，請稍後重試' }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `已成功為【${teacher.displayName}】重設密碼！`,
+      username: teacher.username,
+      displayName: teacher.displayName,
+      newPassword: finalPassword,
+    });
   }
 }
 

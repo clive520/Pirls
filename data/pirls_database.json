@@ -292,6 +292,16 @@
       "seatNumber": 3,
       "gradeLevel": 4,
       "createdAt": "2026-10-28T12:32:27.912Z"
+    },
+    "usr_1793239009433_ned3s": {
+      "username": "test_teacher_reset_1793239009358",
+      "passwordHash": "$2a$10$v5R7hHhNw1tEaEjACTJgt.KEO1wcA8ZJr7JH/SVgEbJYxWPBOKgQm",
+      "displayName": "重設密碼測試老師",
+      "role": "teacher",
+      "status": "active",
+      "school": "測試實驗國小",
+      "id": "usr_1793239009433_ned3s",
+      "createdAt": "2026-10-29T01:56:49.433Z"
     }
   },
   "classes": {
@@ -2957,6 +2967,30 @@
         "cls_1793190747730_6qsx"
       ],
       "examCode": "PIRLS2026"
+    },
+    "test_1793237912246_34eae": {
+      "title": "海龜的冒險旅程",
+      "targetGrade": 4,
+      "textType": "literary",
+      "themeSummary": "透過小海龜的海洋冒險，培養愛護海洋與堅持到底的毅力。",
+      "wordCount": 880,
+      "articleContent": "海龜在晨光中游向深藍色的大海...",
+      "paragraphs": [
+        {
+          "paragraphNumber": 1,
+          "text": "海龜在晨光中游向深藍色的大海..."
+        }
+      ],
+      "questions": [],
+      "totalPoints": 10,
+      "creatorId": "admin_root_001",
+      "creatorName": "李接手 老師（已歸檔校本公共題庫）",
+      "isPublic": true,
+      "timeLimitMinutes": 40,
+      "id": "test_1793237912246_34eae",
+      "assignedClassIds": [],
+      "createdAt": "2026-10-29T01:38:32.246Z",
+      "updatedAt": "2026-10-29T01:38:32.246Z"
     }
   },
   "submissions": {

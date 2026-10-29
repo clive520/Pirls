@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
+import { BookOpen, Lock, User, AlertCircle, ArrowRight, KeyRound, HelpCircle, X } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +86,16 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700">密碼 (Password)</label>
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-semibold text-slate-700">密碼 (Password)</label>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(true)}
+                  className="text-xs font-semibold text-sky-600 hover:text-sky-700"
+                >
+                  忘記密碼？
+                </button>
+              </div>
               <div className="mt-1 relative rounded-lg shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                   <Lock className="h-5 w-5" />
@@ -128,6 +138,66 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {/* 忘記密碼補救指引 Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <button
+                onClick={() => setShowForgotModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div>
+              <h3 className="text-base font-bold text-slate-900">忘記密碼補救指引</h3>
+              <p className="text-xs text-slate-500 mt-0.5">依據校園教學平臺與資安管理規範：</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-700 space-y-3">
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px] mt-0.5">
+                  1
+                </span>
+                <div>
+                  <strong className="text-slate-900">授課教師忘記密碼：</strong>
+                  <p className="text-slate-600 mt-0.5 leading-relaxed">
+                    請聯繫校內<strong className="text-sky-800">系統最高管理員</strong>（如資訊組長、設備組長或教務處人員），管理員可於審核後台為您一鍵重設臨時密碼。
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5 pt-2.5 border-t border-slate-200/60">
+                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px] mt-0.5">
+                  2
+                </span>
+                <div>
+                  <strong className="text-slate-900">班級學生忘記密碼：</strong>
+                  <p className="text-slate-600 mt-0.5 leading-relaxed">
+                    請直接向您的<strong className="text-emerald-800">國語任課老師</strong>反映，老師可在「班級與學生管理工作台」中直接為您重新設定密碼。
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition"
+              >
+                我知道了，返回登入
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

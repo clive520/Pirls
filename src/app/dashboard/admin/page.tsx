@@ -24,6 +24,9 @@ import {
   Check,
   AlertCircle,
   UserCog,
+  KeyRound,
+  Copy,
+  X,
 } from 'lucide-react';
 
 interface TeacherItem {
@@ -74,6 +77,14 @@ export default function AdminDashboardPage() {
   const [deleteMode, setDeleteMode] = useState<'transfer' | 'cascade'>('transfer');
   const [targetTeacherId, setTargetTeacherId] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // 重設密碼 Modal (方案 1)
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [selectedTeacherForReset, setSelectedTeacherForReset] = useState<TeacherItem | null>(null);
+  const [resetNewPassword, setResetNewPassword] = useState('teacher123');
+  const [resetSuccessData, setResetSuccessData] = useState<{ username: string; newPassword: string } | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const fetchTeachers = async () => {
     try {
@@ -203,6 +214,49 @@ export default function AdminDashboardPage() {
       alert(err.message || '刪除異常');
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  // 打開重設密碼 Modal (方案 1)
+  const openResetPasswordModal = (teacher: TeacherItem) => {
+    setSelectedTeacherForReset(teacher);
+    setResetNewPassword('teacher123');
+    setResetSuccessData(null);
+    setCopied(false);
+    setShowResetPasswordModal(true);
+  };
+
+  // 執行重設密碼
+  const handleConfirmResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTeacherForReset) return;
+
+    setResetLoading(true);
+    try {
+      const res = await fetch('/api/admin/teachers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teacherId: selectedTeacherForReset.id,
+          action: 'reset_password',
+          newPassword: resetNewPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setResetSuccessData({
+          username: data.username,
+          newPassword: data.newPassword,
+        });
+        triggerToast(data.message);
+      } else {
+        alert(data.error || '重設密碼失敗');
+      }
+    } catch (err: any) {
+      alert(err.message || '重設密碼異常');
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -394,19 +448,29 @@ export default function AdminDashboardPage() {
                       <span className="text-[11px] text-slate-400">
                         {adm.classCount} 個班級 • {adm.studentCount} 位學生
                       </span>
-                      {isOnlyAdmin ? (
-                        <span className="text-[10px] text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded font-medium">
-                          系統唯一管理員（不可降級）
-                        </span>
-                      ) : (
+                      <div className="flex items-center space-x-1.5">
                         <button
-                          onClick={() => handleTeacherAction(adm.id, 'revoke_admin')}
-                          className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-rose-600 hover:border-rose-200 font-medium transition text-[11px]"
-                          title="解除管理員身分，恢復為一般教師"
+                          onClick={() => openResetPasswordModal(adm)}
+                          className="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200/60 font-semibold text-[11px] inline-flex items-center space-x-1 transition"
+                          title="為該管理人員重設密碼"
                         >
-                          降為一般教師
+                          <KeyRound className="w-3 h-3 text-amber-600" />
+                          <span>重設密碼</span>
                         </button>
-                      )}
+                        {isOnlyAdmin ? (
+                          <span className="text-[10px] text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded font-medium">
+                            唯一管理員
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleTeacherAction(adm.id, 'revoke_admin')}
+                            className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-rose-600 hover:border-rose-200 font-medium transition text-[11px]"
+                            title="解除管理員身分，恢復為一般教師"
+                          >
+                            降為一般教師
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -614,6 +678,16 @@ export default function AdminDashboardPage() {
                         )}
 
                         <div className="flex items-center space-x-1">
+                          {/* 重設密碼按鈕 (方案 1) */}
+                          <button
+                            onClick={() => openResetPasswordModal(t)}
+                            className="inline-flex items-center space-x-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200/60 font-semibold text-[11px] transition"
+                            title="為該教師重設登入密碼"
+                          >
+                            <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+                            <span>重設密碼</span>
+                          </button>
+
                           {/* 打回未審核狀態 */}
                           <button
                             onClick={() => handleTeacherAction(t.id, 'reset_to_pending')}
@@ -916,6 +990,170 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          重設教師密碼 Modal (方案 1)
+         ======================================================== */}
+      {showResetPasswordModal && selectedTeacherForReset && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">重設登入密碼</h3>
+                  <p className="text-xs text-slate-500">教師忘記密碼補救服務</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowResetPasswordModal(false);
+                  setSelectedTeacherForReset(null);
+                  setResetSuccessData(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 教師資訊摘要條 */}
+            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">教師姓名：</span>
+                <strong className="text-slate-800 font-bold">{selectedTeacherForReset.displayName}</strong>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">帳號 (Username)：</span>
+                <strong className="font-mono text-indigo-700 font-bold">{selectedTeacherForReset.username}</strong>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">任教學校：</span>
+                <span className="text-slate-700">{selectedTeacherForReset.school}</span>
+              </div>
+            </div>
+
+            {!resetSuccessData ? (
+              <form onSubmit={handleConfirmResetPassword} className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700">新密碼設定</label>
+                    <button
+                      type="button"
+                      onClick={() => setResetNewPassword('teacher123')}
+                      className="text-[11px] text-sky-600 hover:text-sky-700 font-semibold"
+                    >
+                      帶入預設值 (teacher123)
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={resetNewPassword}
+                    onChange={(e) => setResetNewPassword(e.target.value)}
+                    placeholder="請輸入至少4個字元的新密碼"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-mono text-slate-800 shadow-xs focus:ring-2 focus:ring-amber-500"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    密碼更新後立即生效，建議提醒教師於登入後至個人設定更新密碼。
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowResetPasswordModal(false);
+                      setSelectedTeacherForReset(null);
+                    }}
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resetLoading || resetNewPassword.trim().length < 4}
+                    className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition disabled:opacity-50"
+                  >
+                    {resetLoading ? '更新中...' : '確認重設密碼'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* 重設成功畫面與一鍵複製 */
+              <div className="space-y-4">
+                <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start space-x-2.5">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="font-bold block">密碼重設成功！</strong>
+                    <p className="text-[11px] text-emerald-700 mt-0.5">
+                      新密碼已同步至雲端系統，您可點擊下方按鈕複製帳密通知資訊發送給教師。
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-900 text-slate-100 text-xs font-mono space-y-1.5">
+                  <div className="text-slate-400 text-[10px] uppercase tracking-wider font-sans font-semibold">
+                    最新帳密資訊
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">帳號：</span>
+                    <span className="text-white font-bold">{resetSuccessData.username}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">新密碼：</span>
+                    <span className="text-amber-300 font-bold">{resetSuccessData.newPassword}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const text = `【PIRLS 智慧閱讀素養評量平臺】\n教師帳密重設通知：\n教師姓名：${selectedTeacherForReset.displayName}\n登入帳號：${resetSuccessData.username}\n新密碼：${resetSuccessData.newPassword}\n平臺網址：${typeof window !== 'undefined' ? window.location.origin : ''}/login\n※ 提示：登入後可隨時至個人設定修改密碼。`;
+                      navigator.clipboard.writeText(text);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 3000);
+                    }}
+                    className={`flex-1 py-2.5 rounded-xl font-bold text-xs inline-flex items-center justify-center space-x-1.5 transition ${
+                      copied
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm'
+                    }`}
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>已複製到剪貼簿！</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        <span>一鍵複製帳密資訊</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowResetPasswordModal(false);
+                      setSelectedTeacherForReset(null);
+                      setResetSuccessData(null);
+                    }}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  >
+                    關閉
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
