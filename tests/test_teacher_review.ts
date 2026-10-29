@@ -47,10 +47,10 @@ async function testTeacherReviewAndAiRegrade() {
         rubric: {
           maxScore: 3,
           criteria: [
-            { score: 3, description: '完整寫出前後對比與因果事件', keyEvidenceNeeded: ['燃煤污染', '風災空污', '齊心投入綠能'] },
-            { score: 2, description: '寫出想法轉變但細節不足', keyEvidenceNeeded: ['燃煤', '綠能'] },
-            { score: 1, description: '僅寫出一種想法', keyEvidenceNeeded: ['綠能'] },
-            { score: 0, description: '未切中核心', keyEvidenceNeeded: [] },
+            { score: 3, code: '30', description: '完整寫出前後對比與因果事件', keyEvidenceNeeded: ['燃煤污染', '風災空污', '齊心投入綠能'] },
+            { score: 2, code: '21', description: '寫出想法轉變但細節不足', keyEvidenceNeeded: ['燃煤', '綠能'] },
+            { score: 1, code: '11', description: '僅寫出一種想法', keyEvidenceNeeded: ['綠能'] },
+            { score: 0, code: '79', description: '未切中核心', keyEvidenceNeeded: [] },
           ],
           sampleFullCreditAnswer: '起初依賴燃煤導致污染，後來因為經歷風災與空污，最後齊心轉向太陽能，明白了環境的重要。',
         },
