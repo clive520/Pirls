@@ -221,17 +221,23 @@ export default function PracticeTakingPage() {
             </div>
           </div>
 
-          {/* 插圖 / SVG 流程圖 */}
+          {/* 多模態繪本情境插圖 / 流程圖 */}
           {testPaper.illustrations && testPaper.illustrations.length > 0 && (
-            <div className="space-y-4">
+            <div className={`gap-4 ${
+              testPaper.illustrations.length === 1
+                ? 'space-y-4'
+                : testPaper.illustrations.length === 2
+                ? 'grid grid-cols-1 sm:grid-cols-2'
+                : 'grid grid-cols-1 sm:grid-cols-3'
+            }`}>
               {testPaper.illustrations.map((ill) => (
-                <div key={ill.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <div key={ill.id} className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex flex-col justify-between">
                   {ill.imageUrl ? (
-                    <div className="w-full flex justify-center py-2">
+                    <div className="w-full flex justify-center py-1 flex-1 items-center">
                       <img
                         src={ill.imageUrl}
                         alt={ill.caption || '課文插圖'}
-                        className="max-w-full h-auto max-h-96 object-contain rounded-xl shadow-sm bg-white"
+                        className="max-w-full h-auto max-h-64 object-contain rounded-xl shadow-sm bg-white"
                       />
                     </div>
                   ) : ill.type === 'svg_diagram' && ill.svgCode ? (
@@ -239,10 +245,14 @@ export default function PracticeTakingPage() {
                       className="w-full overflow-x-auto flex justify-center py-2"
                       dangerouslySetInnerHTML={{ __html: ill.svgCode }}
                     />
-                  ) : null}
+                  ) : (
+                    <div className="h-32 bg-slate-200 rounded flex items-center justify-center text-xs text-slate-400">
+                      {ill.caption || '插圖'}
+                    </div>
+                  )}
                   {ill.caption && (
-                    <p className="text-center text-xs text-slate-500 font-medium mt-2">
-                      圖：{ill.caption}
+                    <p className="text-center text-xs text-slate-600 font-medium mt-2 px-1">
+                      {ill.caption}
                     </p>
                   )}
                 </div>

@@ -61,9 +61,23 @@ function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, targetCou
     {
       "id": "ill_1",
       "paragraphNumber": 1,
-      "caption": "圖 1：老鐘錶行門口金爺爺親切與孩子們交流的情境",
+      "caption": "圖 1：【起·開端情境】老鐘錶行門口金爺爺親切與孩子們交流",
       "type": "illustration_url",
       "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：和藹的金爺爺在古樸老鐘錶行門口，笑瞇瞇地向身旁幾位國小學童解說鐘錶齒輪，暖陽灑落、柔和明亮、充滿童趣與故事溫度，16:9 橫向構圖，高品質繪本插圖。 / English prompt: A heartwarming children storybook watercolor illustration of kind elderly Grandpa Jin standing in front of his vintage wooden clock shop, warmly explaining gears to curious elementary school kids, sunny afternoon, soft warm lighting, detailed, charming, storybook art style --ar 16:9"
+    },
+    {
+      "id": "ill_2",
+      "paragraphNumber": 2,
+      "caption": "圖 2：【承轉·衝突高潮】金爺爺在工作檯前專注修復停擺的古老機械鐘",
+      "type": "illustration_url",
+      "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：昏黃檯燈下，金爺爺戴著放大鏡，神情極度專注地以精細鑷子調整散落的黃銅齒輪與彈簧，工作檯上擺滿修復工具，充滿工匠精神與懸疑專注氛圍，16:9 橫向構圖。 / English prompt: Storybook watercolor illustration of Grandpa Jin under a warm desk lamp, wearing a magnifying loupe, delicately adjusting brass gears on a vintage workbench full of clockmaking tools, intense focus, craftsmanship, atmospheric, cozy --ar 16:9"
+    },
+    {
+      "id": "ill_3",
+      "paragraphNumber": 4,
+      "caption": "圖 3：【合·溫馨結局】古鐘重新清脆敲響，孩子們與金爺爺欣慰歡呼",
+      "type": "illustration_url",
+      "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：晨光灑滿鐘錶行，高聳的大鐘指針轉動，齒輪重新運轉，金爺爺擦拭額頭汗水露出欣慰笑容，學童們興奮拍手歡呼，充滿感動與成就感，色彩明朗溫暖，16:9 橫向構圖。 / English prompt: Joyful children storybook watercolor illustration, morning sunlight pouring into the shop, clock ticking again, Grandpa Jin smiling with relief, cheerful kids clapping and celebrating, touching moment, uplifting and warm --ar 16:9"
     }
   ],
   "questions": [
@@ -118,11 +132,14 @@ function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, targetCou
    嚴禁在 JSON 之前輸出任何開場白、故事摘要、引言或客套話！第一字必須是 {。
    嚴禁在 JSON 之後輸出任何補充說明或結尾語！最後一字必須是 }。
 5. 引號規範：故事內之人物對話或引文，請一律使用中文全形引號「」與『』，嚴禁在字串內使用未跳脫的半形雙引號，以維護 JSON 語法完全合法。
-6. 【PIRLS 多模態圖文閱讀生圖提示詞 (Image Generation Prompt)】：
-   ${includeDiagram ? `本次任務已啟用多模態配圖需求。請在 "illustrations" 陣列中為文章生成 1 組切合課文情境的「專屬 AI 繪圖提示詞 (imagePrompt)」：
-   - 包含中英文雙語提示詞（讓教師可一鍵複製至 Midjourney、ChatGPT / DALL-E 3、Bing Image Creator、Recraft、Canva 等工具直接生成高質感真實繪本插圖）。
+6. 【PIRLS 多模態課文繪本配圖 (依情節發展擷取 3 個關鍵場景)】：
+   ${includeDiagram ? `本次任務已啟用多模態配圖需求。你「必須」在 "illustrations" 陣列中依文章脈絡擷取 3 個關鍵場景，分別產出 3 組分開的「專屬 AI 繪圖提示詞 (imagePrompt)」：
+   - 第 1 幅【起·開端情境】：故事開端、背景環境設定或主角初次登場（對應文章第 1 段）。
+   - 第 2 幅【承轉·衝突高潮】：情節關鍵挑戰、核心互動、專注行動或情節轉折高潮（對應文章中段）。
+   - 第 3 幅【合·溫馨結局】：問題圓滿解決、眾人欣慰體悟、展望未來的感動結局（對應文章末段）。
+   - 每組提示詞皆需包含中英文雙語提示詞（方便教師一鍵複製至 Midjourney、ChatGPT / DALL-E 3、Bing Image Creator、Recraft、Canva 等工具直接生成高質感真實繪本插圖）。
    - 內容需詳細描繪：主要角色外觀、神情動作、故事關鍵場景、時間光影氛圍、藝術風格（如溫馨兒童繪本水彩風、柔和手繪質感、16:9 橫向構圖，畫面無文字雜訊）。
-   - caption 欄位提供簡明得體的課文圖說（如：圖 1：金爺爺在老鐘錶行門口與孩子們熱絡討論）。
+   - caption 欄位提供簡明得體的課文圖說（如：圖 1：【開端】老鐘錶行門口、圖 2：【高潮】修復齒輪、圖 3：【結局】重現鐘聲）。
    - type 設為 "illustration_url"。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
    完整 JSON 架構參考如下：
 ${schemaExample}`;
@@ -134,14 +151,14 @@ ${schemaExample}`;
 年級：國小 ${params.targetGrade} 年級
 題量：共 ${targetCount} 題
 文章長度：約 800~1,200 字，分段清晰 (每段開頭標示【第一段】、【第二段】等)
-${includeDiagram ? '多模態生圖提示詞：請務必在 illustrations 欄位中，針對文章核心情境構思 1 組極為生動細膩的中英文生圖提示詞 (imagePrompt) 與圖說 (caption)，供教師複製至專業繪圖 AI 生成真實插圖。' : '插圖需求：不需生成插圖，illustrations 填空陣列 []。'}
+${includeDiagram ? '多模態生圖提示詞：請務必在 illustrations 陣列中，依文章脈絡擷取 3 個關鍵場景（起·開端、承轉·高潮、合·結局），分別構思 3 組生動細膩的中英文生圖提示詞 (imagePrompt) 與圖說 (caption)，供教師複製至專業繪圖 AI 生成真實插圖。' : '插圖需求：不需生成插圖，illustrations 填空陣列 []。'}
 請即刻生成符合上述 PIRLS 規範之完整 JSON 試卷。`
     : `【自選文章提煉 PIRLS 題本】
 文章標題：${params.pastedTitle || '自選閱讀材料'}
 適用年級：國小 ${params.targetGrade} 年級
 文體類別：${isLiterary ? '文學性文本' : '訊息性文本'}
 題量：共 ${targetCount} 題
-${includeDiagram ? '多模態生圖提示詞：請務必在 illustrations 欄位中，針對自選文章內容構思 1 組極為生動細膩的中英文生圖提示詞 (imagePrompt) 與圖說 (caption)，供教師複製生圖並上傳。' : '插圖需求：不需生成插圖，illustrations 填空陣列 []。'}
+${includeDiagram ? '多模態生圖提示詞：請務必在 illustrations 陣列中，依自選文章內容擷取 3 個關鍵重要場景（起·開端、承轉·高潮、合·結局），分別構思 3 組生動細膩的中英文生圖提示詞 (imagePrompt) 與圖說 (caption)，供教師複製生圖並上傳。' : '插圖需求：不需生成插圖，illustrations 填空陣列 []。'}
 原始文章內容：
 ${params.pastedText}
 
@@ -515,7 +532,7 @@ function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
     };
   });
 
-  // 3. 插圖防呆與 AI 繪圖提示詞 (Image Generation Prompt)
+  // 3. 插圖防呆與 AI 繪圖提示詞 (預設提供 3 幅關鍵場景)
   const shouldIncludeDiagram = params.includeDiagram !== false;
   const rawIllustrations = parsed.illustrations || [];
   let illustrations: ArticleIllustration[] = [];
@@ -528,7 +545,7 @@ function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
       const caption = ill?.caption || `圖 ${idx + 1}：${parsed.title || '文章'}情境插圖`;
       list.push({
         id: ill?.id || `ill_${Date.now()}_${idx + 1}`,
-        paragraphNumber: Number(ill?.paragraphNumber) || 1,
+        paragraphNumber: Number(ill?.paragraphNumber) || (idx === 0 ? 1 : idx === 1 ? 2 : 4),
         caption,
         type: ill?.imageUrl ? 'illustration_url' : (ill?.type || 'illustration_url'),
         imageUrl: ill?.imageUrl || '',
@@ -539,30 +556,15 @@ function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
     illustrations = list;
   }
 
-  // 若使用者勾選了配圖需求，但模型漏回提示詞，自動構建高品質雙語生圖提示詞
-  if (shouldIncludeDiagram && (illustrations.length === 0 || !illustrations[0].imagePrompt)) {
+  // 若使用者勾選了配圖需求，但模型回傳不足 3 幅或無提示詞，自動為課文生成 3 幅標準關鍵場景提示詞
+  if (shouldIncludeDiagram && (illustrations.length === 0 || !illustrations.some(i => i.imagePrompt))) {
     const isLit = params.textType === 'literary';
-    const autoPrompt = generateSmartImagePrompt(
+    illustrations = generateSmartImagePrompts(
       parsed.title || params.theme || params.pastedTitle || '國小閱讀課文',
       parsed.themeSummary || '溫馨啟發與情境教育',
       isLit,
       params.targetGrade || 4
     );
-
-    if (illustrations.length === 0) {
-      illustrations = [
-        {
-          id: `ill_auto_${Date.now()}`,
-          paragraphNumber: 1,
-          caption: `圖 1：【${parsed.title || '文章主題'}】${isLit ? '故事情境插圖' : '多模態知識概念圖'}`,
-          type: 'illustration_url',
-          imageUrl: '',
-          imagePrompt: autoPrompt,
-        },
-      ];
-    } else {
-      illustrations[0].imagePrompt = autoPrompt;
-    }
   }
 
   return {
@@ -587,7 +589,105 @@ function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
 }
 
 /**
- * 智慧生圖提示詞構建器（雙語提示詞，專為 Midjourney / DALL-E / Bing 等現代繪圖 AI 優化）
+ * 智慧 3 幅關鍵場景生圖提示詞構建器：依文章起承轉合情境，構思 3 幅獨立且風格統一之關鍵場景提示詞
+ */
+export function generateSmartImagePrompts(
+  title: string,
+  summary: string,
+  isLiterary: boolean,
+  grade: number
+): ArticleIllustration[] {
+  const styleZh = isLiterary
+    ? '溫馨細膩的台灣國小兒童繪本水彩手繪插畫風格、柔和溫暖光影、人物表情生動自然、色彩和諧純淨、富有故事感與童趣'
+    : '現代清新教育科普插畫風格、清晰的圖文結構與生動生態/科學細節、色彩明亮鮮活、國家地理少兒版風格';
+
+  const styleEn = isLiterary
+    ? 'Warm and charming children storybook illustration, soft watercolor and colored pencil textures, gentle golden morning sunlight, expressive characters, nostalgic Taiwanese countryside storybook style, wholesome, beautiful detailed background, 8k resolution, artstation trending --ar 16:9 --v 6.0'
+    : 'Modern educational children science infographic illustration, clean vector aesthetic, clear composition, bright natural daylight, highly detailed and pedagogical, National Geographic Kids style, 8k resolution --ar 16:9';
+
+  const scenes = isLiterary
+    ? [
+        {
+          stage: '起·開端情境',
+          para: 1,
+          descZh: `故事開端背景：主角初次登場，置身於故事核心環境中，展現生活日常或冒險前夕的期盼氛圍。`,
+          descEn: `Scene 1 (Beginning): Introduction of main characters in their peaceful native environment with gentle soft morning atmosphere.`,
+        },
+        {
+          stage: '承轉·衝突高潮',
+          para: 2,
+          descZh: `情節關鍵轉折與考驗：主角面臨核心挑戰或重大行動時刻，神情專注緊張，充滿動態張力與互動感。`,
+          descEn: `Scene 2 (Climax): The climactic turning point and core challenge, dynamic interaction, emotional expression, dramatic lighting and tension.`,
+        },
+        {
+          stage: '合·溫馨結局',
+          para: 4,
+          descZh: `故事溫暖結局與啟發：問題獲得解決，眾人露出欣慰笑容，迎向晨光或夕陽，洋溢理解與成長的感動。`,
+          descEn: `Scene 3 (Ending): Wholesome and touching conclusion, celebrating resolution and growth, warm golden hour glow, smiling faces, heartfelt harmony.`,
+        },
+      ]
+    : [
+        {
+          stage: '引言·生態全景',
+          para: 1,
+          descZh: `宏觀全景視野：呈現該科普主題或自然生物棲地的壯麗全景與生存環境。`,
+          descEn: `Scene 1 (Overview): Majestic wide panoramic overview of the ecological habitat and natural environment.`,
+        },
+        {
+          stage: '核心·構造運作',
+          para: 2,
+          descZh: `特寫微觀焦點：生動展示生物特殊構造、習性互動或科學運作的關鍵特徵細節。`,
+          descEn: `Scene 2 (Feature): Close-up detailed depiction of distinctive biological traits, adaptations, or scientific processes.`,
+        },
+        {
+          stage: '體悟·人與自然',
+          para: 3,
+          descZh: `和諧共存啟發：人類保育觀察或生態平衡的永續美好畫面，富有教育啟發性。`,
+          descEn: `Scene 3 (Harmony): Harmonious coexistence between human observation and natural conservation, inspiring and educational.`,
+        },
+      ];
+
+  return scenes.map((s, idx) => ({
+    id: `ill_scene_${idx + 1}_${Date.now()}`,
+    paragraphNumber: s.para,
+    caption: `圖 ${idx + 1}：【${s.stage}】《${title}》課文情境插圖`,
+    type: 'illustration_url' as const,
+    imageUrl: '',
+    imagePrompt: `【場景 ${idx + 1}（${s.stage}）中文描述 - 適用 ChatGPT / DALL-E 3 / Bing 繪圖】：
+繪製國小 ${grade} 年級課文《${title}》的關鍵插圖（場景 ${idx + 1}：${s.stage}）。
+畫面核心：${s.descZh}（主旨：${summary}）。
+藝術風格：${styleZh}。構圖橫向 16:9，畫面請勿出現任何文字或水印，呈現高質感純淨兒童繪本畫面。
+
+【英文指令 - 適用 Midjourney / Recraft 複製貼上】：
+A masterwork children book illustration for "${title}", Scene ${idx + 1} (${s.stage}): ${s.descEn}. Key theme: ${summary}. ${styleEn}`,
+  }));
+}
+
+/**
+ * 組合全套場景生圖提示詞（一段結構完整的提示詞，包含所有分開的圖片指示）
+ * 讓老師一鍵複製，可直接整段貼給 ChatGPT、Claude 或繪圖 AI 一次產出全套插圖！
+ */
+export function formatCombinedImagePrompt(illustrations: ArticleIllustration[], title: string): string {
+  if (!illustrations || illustrations.length === 0) return '';
+
+  const header = `請幫我依據國小閱讀課文《${title}》，為課文關鍵場景分別生成 ${illustrations.length} 張風格完全統一的「16:9 兒童繪本水彩手繪插畫」：\n\n`;
+
+  const body = illustrations
+    .map((ill, i) => {
+      const promptText = ill.imagePrompt
+        ? ill.imagePrompt.trim()
+        : `請繪製：${ill.caption || `第 ${i + 1} 幅插圖`}`;
+      return `━━━━━━━━━━━━━━━━━━━━━\n【第 ${i + 1} 幅插圖】(${ill.caption || `場景 ${i + 1}`})\n${promptText}`;
+    })
+    .join('\n\n');
+
+  const footer = `\n\n━━━━━━━━━━━━━━━━━━━━━\n【全套統一視覺要求】：\n1. 藝術風格：溫馨柔和的兒童故事繪本手繪水彩風格，光影柔和溫暖，人物線條生動可愛。\n2. 規格比例：16:9 橫向寬螢幕構圖。\n3. 純淨畫面：畫面中切勿包含任何文字、標題或浮水印。`;
+
+  return header + body + footer;
+}
+
+/**
+ * 智慧生圖提示詞構建器（單幅保底相容）
  */
 export function generateSmartImagePrompt(
   title: string,

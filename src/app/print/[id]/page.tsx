@@ -138,17 +138,23 @@ export default function PrintTestPaperPage() {
             </span>
           </div>
 
-          {/* 非連續性科學插圖 / 流程圖 */}
+          {/* 非連續性科學插圖 / 繪本情境圖 */}
           {testPaper.illustrations && testPaper.illustrations.length > 0 && (
-            <div className="my-4 border border-slate-300 rounded p-4 break-inside-avoid">
+            <div className={`my-3 border border-slate-300 rounded p-3 break-inside-avoid ${
+              testPaper.illustrations.length === 1
+                ? 'space-y-2'
+                : testPaper.illustrations.length === 2
+                ? 'grid grid-cols-2 gap-3'
+                : 'grid grid-cols-3 gap-3'
+            }`}>
               {testPaper.illustrations.map((ill) => (
-                <div key={ill.id} className="space-y-2">
+                <div key={ill.id} className="space-y-1.5 flex flex-col justify-between text-center">
                   {ill.imageUrl ? (
-                    <div className="w-full flex justify-center py-2">
+                    <div className="w-full flex justify-center py-1">
                       <img
                         src={ill.imageUrl}
                         alt={ill.caption || '課文插圖'}
-                        className="max-w-[85%] max-h-72 object-contain rounded"
+                        className="max-h-44 w-auto object-contain rounded border border-slate-200"
                       />
                     </div>
                   ) : ill.svgCode ? (
@@ -158,7 +164,7 @@ export default function PrintTestPaperPage() {
                     />
                   ) : null}
                   {ill.caption && (
-                    <div className="text-center text-xs font-sans font-semibold text-slate-700">
+                    <div className="text-center text-[11px] font-sans font-semibold text-slate-700">
                       【圖】{ill.caption}
                     </div>
                   )}

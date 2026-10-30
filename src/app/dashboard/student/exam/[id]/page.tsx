@@ -227,27 +227,33 @@ export default function StudentExamPage() {
             {testPaper.title}
           </h2>
 
-          {/* 文章插圖或 SVG 科學圖表 */}
+          {/* 文章插圖或繪本多模態場景 */}
           {testPaper.illustrations && testPaper.illustrations.length > 0 && (
-            <div className="my-3 space-y-3">
+            <div className={`my-4 gap-3 ${
+              testPaper.illustrations.length === 1
+                ? 'flex flex-col'
+                : testPaper.illustrations.length === 2
+                ? 'grid grid-cols-1 sm:grid-cols-2'
+                : 'grid grid-cols-1 sm:grid-cols-3'
+            }`}>
               {testPaper.illustrations.map((ill) => (
-                <div key={ill.id} className="rounded-xl border border-slate-200 bg-slate-50 p-2 overflow-hidden shadow-inner">
+                <div key={ill.id} className="rounded-xl border border-slate-200 bg-slate-50 p-2 overflow-hidden shadow-sm flex flex-col justify-between">
                   {ill.imageUrl ? (
-                    <div className="flex justify-center p-1 bg-white rounded-lg">
+                    <div className="flex justify-center p-1 bg-white rounded-lg flex-1 items-center">
                       <img
                         src={ill.imageUrl}
                         alt={ill.caption || '課文插圖'}
-                        className="w-full max-h-80 object-contain rounded-lg shadow-sm"
+                        className="w-full max-h-60 object-contain rounded-lg"
                       />
                     </div>
                   ) : ill.svgCode ? (
                     <div dangerouslySetInnerHTML={{ __html: ill.svgCode }} />
                   ) : (
-                    <div className="h-36 bg-slate-200 rounded flex items-center justify-center text-xs text-slate-400">
-                      插圖
+                    <div className="h-32 bg-slate-200 rounded flex items-center justify-center text-xs text-slate-400">
+                      {ill.caption || '插圖'}
                     </div>
                   )}
-                  <p className="text-[11px] text-center text-slate-500 font-semibold mt-1.5">
+                  <p className="text-[11px] text-center text-slate-600 font-semibold mt-2 px-1 leading-snug">
                     {ill.caption}
                   </p>
                 </div>
