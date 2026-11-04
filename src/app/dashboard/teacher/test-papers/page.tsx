@@ -27,8 +27,8 @@ export default function TeacherTestPapersPage() {
     try {
       setLoading(true);
       const [testRes, clsRes] = await Promise.all([
-        fetch('/api/teacher/test-papers'),
-        fetch('/api/teacher/classes'),
+        fetch('/api/teacher/test-papers', { cache: 'no-store' }),
+        fetch('/api/teacher/classes', { cache: 'no-store' }),
       ]);
 
       if (testRes.status === 401 || testRes.status === 403) {

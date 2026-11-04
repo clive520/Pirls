@@ -118,6 +118,37 @@ async function fetchFromFirestore(): Promise<{ data: DBState | null; exists: boo
   if (!db) return { data: null, exists: false };
 
   try {
+    // 優先查詢各獨立 Collections (克服單一文檔 1MB 限制)
+    const [usersSnap, classesSnap, testPapersSnap, submissionsSnap] = await Promise.all([
+      db.collection('users').get(),
+      db.collection('classes').get(),
+      db.collection('testPapers').get(),
+      db.collection('submissions').get(),
+    ]);
+
+    if (!testPapersSnap.empty || !usersSnap.empty) {
+      const data: DBState = {
+        users: {},
+        classes: {},
+        testPapers: {},
+        submissions: {},
+      };
+      usersSnap.forEach((doc) => {
+        data.users[doc.id] = doc.data() as User;
+      });
+      classesSnap.forEach((doc) => {
+        data.classes[doc.id] = doc.data() as ClassRoom;
+      });
+      testPapersSnap.forEach((doc) => {
+        data.testPapers[doc.id] = doc.data() as TestPaper;
+      });
+      submissionsSnap.forEach((doc) => {
+        data.submissions[doc.id] = doc.data() as ExamSubmission;
+      });
+      return { data, exists: true };
+    }
+
+    // 備援：若集合為空，嘗試讀取舊版單一文檔 _pirls_system/database_state
     const docSnap = await db.collection('_pirls_system').doc('database_state').get();
     if (docSnap.exists) {
       const raw = docSnap.data();
@@ -142,16 +173,77 @@ async function syncToFirestore(state: DBState): Promise<void> {
   if (!db) return;
 
   try {
-    await db.collection('_pirls_system').doc('database_state').set({
-      users: state.users,
-      classes: state.classes,
-      testPapers: state.testPapers,
-      submissions: state.submissions,
-      lastSyncedAt: new Date().toISOString(),
-    });
+    // 批次寫入各獨立 collection (每批最多 450 個操作)
+    let batch = db.batch();
+    let opCount = 0;
+
+    for (const [id, paper] of Object.entries(state.testPapers)) {
+      batch.set(db.collection('testPapers').doc(id), paper, { merge: true });
+      opCount++;
+      if (opCount >= 450) {
+        await batch.commit();
+        batch = db.batch();
+        opCount = 0;
+      }
+    }
+    for (const [id, user] of Object.entries(state.users)) {
+      batch.set(db.collection('users').doc(id), user, { merge: true });
+      opCount++;
+      if (opCount >= 450) {
+        await batch.commit();
+        batch = db.batch();
+        opCount = 0;
+      }
+    }
+    for (const [id, cls] of Object.entries(state.classes)) {
+      batch.set(db.collection('classes').doc(id), cls, { merge: true });
+      opCount++;
+      if (opCount >= 450) {
+        await batch.commit();
+        batch = db.batch();
+        opCount = 0;
+      }
+    }
+    for (const [id, sub] of Object.entries(state.submissions)) {
+      batch.set(db.collection('submissions').doc(id), sub, { merge: true });
+      opCount++;
+      if (opCount >= 450) {
+        await batch.commit();
+        batch = db.batch();
+        opCount = 0;
+      }
+    }
+
+    if (opCount > 0) {
+      await batch.commit();
+    }
     globalThis.__pirls_blob_last_synced = Date.now();
   } catch (err) {
     console.warn('[DB] Firestore sync warning:', err);
+  }
+}
+
+export async function syncTestPaperToFirestore(paper: TestPaper): Promise<void> {
+  if (isBuildPhase()) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    await db.collection('testPapers').doc(paper.id).set(paper);
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err: any) {
+    console.error('[DB] Failed to sync testPaper to Firestore:', err);
+    throw err;
+  }
+}
+
+export async function deleteTestPaperFromFirestore(id: string): Promise<void> {
+  if (isBuildPhase()) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    await db.collection('testPapers').doc(id).delete();
+  } catch (err: any) {
+    console.error('[DB] Failed to delete testPaper from Firestore:', err);
   }
 }
 
@@ -1040,6 +1132,9 @@ export async function createTestPaper(
   };
   state.testPapers[id] = newTest;
   saveLocalDB(state);
+
+  // 直接以單文檔原子寫入 Firestore testPapers 集合，保證即時持久化且不受 1MB 總庫限制！
+  await syncTestPaperToFirestore(newTest).catch((e) => console.warn('[DB] Direct Firestore testPaper write warning:', e));
   await syncToBlob(state);
   return newTest;
 }
@@ -1057,9 +1152,12 @@ export async function updateTestPaper(
     ...updates,
     updatedAt: new Date().toISOString(),
   };
+  const updated = state.testPapers[id];
   saveLocalDB(state);
+
+  await syncTestPaperToFirestore(updated).catch((e) => console.warn('[DB] Direct Firestore testPaper update warning:', e));
   await syncToBlob(state);
-  return state.testPapers[id];
+  return updated;
 }
 
 export async function getTestPaperById(id: string): Promise<TestPaper | null> {
@@ -1068,11 +1166,11 @@ export async function getTestPaperById(id: string): Promise<TestPaper | null> {
   return state.testPapers[id] || null;
 }
 
-export async function getTeacherTestPapers(teacherId: string): Promise<TestPaper[]> {
+export async function getTeacherTestPapers(teacherId: string, isAdmin: boolean = false): Promise<TestPaper[]> {
   await syncCloudOnBoot();
   const state = ensureLocalDB();
   return Object.values(state.testPapers)
-    .filter((t) => t.creatorId === teacherId)
+    .filter((t) => isAdmin || t.creatorId === teacherId || t.isPublic)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
@@ -1099,6 +1197,7 @@ export async function deleteTestPaper(id: string): Promise<boolean> {
   if (state.testPapers[id]) {
     delete state.testPapers[id];
     saveLocalDB(state);
+    await deleteTestPaperFromFirestore(id).catch((e) => console.warn('[DB] Direct Firestore testPaper delete note:', e));
     await syncToBlob(state);
     return true;
   }

@@ -167,15 +167,15 @@ export default function TeacherCreateTestPage() {
   const [copiedCombined, setCopiedCombined] = useState(false);
   const [copiedSingle, setCopiedSingle] = useState(false);
 
-  // 客戶端圖片無損等比輕量壓縮（縮小至 1000px 以內，產出高品質約 80KB JPEG Data URL）
+  // 客戶端圖片無損等比輕量壓縮（縮小至 900px 以內，產出高品質約 50KB JPEG Data URL，極速載入）
   const compressAndLoadImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const maxWidth = 1000;
-          const maxHeight = 1000;
+          const maxWidth = 900;
+          const maxHeight = 900;
           let width = img.width;
           let height = img.height;
 
@@ -200,7 +200,7 @@ export default function TeacherCreateTestPage() {
             return;
           }
           ctx.drawImage(img, 0, 0, width, height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
           resolve(dataUrl);
         };
         img.onerror = reject;
@@ -438,25 +438,30 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
     }
   };
 
+  const [saving, setSaving] = useState(false);
+
   // 儲存試卷至題庫
   const handleSaveTestPaper = async () => {
-    if (!testPaper) return;
+    if (!testPaper || saving) return;
     try {
+      setSaving(true);
       const res = await fetch('/api/teacher/test-papers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(testPaper),
       });
       const data = await res.json();
-      if (res.ok) {
-        alert('🎉 試卷已成功儲存至個人題庫！');
+      if (res.ok && data.success) {
+        alert('🎉 試卷已成功寫入資料庫並同步至個人題庫！');
         router.push('/dashboard/teacher/test-papers');
       } else {
-        alert(data.error || '儲存失敗');
+        alert(data.error || '儲存失敗，請檢查資料完整度');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('儲存過程發生錯誤');
+      alert('儲存過程發生錯誤：' + (err.message || '請確認網路狀態'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -544,10 +549,20 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
               </span>
               <button
                 onClick={handleSaveTestPaper}
-                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold inline-flex items-center space-x-1.5 shadow-sm transition"
+                disabled={saving}
+                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:bg-slate-400 text-white text-xs font-bold inline-flex items-center space-x-1.5 shadow-sm transition"
               >
-                <Save className="w-4 h-4" />
-                <span>儲存至題庫</span>
+                {saving ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>寫入題庫中...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>儲存至題庫</span>
+                  </>
+                )}
               </button>
             </div>
           )}
@@ -1598,10 +1613,20 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
                   <div className="pt-4 flex justify-end">
                     <button
                       onClick={handleSaveTestPaper}
-                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md transition flex items-center space-x-2"
+                      disabled={saving}
+                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 disabled:opacity-50 text-white font-bold text-sm shadow-md transition flex items-center space-x-2"
                     >
-                      <Save className="w-4 h-4" />
-                      <span>確認完成微調，儲存至題庫</span>
+                      {saving ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>寫入題庫與雲端同調中...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          <span>確認完成微調，儲存至題庫</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
