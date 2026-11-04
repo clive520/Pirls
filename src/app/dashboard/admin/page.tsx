@@ -90,7 +90,7 @@ export default function AdminDashboardPage() {
     try {
       setLoading(true);
       setErrorMsg('');
-      const res = await fetch('/api/admin/teachers');
+      const res = await fetch('/api/admin/teachers', { cache: 'no-store' });
       if (res.status === 401 || res.status === 403) {
         router.push('/login');
         return;

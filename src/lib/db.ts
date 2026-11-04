@@ -242,8 +242,108 @@ export async function deleteTestPaperFromFirestore(id: string): Promise<void> {
   if (!db) return;
   try {
     await db.collection('testPapers').doc(id).delete();
+    globalThis.__pirls_blob_last_synced = Date.now();
   } catch (err: any) {
     console.error('[DB] Failed to delete testPaper from Firestore:', err);
+  }
+}
+
+export async function syncUserToFirestore(user: User): Promise<void> {
+  if (isBuildPhase()) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    await db.collection('users').doc(user.id).set(user);
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err: any) {
+    console.error('[DB] Failed to sync user to Firestore:', err);
+  }
+}
+
+export async function deleteUserFromFirestore(id: string): Promise<void> {
+  if (isBuildPhase()) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    await db.collection('users').doc(id).delete();
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err: any) {
+    console.error('[DB] Failed to delete user from Firestore:', err);
+  }
+}
+
+export async function syncClassToFirestore(cls: ClassRoom): Promise<void> {
+  if (isBuildPhase()) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    await db.collection('classes').doc(cls.id).set(cls);
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err: any) {
+    console.error('[DB] Failed to sync class to Firestore:', err);
+  }
+}
+
+export async function deleteClassFromFirestore(id: string): Promise<void> {
+  if (isBuildPhase()) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    await db.collection('classes').doc(id).delete();
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err: any) {
+    console.error('[DB] Failed to delete class from Firestore:', err);
+  }
+}
+
+export async function syncSubmissionToFirestore(sub: ExamSubmission): Promise<void> {
+  if (isBuildPhase()) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    await db.collection('submissions').doc(sub.id).set(sub);
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err: any) {
+    console.error('[DB] Failed to sync submission to Firestore:', err);
+  }
+}
+
+export async function deleteSubmissionFromFirestore(id: string): Promise<void> {
+  if (isBuildPhase()) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    await db.collection('submissions').doc(id).delete();
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err: any) {
+    console.error('[DB] Failed to delete submission from Firestore:', err);
+  }
+}
+
+export async function batchDeleteFromFirestore(
+  items: { collection: string; id: string }[]
+): Promise<void> {
+  if (isBuildPhase() || items.length === 0) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    let batch = db.batch();
+    let count = 0;
+    for (const item of items) {
+      batch.delete(db.collection(item.collection).doc(item.id));
+      count++;
+      if (count >= 450) {
+        await batch.commit();
+        batch = db.batch();
+        count = 0;
+      }
+    }
+    if (count > 0) {
+      await batch.commit();
+    }
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err) {
+    console.error('[DB] Failed batchDeleteFromFirestore:', err);
   }
 }
 
@@ -501,6 +601,7 @@ export async function createUser(data: Omit<User, 'id' | 'createdAt'>): Promise<
   };
   state.users[id] = newUser;
   saveLocalDB(state);
+  await syncUserToFirestore(newUser);
   await syncToBlob(state);
   return newUser;
 }
@@ -535,6 +636,7 @@ export async function updateUserRole(
 
   user.role = newRole;
   saveLocalDB(state);
+  await syncUserToFirestore(user);
   await syncToBlob(state);
   return { success: true };
 }
@@ -557,6 +659,7 @@ export async function updateUserStatus(userId: string, status: UserStatus): Prom
 
   user.status = status;
   saveLocalDB(state);
+  await syncUserToFirestore(user);
   await syncToBlob(state);
   return true;
 }
@@ -743,11 +846,13 @@ export async function deleteTeacher(
     // 1. 轉移班級
     for (const c of teacherClasses) {
       c.teacherId = options.targetTeacherId;
+      await syncClassToFirestore(c);
     }
 
     // 2. 轉移學生
     for (const s of teacherStudents) {
       s.teacherId = options.targetTeacherId;
+      await syncUserToFirestore(s);
     }
 
     // 3. 轉移試卷與文章（方案 A：校本資產保護，完整移交新任教師）
@@ -755,13 +860,15 @@ export async function deleteTeacher(
       if (t.creatorId === teacherId) {
         t.creatorId = options.targetTeacherId;
         t.creatorName = `${teacher.displayName} (由 ${targetTeacher.displayName} 接手)`;
+        await syncTestPaperToFirestore(t);
       }
     }
 
-    // 4. 刪除原教師帳號
+    // 4. 刪除原教師帳號 (記憶體 + 本地檔 + Firestore 原生集合原子刪除)
     delete state.users[teacherId];
 
     saveLocalDB(state);
+    await deleteUserFromFirestore(teacherId);
     await syncToBlob(state);
 
     return {
@@ -771,28 +878,35 @@ export async function deleteTeacher(
   } else if (options.deleteMode === 'cascade') {
     // 連帶刪除該教師名下所有班級、學生與作答成績
     let deletedSubmissionsCount = 0;
+    const deletedSubmissionIds: string[] = [];
     for (const [subId, sub] of Object.entries(state.submissions)) {
       if (
         (sub.studentId && teacherStudentIds.has(sub.studentId)) ||
         (sub.classId && teacherClassIds.has(sub.classId))
       ) {
         delete state.submissions[subId];
+        deletedSubmissionIds.push(subId);
         deletedSubmissionsCount++;
       }
     }
 
     // 刪除學生
+    const deletedStudentIds: string[] = [];
     for (const s of teacherStudents) {
       delete state.users[s.id];
+      deletedStudentIds.push(s.id);
     }
 
     // 刪除班級
+    const deletedClassIds: string[] = [];
     for (const c of teacherClasses) {
       delete state.classes[c.id];
+      deletedClassIds.push(c.id);
     }
 
     // 4. 方案 A：校本教學資產保護 — 教師所建立的文章與題本「全數安全保留」，轉為全校公共題庫！
     let preservedPapersCount = 0;
+    const updatedPapers: TestPaper[] = [];
     for (const [tid, tp] of Object.entries(state.testPapers)) {
       if (tp.creatorId === teacherId) {
         tp.creatorId = 'admin_root_001';
@@ -800,6 +914,7 @@ export async function deleteTeacher(
         tp.isPublic = true; // 設為全校公共題庫與開放練習，供全校師生調用
         tp.assignedClassIds = []; // 清空已刪除班級之綁定
         preservedPapersCount++;
+        updatedPapers.push(tp);
       }
     }
 
@@ -807,6 +922,20 @@ export async function deleteTeacher(
     delete state.users[teacherId];
 
     saveLocalDB(state);
+
+    // 執行 Firestore 原子批次刪除與更新
+    const firestoreDeletions: { collection: string; id: string }[] = [
+      { collection: 'users', id: teacherId },
+      ...deletedStudentIds.map((id) => ({ collection: 'users', id })),
+      ...deletedClassIds.map((id) => ({ collection: 'classes', id })),
+      ...deletedSubmissionIds.map((id) => ({ collection: 'submissions', id })),
+    ];
+    await batchDeleteFromFirestore(firestoreDeletions);
+
+    for (const p of updatedPapers) {
+      await syncTestPaperToFirestore(p);
+    }
+
     await syncToBlob(state);
 
     return {
@@ -836,6 +965,7 @@ export async function createClass(
   };
   state.classes[id] = newClass;
   saveLocalDB(state);
+  await syncClassToFirestore(newClass);
   await syncToBlob(state);
   return newClass;
 }
@@ -953,8 +1083,10 @@ export async function deleteStudent(studentId: string): Promise<boolean> {
     delete state.users[studentId];
     if (classId && state.classes[classId] && state.classes[classId].studentCount > 0) {
       state.classes[classId].studentCount -= 1;
+      await syncClassToFirestore(state.classes[classId]);
     }
     saveLocalDB(state);
+    await deleteUserFromFirestore(studentId);
     await syncToBlob(state);
     return true;
   }
@@ -1005,6 +1137,7 @@ export async function updateStudentInfo(
   }
 
   saveLocalDB(state);
+  await syncUserToFirestore(student);
   await syncToBlob(state);
   return { success: true, student };
 }
@@ -1088,12 +1221,20 @@ export async function deleteClass(classId: string): Promise<boolean> {
   const state = ensureLocalDB();
   if (state.classes[classId]) {
     delete state.classes[classId];
+    const studentIdsToDelete: string[] = [];
     for (const [uid, user] of Object.entries(state.users)) {
       if (user.classId === classId) {
         delete state.users[uid];
+        studentIdsToDelete.push(uid);
       }
     }
     saveLocalDB(state);
+
+    const toDelete = [
+      { collection: 'classes', id: classId },
+      ...studentIdsToDelete.map((id) => ({ collection: 'users', id })),
+    ];
+    await batchDeleteFromFirestore(toDelete);
     await syncToBlob(state);
     return true;
   }
@@ -1106,6 +1247,7 @@ export async function resetUserPassword(userId: string, newPlainPassword: string
   if (state.users[userId]) {
     state.users[userId].passwordHash = await hashPassword(newPlainPassword);
     saveLocalDB(state);
+    await syncUserToFirestore(state.users[userId]);
     await syncToBlob(state);
     return true;
   }
@@ -1251,6 +1393,7 @@ export async function createSubmission(
   };
   state.submissions[id] = newSubmission;
   saveLocalDB(state);
+  await syncSubmissionToFirestore(newSubmission);
   await syncToBlob(state);
   return newSubmission;
 }
@@ -1398,6 +1541,7 @@ export async function updateSubmissionReview(
   }
 
   saveLocalDB(state);
+  await syncSubmissionToFirestore(sub);
   await syncToBlob(state);
   return sub;
 }

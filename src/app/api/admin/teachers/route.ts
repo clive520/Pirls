@@ -164,33 +164,38 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: '無管理員權限' }, { status: 403 });
   }
 
-  const body = await req.json();
-  const { teacherId, deleteMode, targetTeacherId } = body;
+  try {
+    const body = await req.json();
+    const { teacherId, deleteMode, targetTeacherId } = body;
 
-  if (!teacherId) {
-    return NextResponse.json({ error: '缺少教師 ID' }, { status: 400 });
+    if (!teacherId) {
+      return NextResponse.json({ error: '缺少教師 ID' }, { status: 400 });
+    }
+
+    if (!['transfer', 'cascade'].includes(deleteMode)) {
+      return NextResponse.json(
+        { error: '請指定刪除處置模式（指定接手 transfer 或連帶刪除 cascade）' },
+        { status: 400 }
+      );
+    }
+
+    const res = await deleteTeacher(teacherId, {
+      deleteMode,
+      targetTeacherId,
+    });
+
+    if (!res.success) {
+      return NextResponse.json({ error: res.error || '刪除失敗' }, { status: 400 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: res.message,
+    });
+  } catch (err: any) {
+    console.error('[API] DELETE teacher error:', err);
+    return NextResponse.json({ error: '刪除教師異常：' + (err.message || '未知錯誤') }, { status: 500 });
   }
-
-  if (!['transfer', 'cascade'].includes(deleteMode)) {
-    return NextResponse.json(
-      { error: '請指定刪除處置模式（指定接手 transfer 或連帶刪除 cascade）' },
-      { status: 400 }
-    );
-  }
-
-  const res = await deleteTeacher(teacherId, {
-    deleteMode,
-    targetTeacherId,
-  });
-
-  if (!res.success) {
-    return NextResponse.json({ error: res.error || '刪除失敗' }, { status: 400 });
-  }
-
-  return NextResponse.json({
-    success: true,
-    message: res.message,
-  });
 }
 
 /**
