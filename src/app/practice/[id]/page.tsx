@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  BookOpen, Clock, ArrowLeft, Send, CheckCircle2,
-  AlertCircle, Sparkles, HelpCircle, User, Compass
+  BookOpen, Clock, ArrowLeft, ArrowRight, Send, CheckCircle2,
+  AlertCircle, Sparkles, HelpCircle, User, Compass, X, Check, ZoomIn, ZoomOut
 } from 'lucide-react';
 import { TestPaper, TestQuestion } from '@/lib/types';
 
@@ -20,6 +20,11 @@ export default function PracticeTakingPage() {
   const [nickname, setNickname] = useState('自主學習同學');
   const [submitting, setSubmitting] = useState(false);
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>('normal');
+
+  // 自學答題流程階段: 'reading' (先閱讀文章) | 'answering' (再回答題目)
+  const [phase, setPhase] = useState<'reading' | 'answering'>('reading');
+  // 做題中隨時查看文章的彈窗狀態
+  const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchExam = async () => {
@@ -40,9 +45,32 @@ export default function PracticeTakingPage() {
     if (testId) fetchExam();
   }, [testId]);
 
+  // 彈窗鍵盤 Esc 關閉支援
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isArticleModalOpen) {
+        setIsArticleModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isArticleModalOpen]);
+
+  // 彈窗開啟時鎖定背景捲軸
+  useEffect(() => {
+    if (isArticleModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isArticleModalOpen]);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-400">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-bold text-sm">
         正在載入自學試卷...
       </div>
     );
@@ -112,41 +140,109 @@ export default function PracticeTakingPage() {
 
   const fontClass =
     fontSize === 'xlarge'
-      ? 'text-lg leading-loose'
+      ? 'text-lg sm:text-xl leading-loose'
       : fontSize === 'large'
-      ? 'text-base leading-relaxed'
-      : 'text-sm leading-relaxed';
+      ? 'text-base sm:text-lg leading-relaxed'
+      : 'text-sm sm:text-base leading-relaxed';
+
+  // 渲染文章內容與穿插情境圖
+  const renderArticleContent = () => (
+    <div className={`space-y-4 text-slate-800 font-serif ${fontClass}`}>
+      {testPaper.paragraphs.map((p, pIdx) => {
+        const matchingIlls = (testPaper.illustrations || []).filter(
+          (ill) => (ill.paragraphNumber || 1) === p.paragraphNumber
+        );
+        const isLast = pIdx === testPaper.paragraphs.length - 1;
+        const trailingIlls = isLast
+          ? (testPaper.illustrations || []).filter(
+              (ill) => (ill.paragraphNumber || 1) > testPaper.paragraphs.length
+            )
+          : [];
+        const allIllsForThisPara = [...matchingIlls, ...trailingIlls];
+
+        return (
+          <div key={p.paragraphNumber} className="space-y-4">
+            <div className="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-100 text-justify relative group">
+              <span className="inline-block text-[10px] font-mono font-bold text-sky-700 bg-sky-50 border border-sky-200/60 px-2 py-0.5 rounded mr-2.5 align-middle select-none">
+                P{p.paragraphNumber}
+              </span>
+              <span className="leading-relaxed">{p.text}</span>
+            </div>
+
+            {/* 穿插於本段落後的情境插圖 */}
+            {allIllsForThisPara.map((ill) => {
+              if (!ill.imageUrl && !ill.svgCode) return null;
+              return (
+                <figure
+                  key={ill.id}
+                  className="my-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex flex-col justify-between max-w-xl mx-auto shadow-sm"
+                >
+                  {ill.imageUrl ? (
+                    <div className="w-full flex justify-center py-1 flex-1 items-center">
+                      <img
+                        src={ill.imageUrl}
+                        alt={ill.caption || '課文插圖'}
+                        className="max-w-full h-auto max-h-80 object-contain rounded-xl shadow-sm bg-white"
+                      />
+                    </div>
+                  ) : ill.type === 'svg_diagram' && ill.svgCode ? (
+                    <div
+                      className="w-full overflow-x-auto flex justify-center py-2"
+                      dangerouslySetInnerHTML={{ __html: ill.svgCode }}
+                    />
+                  ) : null}
+                  {ill.caption && (
+                    <figcaption className="text-center text-xs text-slate-600 font-semibold mt-2.5 px-2 leading-relaxed">
+                      {ill.caption}
+                    </figcaption>
+                  )}
+                </figure>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col justify-between">
       {/* 頂部導航與進度列 */}
       <header className="bg-white border-b sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Link
               href="/practice"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
               title="離開自學"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-sky-700">
-                  開放自學體驗
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    phase === 'reading'
+                      ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                      : 'bg-sky-100 text-sky-800 border border-sky-200'
+                  }`}
+                >
+                  {phase === 'reading' ? '📖 第 1 階段：閱讀文章' : '📝 第 2 階段：自學作答'}
                 </span>
-                <span className="text-xs text-slate-400">國小 {testPaper.targetGrade} 年級</span>
+                <span className="text-[11px] text-slate-400 hidden sm:inline">
+                  國小 {testPaper.targetGrade} 年級
+                </span>
               </div>
-              <h1 className="text-sm font-bold text-slate-900 line-clamp-1">{testPaper.title}</h1>
+              <h1 className="text-sm sm:text-base font-bold text-slate-900 line-clamp-1">{testPaper.title}</h1>
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             {/* 字體縮放按鈕 */}
             <div className="hidden sm:flex items-center bg-slate-100 p-1 rounded-xl space-x-1 text-xs">
               <button
                 onClick={() => setFontSize('normal')}
-                className={`px-2 py-0.5 rounded-lg font-bold ${
+                className={`px-2 py-0.5 rounded-lg font-bold transition ${
                   fontSize === 'normal' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'
                 }`}
               >
@@ -154,7 +250,7 @@ export default function PracticeTakingPage() {
               </button>
               <button
                 onClick={() => setFontSize('large')}
-                className={`px-2 py-0.5 rounded-lg font-bold ${
+                className={`px-2 py-0.5 rounded-lg font-bold transition ${
                   fontSize === 'large' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'
                 }`}
               >
@@ -162,7 +258,7 @@ export default function PracticeTakingPage() {
               </button>
               <button
                 onClick={() => setFontSize('xlarge')}
-                className={`px-2 py-0.5 rounded-lg font-bold ${
+                className={`px-2 py-0.5 rounded-lg font-bold transition ${
                   fontSize === 'xlarge' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'
                 }`}
               >
@@ -182,113 +278,177 @@ export default function PracticeTakingPage() {
               />
             </div>
 
-            {/* 交卷按鈕 */}
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs font-bold inline-flex items-center space-x-1.5 shadow-sm transition disabled:opacity-50"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>{submitting ? '批改中...' : '交卷並診斷'}</span>
-            </button>
+            {/* 階段專屬按鈕 */}
+            {phase === 'reading' ? (
+              <button
+                onClick={() => {
+                  setPhase('answering');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs font-bold inline-flex items-center space-x-1.5 shadow-md shadow-sky-500/20 transition"
+              >
+                <span>我讀完了，開始做題</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <>
+                {/* 隨時查看文章按鈕 */}
+                <button
+                  onClick={() => setIsArticleModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold flex items-center space-x-1.5 transition shadow-sm"
+                  title="點擊彈出文章對照"
+                >
+                  <BookOpen className="w-4 h-4 text-amber-600" />
+                  <span>查看文章</span>
+                </button>
+
+                {/* 交卷按鈕 */}
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs font-bold inline-flex items-center space-x-1.5 shadow-sm transition disabled:opacity-50"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{submitting ? '批改中...' : '交卷並診斷'}</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
 
         {/* 作答進度條 */}
-        <div className="w-full bg-slate-200 h-1">
-          <div
-            className="h-full bg-gradient-to-r from-sky-500 to-indigo-600 transition-all duration-300"
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
+        {phase === 'answering' && (
+          <div className="w-full bg-slate-200 h-1">
+            <div
+              className="h-full bg-gradient-to-r from-sky-500 to-indigo-600 transition-all duration-300"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        )}
       </header>
 
-      {/* 雙欄主閱讀區塊 */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* 左側：文本文章區 (佔 6 欄) */}
-        <section className="lg:col-span-6 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6 lg:sticky lg:top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
-          <div className="border-b border-slate-100 pb-4">
-            <span className="text-[11px] font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded">
-              {testPaper.textType === 'literary' ? '文學性故事閱讀' : '訊息性科普閱讀'}
-            </span>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
-              《{testPaper.title}》
-            </h2>
-            <div className="text-xs text-slate-400 mt-1 flex items-center space-x-3">
-              <span>全文約 {testPaper.wordCount} 字</span>
-              <span>•</span>
-              <span>共 {testPaper.paragraphs.length} 個自然段</span>
+      {/* 依階段切換主介面 */}
+      {phase === 'reading' ? (
+        /* ========== 第 1 階段：專注文讀模式 ========== */
+        <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
+          {/* 引導標籤卡 */}
+          <div className="bg-gradient-to-r from-sky-50 via-indigo-50 to-sky-50 p-4 sm:p-5 rounded-2xl border border-sky-100 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center space-x-3.5">
+              <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center font-bold flex-shrink-0 shadow-md shadow-sky-500/20">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs font-black px-2 py-0.5 rounded bg-sky-600 text-white">
+                    第一階段
+                  </span>
+                  <span className="text-sm font-bold text-slate-800">請先仔細閱讀文章</span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  專心讀完整篇故事與情境圖後，點擊下方「開始做題」即可進入題目回答階段。
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setPhase('answering');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-md shadow-sky-500/20 flex items-center justify-center space-x-1.5 transition flex-shrink-0"
+            >
+              <span>我讀完了，開始做題</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* 文章閱讀大卡片 */}
+          <article className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-10 space-y-6">
+            <div className="border-b border-slate-100 pb-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  {testPaper.textType === 'literary' ? '文學性故事閱讀' : '訊息性科普閱讀'}
+                </span>
+                <span className="text-xs text-slate-400 font-mono">
+                  約 {testPaper.wordCount} 字 • 共 {testPaper.paragraphs.length} 個自然段
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">
+                《{testPaper.title}》
+              </h2>
+              {testPaper.themeSummary && (
+                <p className="text-xs sm:text-sm text-slate-600 italic bg-slate-50 p-3.5 rounded-xl border border-slate-100 leading-relaxed">
+                  💡 導讀：{testPaper.themeSummary}
+                </p>
+              )}
+            </div>
+
+            {/* 段落本文與穿插插圖 */}
+            {renderArticleContent()}
+
+            {/* 讀畢引導區 */}
+            <div className="pt-8 border-t border-slate-100">
+              <div className="p-6 sm:p-8 bg-gradient-to-br from-sky-50 via-indigo-50 to-sky-50/60 rounded-3xl border border-sky-100 text-center space-y-4">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-sky-600 text-white flex items-center justify-center shadow-lg shadow-sky-500/25">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                    文章已經讀完了嗎？
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
+                    接下來將進入題目回答。在做題過程中，
+                    <strong className="text-sky-600 font-bold">隨時可點擊「查看文章」按鈕</strong>彈出全文對照，尋找答案證據！
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setPhase('answering');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-sm font-bold shadow-lg shadow-sky-500/25 transition transform hover:scale-[1.02] active:scale-[0.98] inline-flex items-center space-x-2"
+                >
+                  <span>我讀完了，開始做題</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </article>
+        </main>
+      ) : (
+        /* ========== 第 2 階段：專注做題模式 ========== */
+        <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 space-y-6">
+          {/* 做題輔助導航提示 */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between text-xs">
+            <div className="flex items-center space-x-2">
+              <span className="font-bold text-slate-800">
+                作答進度：{answeredCount} / {totalQuestions} 題 ({progressPct}%)
+              </span>
+              <span className="text-slate-400 hidden sm:inline">•</span>
+              <span className="text-slate-500 hidden sm:inline">
+                需要查找證據時，可隨時點擊查看文章
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsArticleModalOpen(true)}
+                className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold flex items-center space-x-1.5 transition shadow-sm"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-amber-600" />
+                <span>查看文章</span>
+              </button>
+              <button
+                onClick={() => {
+                  setPhase('reading');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition"
+              >
+                返回文章
+              </button>
             </div>
           </div>
 
-          {/* 文章段落與穿插於合適位置的情境插圖 */}
-          <div className={`space-y-5 text-slate-800 ${fontClass}`}>
-            {testPaper.paragraphs.map((p, pIdx) => {
-              const matchingIlls = (testPaper.illustrations || []).filter(
-                (ill) => (ill.paragraphNumber || 1) === p.paragraphNumber
-              );
-              const isLast = pIdx === testPaper.paragraphs.length - 1;
-              const trailingIlls = isLast
-                ? (testPaper.illustrations || []).filter(
-                    (ill) => (ill.paragraphNumber || 1) > testPaper.paragraphs.length
-                  )
-                : [];
-              const allIllsForThisPara = [...matchingIlls, ...trailingIlls];
-
-              return (
-                <div key={p.paragraphNumber} className="space-y-4">
-                  <div className="relative group flex items-start space-x-2">
-                    <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex-shrink-0 mt-1 select-none">
-                      P{p.paragraphNumber}
-                    </span>
-                    <p className="indent-4 leading-relaxed">{p.text}</p>
-                  </div>
-
-                  {/* 穿插於本段落後的情境插圖 */}
-                  {allIllsForThisPara.map((ill) => {
-                    if (!ill.imageUrl && !ill.svgCode) return null;
-                    return (
-                      <figure
-                        key={ill.id}
-                        className="my-3.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex flex-col justify-between max-w-lg mx-auto shadow-sm"
-                      >
-                        {ill.imageUrl ? (
-                          <div className="w-full flex justify-center py-1 flex-1 items-center">
-                            <img
-                              src={ill.imageUrl}
-                              alt={ill.caption || '課文插圖'}
-                              className="max-w-full h-auto max-h-64 object-contain rounded-xl shadow-sm bg-white"
-                            />
-                          </div>
-                        ) : ill.type === 'svg_diagram' && ill.svgCode ? (
-                          <div
-                            className="w-full overflow-x-auto flex justify-center py-2"
-                            dangerouslySetInnerHTML={{ __html: ill.svgCode }}
-                          />
-                        ) : null}
-                        {ill.caption && (
-                          <figcaption className="text-center text-xs text-slate-600 font-medium mt-2 px-1">
-                            {ill.caption}
-                          </figcaption>
-                        )}
-                      </figure>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* 右側：答題區 (佔 6 欄) */}
-        <section className="lg:col-span-6 space-y-6">
-          <div className="bg-sky-50/70 p-4 rounded-2xl border border-sky-100 flex items-center justify-between text-xs text-sky-800">
-            <span>
-              已完成：<strong>{answeredCount}</strong> / {totalQuestions} 題 ({progressPct}%)
-            </span>
-            <span className="text-slate-500">回答開放簡答題時，請儘量結合文章字句佐證！</span>
-          </div>
-
+          {/* 題目清單 */}
           <div className="space-y-6">
             {testPaper.questions.map((q) => {
               const currentAns = answers[q.id] || '';
@@ -301,7 +461,7 @@ export default function PracticeTakingPage() {
                     isAnswered ? 'border-sky-300' : 'border-slate-200'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div className="flex items-center space-x-2">
                       <span className="w-7 h-7 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
                         {q.questionNumber}
@@ -321,9 +481,20 @@ export default function PracticeTakingPage() {
                       </span>
                     </div>
 
-                    <span className="text-xs font-bold text-slate-500">
-                      配分：{q.points} 分
-                    </span>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setIsArticleModalOpen(true)}
+                        className="text-xs text-sky-700 hover:text-sky-900 hover:bg-sky-50 px-2.5 py-1 rounded-lg flex items-center space-x-1 font-bold transition border border-sky-100"
+                        title="開啟文章彈窗查閱線索"
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>對照文章</span>
+                      </button>
+                      <span className="text-xs font-bold text-slate-500">
+                        配分：{q.points} 分
+                      </span>
+                    </div>
                   </div>
 
                   {/* 題幹 */}
@@ -341,14 +512,14 @@ export default function PracticeTakingPage() {
                             key={opt.label}
                             type="button"
                             onClick={() => handleSelectOption(q.id, opt.label)}
-                            className={`w-full text-left p-3.5 rounded-xl border text-xs sm:text-sm font-medium transition flex items-center space-x-3 ${
+                            className={`w-full text-left p-3.5 sm:p-4 rounded-2xl border text-xs sm:text-sm font-medium transition flex items-center space-x-3 ${
                               isSelected
-                                ? 'bg-sky-50 border-sky-500 text-sky-900 shadow-sm'
+                                ? 'bg-sky-50 border-sky-500 text-sky-900 shadow-sm ring-1 ring-sky-400/30'
                                 : 'bg-slate-50/60 border-slate-200 hover:bg-slate-100 text-slate-700'
                             }`}
                           >
                             <span
-                              className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs border ${
+                              className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs border transition ${
                                 isSelected
                                   ? 'bg-sky-600 text-white border-sky-600'
                                   : 'bg-white border-slate-300 text-slate-600'
@@ -356,7 +527,8 @@ export default function PracticeTakingPage() {
                             >
                               {opt.label}
                             </span>
-                            <span className="flex-1">{opt.text}</span>
+                            <span className="flex-1 leading-relaxed">{opt.text}</span>
+                            {isSelected && <Check className="w-4 h-4 text-sky-600 flex-shrink-0" />}
                           </button>
                         );
                       })}
@@ -371,7 +543,7 @@ export default function PracticeTakingPage() {
                         value={currentAns}
                         onChange={(e) => handleTextChange(q.id, e.target.value)}
                         placeholder="請依據文章內容寫下您的思考與文本證據（建議寫出具體原因與段落線索）..."
-                        className="w-full p-4 rounded-2xl border border-slate-200 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition leading-relaxed resize-y"
+                        className="w-full p-4 rounded-2xl border border-slate-200 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition leading-relaxed resize-y shadow-sm"
                       />
                       <div className="flex justify-between items-center text-[11px] text-slate-400">
                         <span>字數：{currentAns.length} 字</span>
@@ -389,24 +561,126 @@ export default function PracticeTakingPage() {
           </div>
 
           {/* 底部繳卷卡 */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <div className="text-sm font-bold text-slate-800">準備好領取您的診斷書了嗎？</div>
-              <div className="text-xs text-slate-400">
-                已答 {answeredCount} / {totalQuestions} 題
+              <div className="text-base font-bold text-slate-800">準備好領取您的素養診斷書了嗎？</div>
+              <div className="text-xs text-slate-400 mt-0.5">
+                已完成 {answeredCount} / {totalQuestions} 題
               </div>
             </div>
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs font-bold inline-flex items-center space-x-1.5 shadow transition disabled:opacity-50"
+              className="w-full sm:w-auto px-7 py-3 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-bold inline-flex items-center justify-center space-x-1.5 shadow-md shadow-sky-500/25 transition disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
-              <span>{submitting ? '批改運算中...' : '確認交卷'}</span>
+              <span>{submitting ? '批改運算中...' : '確認交卷並診斷'}</span>
             </button>
           </div>
-        </section>
-      </main>
+
+          {/* 畫面右下角常駐懸浮按鈕 (FAB) - 隨時彈出文章 */}
+          <button
+            onClick={() => setIsArticleModalOpen(true)}
+            className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold px-4 py-3 rounded-full shadow-2xl flex items-center space-x-2 transition transform hover:scale-105 active:scale-95 border-2 border-white ring-4 ring-amber-500/20"
+            title="隨時查看文章內容"
+          >
+            <BookOpen className="w-5 h-5" />
+            <span className="text-xs sm:text-sm font-bold">隨時查看文章</span>
+          </button>
+        </main>
+      )}
+
+      {/* ========== 隨時查看文章之彈出視窗 (Modal) ========== */}
+      {isArticleModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setIsArticleModalOpen(false)}
+        >
+          <div
+            className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 彈窗標頭 */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/90">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-sky-600 text-white flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base line-clamp-1">
+                    {testPaper.title}
+                  </h3>
+                  <div className="text-[11px] text-slate-400 font-mono">
+                    約 {testPaper.wordCount} 字 • 共 {testPaper.paragraphs.length} 段
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                {/* 彈窗內字級縮放 */}
+                <div className="flex items-center bg-white p-1 rounded-lg border border-slate-200 space-x-1 text-xs">
+                  <button
+                    onClick={() => setFontSize('normal')}
+                    className={`px-2 py-0.5 rounded font-bold transition ${
+                      fontSize === 'normal' ? 'bg-sky-100 text-sky-800' : 'text-slate-500'
+                    }`}
+                  >
+                    標準
+                  </button>
+                  <button
+                    onClick={() => setFontSize('large')}
+                    className={`px-2 py-0.5 rounded font-bold transition ${
+                      fontSize === 'large' ? 'bg-sky-100 text-sky-800' : 'text-slate-500'
+                    }`}
+                  >
+                    中
+                  </button>
+                  <button
+                    onClick={() => setFontSize('xlarge')}
+                    className={`px-2 py-0.5 rounded font-bold transition ${
+                      fontSize === 'xlarge' ? 'bg-sky-100 text-sky-800' : 'text-slate-500'
+                    }`}
+                  >
+                    大
+                  </button>
+                </div>
+
+                {/* 關閉按鈕 */}
+                <button
+                  onClick={() => setIsArticleModalOpen(false)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition"
+                  title="關閉彈窗 (Esc)"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* 彈窗內文章正文 (可滾動) */}
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-4">
+              {testPaper.themeSummary && (
+                <div className="text-xs sm:text-sm text-slate-600 italic bg-slate-50 p-3.5 rounded-xl border border-slate-100 leading-relaxed mb-4">
+                  💡 導讀：{testPaper.themeSummary}
+                </div>
+              )}
+              {renderArticleContent()}
+            </div>
+
+            {/* 彈窗底部操作列 */}
+            <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+              <span className="text-xs text-slate-500 hidden sm:inline">
+                💡 提示：隨時可滾動查閱各段落與插圖，已作答的所有內容均完整保留。
+              </span>
+              <button
+                onClick={() => setIsArticleModalOpen(false)}
+                className="w-full sm:w-auto px-6 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow transition ml-auto"
+              >
+                關閉，返回繼續作答
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
