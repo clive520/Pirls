@@ -5,9 +5,10 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   BookOpen, ArrowLeft, ArrowRight, Send, CheckCircle2, AlertCircle,
-  HelpCircle, RefreshCw, ZoomIn, ZoomOut, Check, X, FileText, ChevronRight
+  HelpCircle, RefreshCw, ZoomIn, ZoomOut, Check, FileText, ChevronRight
 } from 'lucide-react';
 import { TestPaper, TestQuestion } from '@/lib/types';
+import { ArticleContent, ArticleModal } from '@/components/article';
 
 export default function StudentExamPage() {
   const router = useRouter();
@@ -57,29 +58,6 @@ export default function StudentExamPage() {
     };
     if (testId) fetchExam();
   }, [testId, router]);
-
-  // 彈窗鍵盤 Esc 關閉支援
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isArticleModalOpen) {
-        setIsArticleModalOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isArticleModalOpen]);
-
-  // 彈窗開啟時背景鎖定
-  useEffect(() => {
-    if (isArticleModalOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isArticleModalOpen]);
 
   const handleSelectChoice = (questionId: string, label: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: label }));
@@ -161,63 +139,6 @@ export default function StudentExamPage() {
     if (fontSizeLevel === 2) return 'text-lg sm:text-xl leading-loose';
     return 'text-sm sm:text-base leading-relaxed';
   };
-
-  // 渲染文章段落與穿插插圖
-  const renderArticleContent = () => (
-    <div className={`space-y-4 text-slate-800 font-serif ${getArticleFontSize()}`}>
-      {testPaper.paragraphs.map((p, pIdx) => {
-        const matchingIlls = (testPaper.illustrations || []).filter(
-          (ill) => (ill.paragraphNumber || 1) === p.paragraphNumber
-        );
-        const isLast = pIdx === testPaper.paragraphs.length - 1;
-        const trailingIlls = isLast
-          ? (testPaper.illustrations || []).filter(
-              (ill) => (ill.paragraphNumber || 1) > testPaper.paragraphs.length
-            )
-          : [];
-        const allIllsForThisPara = [...matchingIlls, ...trailingIlls];
-
-        return (
-          <div key={p.paragraphNumber} className="space-y-4">
-            <div className="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-100 text-justify relative group">
-              <span className="inline-block text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 px-2 py-0.5 rounded mr-2.5 align-middle select-none">
-                P{p.paragraphNumber}
-              </span>
-              <span className="leading-relaxed">{p.text}</span>
-            </div>
-
-            {/* 穿插於本段落後的情境插圖 */}
-            {allIllsForThisPara.map((ill) => {
-              if (!ill.imageUrl && !ill.svgCode) return null;
-              return (
-                <figure
-                  key={ill.id}
-                  className="my-4 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 shadow-sm flex flex-col items-center justify-between mx-auto max-w-xl"
-                >
-                  {ill.imageUrl ? (
-                    <div className="flex justify-center p-1 bg-white rounded-xl w-full">
-                      <img
-                        src={ill.imageUrl}
-                        alt={ill.caption || '課文情境插圖'}
-                        className="w-full max-h-80 object-contain rounded-lg shadow-sm"
-                      />
-                    </div>
-                  ) : ill.svgCode ? (
-                    <div className="w-full flex justify-center py-2 overflow-x-auto" dangerouslySetInnerHTML={{ __html: ill.svgCode }} />
-                  ) : null}
-                  {ill.caption && (
-                    <figcaption className="text-xs text-center text-slate-600 font-semibold mt-2.5 px-2 leading-relaxed">
-                      {ill.caption}
-                    </figcaption>
-                  )}
-                </figure>
-              );
-            })}
-          </div>
-        );
-      })}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col justify-between">
@@ -388,7 +309,12 @@ export default function StudentExamPage() {
             </div>
 
             {/* 段落本文與穿插插圖 */}
-            {renderArticleContent()}
+            <ArticleContent
+              paragraphs={testPaper.paragraphs}
+              illustrations={testPaper.illustrations}
+              fontSizeClass={getArticleFontSize()}
+              badgeTheme="indigo"
+            />
 
             {/* 讀畢引導區 */}
             <div className="pt-8 border-t border-slate-100">
@@ -593,87 +519,16 @@ export default function StudentExamPage() {
       )}
 
       {/* ========== 隨時查看文章之彈出視窗 (Modal) ========== */}
-      {isArticleModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setIsArticleModalOpen(false)}
-        >
-          <div
-            className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* 彈窗標頭 */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/90">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-sm sm:text-base line-clamp-1">
-                    {testPaper.title}
-                  </h3>
-                  <div className="text-[11px] text-slate-400 font-mono">
-                    約 {testPaper.wordCount} 字 • 共 {testPaper.paragraphs.length} 段
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                {/* 彈窗內字級縮放 */}
-                <div className="flex items-center space-x-1 bg-white p-1 rounded-lg border border-slate-200">
-                  <button
-                    onClick={() => setFontSizeLevel(Math.max(0, fontSizeLevel - 1))}
-                    className="p-1 rounded hover:bg-slate-100 text-slate-600 transition"
-                    title="縮小"
-                  >
-                    <ZoomOut className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="text-[11px] font-bold px-1 text-slate-600">字級</span>
-                  <button
-                    onClick={() => setFontSizeLevel(Math.min(2, fontSizeLevel + 1))}
-                    className="p-1 rounded hover:bg-slate-100 text-slate-600 transition"
-                    title="放大"
-                  >
-                    <ZoomIn className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {/* 關閉按鈕 */}
-                <button
-                  onClick={() => setIsArticleModalOpen(false)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition"
-                  title="關閉彈窗 (Esc)"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* 彈窗內文章正文 (可滾動) */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-4">
-              {testPaper.themeSummary && (
-                <div className="text-xs sm:text-sm text-slate-600 italic bg-slate-50 p-3.5 rounded-xl border border-slate-100 leading-relaxed mb-4">
-                  💡 導讀：{testPaper.themeSummary}
-                </div>
-              )}
-              {renderArticleContent()}
-            </div>
-
-            {/* 彈窗底部操作列 */}
-            <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-              <span className="text-xs text-slate-500 hidden sm:inline">
-                💡 提示：隨時可滾動查閱各段落與插圖，已作答的所有內容均完整保留。
-              </span>
-              <button
-                onClick={() => setIsArticleModalOpen(false)}
-                className="w-full sm:w-auto px-6 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow transition ml-auto"
-              >
-                關閉，返回繼續作答
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ArticleModal
+        isOpen={isArticleModalOpen}
+        onClose={() => setIsArticleModalOpen(false)}
+        title={testPaper.title}
+        wordCount={testPaper.wordCount}
+        themeSummary={testPaper.themeSummary}
+        paragraphs={testPaper.paragraphs}
+        illustrations={testPaper.illustrations}
+        accentColor="indigo"
+      />
     </div>
   );
 }
