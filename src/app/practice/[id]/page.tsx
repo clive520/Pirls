@@ -221,55 +221,62 @@ export default function PracticeTakingPage() {
             </div>
           </div>
 
-          {/* 多模態繪本情境插圖 / 流程圖 */}
-          {testPaper.illustrations && testPaper.illustrations.length > 0 && (
-            <div className={`gap-4 ${
-              testPaper.illustrations.length === 1
-                ? 'space-y-4'
-                : testPaper.illustrations.length === 2
-                ? 'grid grid-cols-1 sm:grid-cols-2'
-                : 'grid grid-cols-1 sm:grid-cols-3'
-            }`}>
-              {testPaper.illustrations.map((ill) => (
-                <div key={ill.id} className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex flex-col justify-between">
-                  {ill.imageUrl ? (
-                    <div className="w-full flex justify-center py-1 flex-1 items-center">
-                      <img
-                        src={ill.imageUrl}
-                        alt={ill.caption || '課文插圖'}
-                        className="max-w-full h-auto max-h-64 object-contain rounded-xl shadow-sm bg-white"
-                      />
-                    </div>
-                  ) : ill.type === 'svg_diagram' && ill.svgCode ? (
-                    <div
-                      className="w-full overflow-x-auto flex justify-center py-2"
-                      dangerouslySetInnerHTML={{ __html: ill.svgCode }}
-                    />
-                  ) : (
-                    <div className="h-32 bg-slate-200 rounded flex items-center justify-center text-xs text-slate-400">
-                      {ill.caption || '插圖'}
-                    </div>
-                  )}
-                  {ill.caption && (
-                    <p className="text-center text-xs text-slate-600 font-medium mt-2 px-1">
-                      {ill.caption}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          {/* 文章段落與穿插於合適位置的情境插圖 */}
+          <div className={`space-y-5 text-slate-800 ${fontClass}`}>
+            {testPaper.paragraphs.map((p, pIdx) => {
+              const matchingIlls = (testPaper.illustrations || []).filter(
+                (ill) => (ill.paragraphNumber || 1) === p.paragraphNumber
+              );
+              const isLast = pIdx === testPaper.paragraphs.length - 1;
+              const trailingIlls = isLast
+                ? (testPaper.illustrations || []).filter(
+                    (ill) => (ill.paragraphNumber || 1) > testPaper.paragraphs.length
+                  )
+                : [];
+              const allIllsForThisPara = [...matchingIlls, ...trailingIlls];
 
-          {/* 文章段落 */}
-          <div className={`space-y-4 text-slate-800 ${fontClass}`}>
-            {testPaper.paragraphs.map((p) => (
-              <div key={p.paragraphNumber} className="relative group flex items-start space-x-2">
-                <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex-shrink-0 mt-1 select-none">
-                  P{p.paragraphNumber}
-                </span>
-                <p className="indent-4 leading-relaxed">{p.text}</p>
-              </div>
-            ))}
+              return (
+                <div key={p.paragraphNumber} className="space-y-4">
+                  <div className="relative group flex items-start space-x-2">
+                    <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex-shrink-0 mt-1 select-none">
+                      P{p.paragraphNumber}
+                    </span>
+                    <p className="indent-4 leading-relaxed">{p.text}</p>
+                  </div>
+
+                  {/* 穿插於本段落後的情境插圖 */}
+                  {allIllsForThisPara.map((ill) => {
+                    if (!ill.imageUrl && !ill.svgCode) return null;
+                    return (
+                      <figure
+                        key={ill.id}
+                        className="my-3.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex flex-col justify-between max-w-lg mx-auto shadow-sm"
+                      >
+                        {ill.imageUrl ? (
+                          <div className="w-full flex justify-center py-1 flex-1 items-center">
+                            <img
+                              src={ill.imageUrl}
+                              alt={ill.caption || '課文插圖'}
+                              className="max-w-full h-auto max-h-64 object-contain rounded-xl shadow-sm bg-white"
+                            />
+                          </div>
+                        ) : ill.type === 'svg_diagram' && ill.svgCode ? (
+                          <div
+                            className="w-full overflow-x-auto flex justify-center py-2"
+                            dangerouslySetInnerHTML={{ __html: ill.svgCode }}
+                          />
+                        ) : null}
+                        {ill.caption && (
+                          <figcaption className="text-center text-xs text-slate-600 font-medium mt-2 px-1">
+                            {ill.caption}
+                          </figcaption>
+                        )}
+                      </figure>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </section>
 

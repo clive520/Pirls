@@ -227,47 +227,57 @@ export default function StudentExamPage() {
             {testPaper.title}
           </h2>
 
-          {/* 文章插圖或繪本多模態場景 */}
-          {testPaper.illustrations && testPaper.illustrations.length > 0 && (
-            <div className={`my-4 gap-3 ${
-              testPaper.illustrations.length === 1
-                ? 'flex flex-col'
-                : testPaper.illustrations.length === 2
-                ? 'grid grid-cols-1 sm:grid-cols-2'
-                : 'grid grid-cols-1 sm:grid-cols-3'
-            }`}>
-              {testPaper.illustrations.map((ill) => (
-                <div key={ill.id} className="rounded-xl border border-slate-200 bg-slate-50 p-2 overflow-hidden shadow-sm flex flex-col justify-between">
-                  {ill.imageUrl ? (
-                    <div className="flex justify-center p-1 bg-white rounded-lg flex-1 items-center">
-                      <img
-                        src={ill.imageUrl}
-                        alt={ill.caption || '課文插圖'}
-                        className="w-full max-h-60 object-contain rounded-lg"
-                      />
-                    </div>
-                  ) : ill.svgCode ? (
-                    <div dangerouslySetInnerHTML={{ __html: ill.svgCode }} />
-                  ) : (
-                    <div className="h-32 bg-slate-200 rounded flex items-center justify-center text-xs text-slate-400">
-                      {ill.caption || '插圖'}
-                    </div>
-                  )}
-                  <p className="text-[11px] text-center text-slate-600 font-semibold mt-2 px-1 leading-snug">
-                    {ill.caption}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 段落本文 */}
+          {/* 段落本文與穿插於合適位置的情境插圖 */}
           <div className={`space-y-4 text-slate-800 font-serif ${getArticleFontSize()}`}>
-            {testPaper.paragraphs.map((p) => (
-              <p key={p.paragraphNumber} className="bg-slate-50/50 p-3.5 rounded-xl border border-slate-100 text-justify">
-                {p.text}
-              </p>
-            ))}
+            {testPaper.paragraphs.map((p, pIdx) => {
+              const matchingIlls = (testPaper.illustrations || []).filter(
+                (ill) => (ill.paragraphNumber || 1) === p.paragraphNumber
+              );
+              // 若為最後一段，亦納入段落編號大於總段落數之插圖
+              const isLast = pIdx === testPaper.paragraphs.length - 1;
+              const trailingIlls = isLast
+                ? (testPaper.illustrations || []).filter(
+                    (ill) => (ill.paragraphNumber || 1) > testPaper.paragraphs.length
+                  )
+                : [];
+              const allIllsForThisPara = [...matchingIlls, ...trailingIlls];
+
+              return (
+                <div key={p.paragraphNumber} className="space-y-4">
+                  <p className="bg-slate-50/50 p-3.5 rounded-xl border border-slate-100 text-justify">
+                    {p.text}
+                  </p>
+
+                  {/* 穿插於本段落後的情境插圖 */}
+                  {allIllsForThisPara.map((ill) => {
+                    if (!ill.imageUrl && !ill.svgCode) return null;
+                    return (
+                      <figure
+                        key={ill.id}
+                        className="my-3.5 rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-sm flex flex-col items-center justify-between mx-auto max-w-lg"
+                      >
+                        {ill.imageUrl ? (
+                          <div className="flex justify-center p-1 bg-white rounded-xl w-full">
+                            <img
+                              src={ill.imageUrl}
+                              alt={ill.caption || '課文情境插圖'}
+                              className="w-full max-h-72 object-contain rounded-lg shadow-sm"
+                            />
+                          </div>
+                        ) : ill.svgCode ? (
+                          <div className="w-full flex justify-center" dangerouslySetInnerHTML={{ __html: ill.svgCode }} />
+                        ) : null}
+                        {ill.caption && (
+                          <figcaption className="text-xs text-center text-slate-600 font-semibold mt-2 px-2 leading-relaxed">
+                            {ill.caption}
+                          </figcaption>
+                        )}
+                      </figure>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </div>
 

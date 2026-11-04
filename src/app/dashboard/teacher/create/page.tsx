@@ -381,7 +381,8 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
       testPaper.title || '自選閱讀材料',
       testPaper.themeSummary || '課文情境與核心素養',
       isLit,
-      testPaper.targetGrade || 4
+      testPaper.targetGrade || 4,
+      testPaper.paragraphs?.length || 5
     );
     setTestPaper({
       ...testPaper,
@@ -1146,6 +1147,9 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
                                     }`}
                                   >
                                     <span>場景 {idx + 1}</span>
+                                    <span className={`text-[10px] font-normal ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>
+                                      (第 {ill.paragraphNumber || 1} 段後)
+                                    </span>
                                     {isDone ? (
                                       <span className={`text-[10px] px-1 py-0.2 rounded font-mono ${isSelected ? 'bg-indigo-700 text-white' : 'bg-emerald-200 text-emerald-900'}`}>✓</span>
                                     ) : (
@@ -1177,15 +1181,15 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
                                       第 {safeSceneIdx + 1} 幅場景設定
                                     </span>
                                     <div className="flex items-center space-x-1 pl-2 border-l border-slate-200">
-                                      <span className="text-[11px] text-slate-500 font-medium">置於：</span>
+                                      <span className="text-[11px] text-indigo-700 font-bold">穿插位置：</span>
                                       <select
                                         value={currentIll.paragraphNumber || 1}
                                         onChange={(e) => handleParagraphChange(parseInt(e.target.value, 10), safeSceneIdx)}
-                                        className="text-xs rounded-md border border-slate-200 py-0.5 px-1.5 bg-slate-50 text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        className="text-xs rounded-md border border-indigo-200 py-0.5 px-2 bg-indigo-50/50 text-indigo-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                       >
                                         {testPaper.paragraphs.map((p) => (
                                           <option key={p.paragraphNumber} value={p.paragraphNumber}>
-                                            第 {p.paragraphNumber} 段
+                                            穿插於 第 {p.paragraphNumber} 段 之後
                                           </option>
                                         ))}
                                       </select>
@@ -1394,13 +1398,82 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
                     );
                   })()}
 
-                  {/* 內文各段落 */}
+                  {/* 內文各段落與穿插的情境插圖預覽 */}
                   <div className="space-y-4 text-sm text-slate-700 leading-relaxed font-sans max-h-[650px] overflow-y-auto pr-2">
-                    {testPaper.paragraphs.map((p) => (
-                      <p key={p.paragraphNumber} className="bg-slate-50/70 p-3 rounded-xl border border-slate-100">
-                        {p.text}
-                      </p>
-                    ))}
+                    {testPaper.paragraphs.map((p, pIdx) => {
+                      const matchingIlls = (testPaper.illustrations || [])
+                        .map((ill, illIdx) => ({ ill, illIdx }))
+                        .filter(({ ill }) => (ill.paragraphNumber || 1) === p.paragraphNumber);
+                      const isLast = pIdx === testPaper.paragraphs.length - 1;
+                      const trailingIlls = isLast
+                        ? (testPaper.illustrations || [])
+                            .map((ill, illIdx) => ({ ill, illIdx }))
+                            .filter(({ ill }) => (ill.paragraphNumber || 1) > testPaper.paragraphs.length)
+                        : [];
+                      const allIllsForThisPara = [...matchingIlls, ...trailingIlls];
+
+                      return (
+                        <div key={p.paragraphNumber} className="space-y-3">
+                          <p className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-100">
+                            {p.text}
+                          </p>
+
+                          {/* 穿插於本段落後的情境圖預覽卡片 */}
+                          {allIllsForThisPara.map(({ ill, illIdx }) => (
+                            <div
+                              key={ill.id}
+                              className="rounded-xl border border-dashed border-indigo-200 bg-indigo-50/30 p-3 space-y-2 transition hover:border-indigo-300"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded-md flex items-center space-x-1">
+                                  <span>🖼️ 場景 {illIdx + 1} 穿插於此</span>
+                                  <span className="text-slate-500 font-normal">（第 {p.paragraphNumber} 段後）</span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveSceneIdx(illIdx);
+                                    window.scrollTo({ top: 350, behavior: 'smooth' });
+                                  }}
+                                  className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline"
+                                >
+                                  {ill.imageUrl ? '管理/更換圖片' : '前往複製提示詞/上傳圖片 →'}
+                                </button>
+                              </div>
+
+                              {ill.imageUrl ? (
+                                <div className="flex flex-col items-center pt-1">
+                                  <img
+                                    src={ill.imageUrl}
+                                    alt={ill.caption || '情境圖'}
+                                    className="max-h-48 w-auto object-contain rounded-lg border border-slate-200 shadow-sm bg-white"
+                                  />
+                                  <p className="text-xs text-center text-slate-600 font-medium mt-1.5">
+                                    {ill.caption}
+                                  </p>
+                                </div>
+                              ) : ill.svgCode ? (
+                                <div className="flex flex-col items-center pt-1">
+                                  <div dangerouslySetInnerHTML={{ __html: ill.svgCode }} className="w-full flex justify-center" />
+                                  <p className="text-xs text-center text-slate-600 font-medium mt-1.5">
+                                    {ill.caption}
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="text-xs text-slate-500 py-1 flex items-center justify-between">
+                                  <span className="line-clamp-1 italic text-slate-400">
+                                    {ill.caption || '尚未上傳真實圖片，完成出題後可複製上方提示詞生圖'}
+                                  </span>
+                                  <span className="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 flex-shrink-0 ml-2">
+                                    待生圖上傳
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 

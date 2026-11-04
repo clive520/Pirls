@@ -57,29 +57,31 @@ function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, targetCou
   "articleContent": "完整文章內容...",
   "paragraphs": [
     { "paragraphNumber": 1, "text": "【第一段】..." },
-    { "paragraphNumber": 2, "text": "【第二段】..." }
+    { "paragraphNumber": 2, "text": "【第二段】..." },
+    { "paragraphNumber": 3, "text": "【第三段】..." },
+    { "paragraphNumber": 4, "text": "【第四段】..." }
   ],
   "illustrations": [
     {
       "id": "ill_1",
       "paragraphNumber": 1,
-      "caption": "圖 1：【起·開端情境】老鐘錶行門口金爺爺親切與孩子們交流",
+      "caption": "圖 1：【起·開端情境 / 穿插於第 1 段後】老鐘錶行門口金爺爺親切與孩子們交流",
       "type": "illustration_url",
-      "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：和藹的金爺爺在古樸老鐘錶行門口，笑瞇瞇地向身旁幾位國小學童解說鐘錶齒輪，暖陽灑落、柔和明亮、充滿童趣與故事溫度，16:9 橫向構圖，高品質繪本插圖。 / English prompt: A heartwarming children storybook watercolor illustration of kind elderly Grandpa Jin standing in front of his vintage wooden clock shop, warmly explaining gears to curious elementary school kids, sunny afternoon, soft warm lighting, detailed, charming, storybook art style --ar 16:9"
+      "imagePrompt": "【場景 1（起·開端情境，建議穿插於第 1 段之後）中文描述】：溫馨細緻的兒童繪本水彩手繪插畫：和藹的金爺爺在古樸老鐘錶行門口，笑瞇瞇地向身旁幾位國小學童解說鐘錶齒輪，暖陽灑落、柔和明亮、充滿童趣與故事溫度，16:9 橫向構圖，高品質繪本插圖。 / English prompt: A heartwarming children storybook watercolor illustration of kind elderly Grandpa Jin standing in front of his vintage wooden clock shop, warmly explaining gears to curious elementary school kids, sunny afternoon, soft warm lighting, detailed, charming, storybook art style --ar 16:9"
     },
     {
       "id": "ill_2",
       "paragraphNumber": 2,
-      "caption": "圖 2：【承轉·衝突高潮】金爺爺在工作檯前專注修復停擺的古老機械鐘",
+      "caption": "圖 2：【承轉·衝突高潮 / 穿插於第 2 段後】金爺爺在工作檯前專注修復停擺的古老機械鐘",
       "type": "illustration_url",
-      "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：昏黃檯燈下，金爺爺戴著放大鏡，神情極度專注地以精細鑷子調整散落的黃銅齒輪與彈簧，工作檯上擺滿修復工具，充滿工匠精神與懸疑專注氛圍，16:9 橫向構圖。 / English prompt: Storybook watercolor illustration of Grandpa Jin under a warm desk lamp, wearing a magnifying loupe, delicately adjusting brass gears on a vintage workbench full of clockmaking tools, intense focus, craftsmanship, atmospheric, cozy --ar 16:9"
+      "imagePrompt": "【場景 2（承轉·衝突高潮，建議穿插於第 2 段之後）中文描述】：昏黃檯燈下，金爺爺戴著放大鏡，神情極度專注地以精細鑷子調整散落的黃銅齒輪與彈簧，工作檯上擺滿修復工具，充滿工匠精神與懸疑專注氛圍，16:9 橫向構圖。 / English prompt: Storybook watercolor illustration of Grandpa Jin under a warm desk lamp, wearing a magnifying loupe, delicately adjusting brass gears on a vintage workbench full of clockmaking tools, intense focus, craftsmanship, atmospheric, cozy --ar 16:9"
     },
     {
       "id": "ill_3",
       "paragraphNumber": 4,
-      "caption": "圖 3：【合·溫馨結局】古鐘重新清脆敲響，孩子們與金爺爺欣慰歡呼",
+      "caption": "圖 3：【合·溫馨結局 / 穿插於第 4 段後】古鐘重新清脆敲響，孩子們與金爺爺欣慰歡呼",
       "type": "illustration_url",
-      "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：晨光灑滿鐘錶行，高聳的大鐘指針轉動，齒輪重新運轉，金爺爺擦拭額頭汗水露出欣慰笑容，學童們興奮拍手歡呼，充滿感動與成就感，色彩明朗溫暖，16:9 橫向構圖。 / English prompt: Joyful children storybook watercolor illustration, morning sunlight pouring into the shop, clock ticking again, Grandpa Jin smiling with relief, cheerful kids clapping and celebrating, touching moment, uplifting and warm --ar 16:9"
+      "imagePrompt": "【場景 3（合·溫馨結局，建議穿插於第 4 段之後）中文描述】：晨光灑滿鐘錶行，高聳的大鐘指針轉動，齒輪重新運轉，金爺爺擦拭額頭汗水露出欣慰笑容，學童們興奮拍手歡呼，充滿感動與成就感，色彩明朗溫暖，16:9 橫向構圖。 / English prompt: Joyful children storybook watercolor illustration, morning sunlight pouring into the shop, clock ticking again, Grandpa Jin smiling with relief, cheerful kids clapping and celebrating, touching moment, uplifting and warm --ar 16:9"
     }
   ],
   "questions": [
@@ -125,23 +127,23 @@ function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, targetCou
     {
       "id": "ill_1",
       "paragraphNumber": 1,
-      "caption": "圖 1：【起·開端情境】...",
+      "caption": "圖 1：【起·開端情境 / 穿插於第 1 段後】...",
       "type": "illustration_url",
-      "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：... / English prompt: ..."
+      "imagePrompt": "【場景 1（起·開端情境，建議穿插於第 1 段之後）中文描述】：溫馨細緻的兒童繪本水彩手繪插畫：... / English prompt: ..."
     },
     {
       "id": "ill_2",
       "paragraphNumber": 2,
-      "caption": "圖 2：【承轉·衝突高潮】...",
+      "caption": "圖 2：【承轉·衝突高潮 / 穿插於中段後】...",
       "type": "illustration_url",
-      "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：... / English prompt: ..."
+      "imagePrompt": "【場景 2（承轉·衝突高潮，建議穿插於中段之後）中文描述】：溫馨細緻的兒童繪本水彩手繪插畫：... / English prompt: ..."
     },
     {
       "id": "ill_3",
       "paragraphNumber": 4,
-      "caption": "圖 3：【合·溫馨結局】...",
+      "caption": "圖 3：【合·溫馨結局 / 穿插於末段後】...",
       "type": "illustration_url",
-      "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：... / English prompt: ..."
+      "imagePrompt": "【場景 3（合·溫馨結局，建議穿插於末段之後）中文描述】：溫馨細緻的兒童繪本水彩手繪插畫：... / English prompt: ..."
     }
   ],
   "questions": [
@@ -201,13 +203,15 @@ function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, targetCou
    - 你必須「直接以 { 開頭，以 } 結尾」，輸出純合法 JSON 格式。
    - 嚴禁在 JSON 之前或之後輸出任何 Markdown 外的閒聊文字。
 5. 引號規範：題目與選項內如有引文，請一律使用中文全形引號「」與『』，嚴禁在字串內使用未跳脫的半形雙引號。
-6. 【PIRLS 多模態課文繪本配圖 (依文章情節擷取 3 個關鍵場景)】：
-   ${includeDiagram ? `本次任務已啟用多模態配圖需求。你「必須」在 "illustrations" 陣列中依自選文章脈絡擷取 3 個關鍵場景，分別產出 3 組分開的「專屬 AI 繪圖提示詞 (imagePrompt)」：
-   - 第 1 幅【起·開端情境】：故事開端、背景環境設定或主角初次登場（對應文章開頭）。
-   - 第 2 幅【承轉·衝突高潮】：情節關鍵挑戰、核心互動、專注行動或情節轉折高潮（對應文章中段）。
-   - 第 3 幅【合·溫馨結局】：問題圓滿解決、眾人欣慰體悟、展望未來的感動結局（對應文章末段）。
+6. 【PIRLS 多模態課文繪本配圖（依情節發展穿插於文章合適段落之後，絕不可全部放在文章開頭）】：
+   ${includeDiagram ? `本次任務已啟用多模態配圖需求。課文插圖應「穿插在文章故事發展的合適段落之後」，絕不可全部堆在文章最前面！你「必須」在 "illustrations" 陣列中依自選文章脈絡擷取 3 個關鍵場景，分別產出 3 組分開的「專屬 AI 繪圖提示詞 (imagePrompt)」，並指明穿插段落：
+   - 第 1 幅【起·開端情境】：paragraphNumber 設為 1（穿插在第 1 段之後，描繪開端環境或主角登場）。
+   - 第 2 幅【承轉·衝突高潮】：paragraphNumber 設為文章中間段落（如第 2 或第 3 段之後，描繪情節轉折、核心挑戰或緊繃行動）。
+   - 第 3 幅【合·溫馨結局】：paragraphNumber 設為文章結尾段落（如第 4 或最後一段之後，描繪問題解決、溫馨體悟或圓滿高潮）。
    - 每組提示詞皆需包含中英文雙語提示詞（方便教師一鍵複製生圖）。
-   - caption 欄位提供簡明得體的課文圖說，type 設為 "illustration_url"。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
+   - 提示詞中請明確包含建議穿插位置說明（例如：【場景 1（建議穿插於第 1 段之後）】）。
+   - caption 欄位提供簡明得體的課文圖說（請標明穿插位置，例如：圖 1：【起·開端 / 穿插於第 1 段後】...、圖 2：【承轉·高潮 / 穿插於中段後】...、圖 3：【合·結局 / 穿插於末段後】...）。
+   - type 設為 "illustration_url"。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
 完整 JSON 架構參考如下：
 ${schemaExamplePaste}`
     : `你是一位享譽國際的 IEA PIRLS (國際閱讀素養進展研究) 命題專家與心理計量學家。
@@ -226,14 +230,15 @@ ${schemaExamplePaste}`
    嚴禁在 JSON 之前輸出任何開場白、故事摘要、引言或客套話！第一字必須是 {。
    嚴禁在 JSON 之後輸出任何補充說明或結尾語！最後一字必須是 }。
 5. 引號規範：故事內之人物對話或引文，請一律使用中文全形引號「」與『』，嚴禁在字串內使用未跳脫的半形雙引號，以維護 JSON 語法完全合法。
-6. 【PIRLS 多模態課文繪本配圖 (依情節發展擷取 3 個關鍵場景)】：
-   ${includeDiagram ? `本次任務已啟用多模態配圖需求。你「必須」在 "illustrations" 陣列中依文章脈絡擷取 3 個關鍵場景，分別產出 3 組分開的「專屬 AI 繪圖提示詞 (imagePrompt)」：
-   - 第 1 幅【起·開端情境】：故事開端、背景環境設定或主角初次登場（對應文章第 1 段）。
-   - 第 2 幅【承轉·衝突高潮】：情節關鍵挑戰、核心互動、專注行動或情節轉折高潮（對應文章中段）。
-   - 第 3 幅【合·溫馨結局】：問題圓滿解決、眾人欣慰體悟、展望未來的感動結局（對應文章末段）。
+6. 【PIRLS 多模態課文繪本配圖 (依情節發展穿插於文章合適段落之後，絕不可全部放在文章開頭)】：
+   ${includeDiagram ? `本次任務已啟用多模態配圖需求。課文插圖應「穿插在文章故事發展的合適段落之後」，絕不可全部堆在文章最前面！你「必須」在 "illustrations" 陣列中依文章脈絡擷取 3 個關鍵場景，分別產出 3 組分開的「專屬 AI 繪圖提示詞 (imagePrompt)」，並指明穿插段落：
+   - 第 1 幅【起·開端情境】：paragraphNumber 設為 1（穿插在第 1 段之後，描繪開端環境或主角登場）。
+   - 第 2 幅【承轉·衝突高潮】：paragraphNumber 設為文章中間段落（如第 2 或第 3 段之後，描繪情節轉折、核心挑戰或緊繃行動）。
+   - 第 3 幅【合·溫馨結局】：paragraphNumber 設為文章結尾段落（如第 4 或最後一段之後，描繪問題解決、溫馨體悟或圓滿高潮）。
    - 每組提示詞皆需包含中英文雙語提示詞（方便教師一鍵複製至 Midjourney、ChatGPT / DALL-E 3、Bing Image Creator、Recraft、Canva 等工具直接生成高質感真實繪本插圖）。
    - 內容需詳細描繪：主要角色外觀、神情動作、故事關鍵場景、時間光影氛圍、藝術風格（如溫馨兒童繪本水彩風、柔和手繪質感、16:9 橫向構圖，畫面無文字雜訊）。
-   - caption 欄位提供簡明得體的課文圖說（如：圖 1：【開端】老鐘錶行門口、圖 2：【高潮】修復齒輪、圖 3：【結局】重現鐘聲）。
+   - 提示詞中請明確包含建議穿插位置說明（例如：【場景 1（建議穿插於第 1 段之後）】）。
+   - caption 欄位提供簡明得體的課文圖說（請標明穿插位置，例如：圖 1：【起·開端 / 穿插於第 1 段後】老鐘錶行門口、圖 2：【承轉·高潮 / 穿插於第 2 段後】修復齒輪、圖 3：【合·結局 / 穿插於第 4 段後】重現鐘聲）。
    - type 設為 "illustration_url"。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
    完整 JSON 架構參考如下：
 ${schemaExampleTheme}`;
@@ -245,14 +250,14 @@ ${schemaExampleTheme}`;
 年級：國小 ${params.targetGrade} 年級
 題量：共 ${targetCount} 題
 文章長度：約 800~1,200 字，分段清晰 (每段開頭標示【第一段】、【第二段】等)
-${includeDiagram ? '多模態生圖提示詞：請務必在 illustrations 陣列中，依文章脈絡擷取 3 個關鍵場景（起·開端、承轉·高潮、合·結局），分別構思 3 組生動細膩的中英文生圖提示詞 (imagePrompt) 與圖說 (caption)，供教師複製至專業繪圖 AI 生成真實插圖。' : '插圖需求：不需生成插圖，illustrations 填空陣列 []。'}
+${includeDiagram ? '多模態生圖提示詞：請務必在 illustrations 陣列中，依文章脈絡擷取 3 個關鍵場景（起·開端、承轉·高潮、合·結局），分別構思 3 組生動細膩的中英文生圖提示詞 (imagePrompt) 與圖說 (caption)，並在 paragraphNumber 明確標明各插圖應「穿插於第幾段之後」（不可堆疊於文章開頭），供教師複製至專業繪圖 AI 生成真實插圖。' : '插圖需求：不需生成插圖，illustrations 填空陣列 []。'}
 請即刻生成符合上述 PIRLS 規範之完整 JSON 試卷。`
     : `【自選文章提煉 PIRLS 題本】
 文章標題：${params.pastedTitle || '自選閱讀材料'}
 適用年級：國小 ${params.targetGrade} 年級
 文體類別：${isLiterary ? '文學性文本' : '訊息性文本'}
 目標題量：共 ${targetCount} 題 (四層次比例：L1 25%、L2 35%、L3 25%、L4 15%)
-【特別提醒】：無須重複輸出完整文章本文與各段落，請聚焦為下列文章產出 ${targetCount} 道高品質 PIRLS 試題與 3 幅情境生圖提示詞。
+【特別提醒】：無須重複輸出完整文章本文與各段落，請聚焦為下列文章產出 ${targetCount} 道高品質 PIRLS 試題與 3 幅情境生圖提示詞（在 paragraphNumber 明確註明各插圖應穿插於第幾段之後）。
 原始文章內容：
 ${params.pastedText}
 
@@ -694,20 +699,26 @@ function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
     };
   });
 
-  // 3. 插圖防呆與 AI 繪圖提示詞 (預設提供 3 幅關鍵場景)
+  // 3. 插圖防呆與 AI 繪圖提示詞 (預設提供 3 幅關鍵場景，穿插於文章合適段落之後)
   const shouldIncludeDiagram = params.includeDiagram !== false;
   const rawIllustrations = parsed.illustrations || [];
   let illustrations: ArticleIllustration[] = [];
 
   if (Array.isArray(rawIllustrations) && rawIllustrations.length > 0) {
     const list: ArticleIllustration[] = [];
+    const totalParas = Math.max(1, paragraphs.length);
     for (let idx = 0; idx < rawIllustrations.length; idx++) {
       const ill = rawIllustrations[idx];
       const imagePrompt = ill?.imagePrompt || parsed.imagePrompt || '';
+      const fallbackPara = idx === 0 ? 1 : idx === 1 ? Math.max(2, Math.round(totalParas / 2)) : totalParas;
+      const parsedPara = Number(ill?.paragraphNumber);
+      const validatedPara = (!isNaN(parsedPara) && parsedPara >= 1 && parsedPara <= totalParas)
+        ? parsedPara
+        : fallbackPara;
       const caption = ill?.caption || `圖 ${idx + 1}：${parsed.title || '文章'}情境插圖`;
       list.push({
         id: ill?.id || `ill_${Date.now()}_${idx + 1}`,
-        paragraphNumber: Number(ill?.paragraphNumber) || (idx === 0 ? 1 : idx === 1 ? 2 : 4),
+        paragraphNumber: validatedPara,
         caption,
         type: ill?.imageUrl ? 'illustration_url' : (ill?.type || 'illustration_url'),
         imageUrl: ill?.imageUrl || '',
@@ -725,7 +736,8 @@ function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
       parsed.title || params.theme || params.pastedTitle || '國小閱讀課文',
       parsed.themeSummary || '溫馨啟發與情境教育',
       isLit,
-      params.targetGrade || 4
+      params.targetGrade || 4,
+      paragraphs.length
     );
   }
 
@@ -751,13 +763,14 @@ function formatToTestPaper(parsed: any, params: GenerateParams): TestPaper {
 }
 
 /**
- * 智慧 3 幅關鍵場景生圖提示詞構建器：依文章起承轉合情境，構思 3 幅獨立且風格統一之關鍵場景提示詞
+ * 智慧 3 幅關鍵場景生圖提示詞構建器：依文章起承轉合情境，構思 3 幅獨立且風格統一之關鍵場景提示詞，並明確指定穿插於各合適段落之後
  */
 export function generateSmartImagePrompts(
   title: string,
   summary: string,
   isLiterary: boolean,
-  grade: number
+  grade: number,
+  paragraphsCount: number = 5
 ): ArticleIllustration[] {
   const styleZh = isLiterary
     ? '溫馨細膩的台灣國小兒童繪本水彩手繪插畫風格、柔和溫暖光影、人物表情生動自然、色彩和諧純淨、富有故事感與童趣'
@@ -767,23 +780,28 @@ export function generateSmartImagePrompts(
     ? 'Warm and charming children storybook illustration, soft watercolor and colored pencil textures, gentle golden morning sunlight, expressive characters, nostalgic Taiwanese countryside storybook style, wholesome, beautiful detailed background, 8k resolution, artstation trending --ar 16:9 --v 6.0'
     : 'Modern educational children science infographic illustration, clean vector aesthetic, clear composition, bright natural daylight, highly detailed and pedagogical, National Geographic Kids style, 8k resolution --ar 16:9';
 
+  const totalParas = Math.max(1, paragraphsCount);
+  const p1 = 1;
+  const p2 = totalParas <= 2 ? 1 : Math.max(2, Math.round(totalParas / 2));
+  const p3 = totalParas <= 2 ? 2 : totalParas;
+
   const scenes = isLiterary
     ? [
         {
           stage: '起·開端情境',
-          para: 1,
+          para: p1,
           descZh: `故事開端背景：主角初次登場，置身於故事核心環境中，展現生活日常或冒險前夕的期盼氛圍。`,
           descEn: `Scene 1 (Beginning): Introduction of main characters in their peaceful native environment with gentle soft morning atmosphere.`,
         },
         {
           stage: '承轉·衝突高潮',
-          para: 2,
+          para: p2,
           descZh: `情節關鍵轉折與考驗：主角面臨核心挑戰或重大行動時刻，神情專注緊張，充滿動態張力與互動感。`,
           descEn: `Scene 2 (Climax): The climactic turning point and core challenge, dynamic interaction, emotional expression, dramatic lighting and tension.`,
         },
         {
           stage: '合·溫馨結局',
-          para: 4,
+          para: p3,
           descZh: `故事溫暖結局與啟發：問題獲得解決，眾人露出欣慰笑容，迎向晨光或夕陽，洋溢理解與成長的感動。`,
           descEn: `Scene 3 (Ending): Wholesome and touching conclusion, celebrating resolution and growth, warm golden hour glow, smiling faces, heartfelt harmony.`,
         },
@@ -791,19 +809,19 @@ export function generateSmartImagePrompts(
     : [
         {
           stage: '引言·生態全景',
-          para: 1,
+          para: p1,
           descZh: `宏觀全景視野：呈現該科普主題或自然生物棲地的壯麗全景與生存環境。`,
           descEn: `Scene 1 (Overview): Majestic wide panoramic overview of the ecological habitat and natural environment.`,
         },
         {
           stage: '核心·構造運作',
-          para: 2,
+          para: p2,
           descZh: `特寫微觀焦點：生動展示生物特殊構造、習性互動或科學運作的關鍵特徵細節。`,
           descEn: `Scene 2 (Feature): Close-up detailed depiction of distinctive biological traits, adaptations, or scientific processes.`,
         },
         {
           stage: '體悟·人與自然',
-          para: 3,
+          para: p3,
           descZh: `和諧共存啟發：人類保育觀察或生態平衡的永續美好畫面，富有教育啟發性。`,
           descEn: `Scene 3 (Harmony): Harmonious coexistence between human observation and natural conservation, inspiring and educational.`,
         },
@@ -812,16 +830,16 @@ export function generateSmartImagePrompts(
   return scenes.map((s, idx) => ({
     id: `ill_scene_${idx + 1}_${Date.now()}`,
     paragraphNumber: s.para,
-    caption: `圖 ${idx + 1}：【${s.stage}】《${title}》課文情境插圖`,
+    caption: `圖 ${idx + 1}：【${s.stage} / 穿插於第 ${s.para} 段後】《${title}》課文情境插圖`,
     type: 'illustration_url' as const,
     imageUrl: '',
-    imagePrompt: `【場景 ${idx + 1}（${s.stage}）中文描述 - 適用 ChatGPT / DALL-E 3 / Bing 繪圖】：
-繪製國小 ${grade} 年級課文《${title}》的關鍵插圖（場景 ${idx + 1}：${s.stage}）。
+    imagePrompt: `【場景 ${idx + 1}（${s.stage}，建議穿插於文章第 ${s.para} 段之後）中文描述 - 適用 ChatGPT / DALL-E 3 / Bing 繪圖】：
+繪製國小 ${grade} 年級課文《${title}》的關鍵插圖（場景 ${idx + 1}：${s.stage}，排版位置：穿插於第 ${s.para} 段後）。
 畫面核心：${s.descZh}（主旨：${summary}）。
 藝術風格：${styleZh}。構圖橫向 16:9，畫面請勿出現任何文字或水印，呈現高質感純淨兒童繪本畫面。
 
 【英文指令 - 適用 Midjourney / Recraft 複製貼上】：
-A masterwork children book illustration for "${title}", Scene ${idx + 1} (${s.stage}): ${s.descEn}. Key theme: ${summary}. ${styleEn}`,
+A masterwork children book illustration for "${title}", Scene ${idx + 1} (${s.stage}, place after paragraph ${s.para}): ${s.descEn}. Key theme: ${summary}. ${styleEn}`,
   }));
 }
 
@@ -832,18 +850,19 @@ A masterwork children book illustration for "${title}", Scene ${idx + 1} (${s.st
 export function formatCombinedImagePrompt(illustrations: ArticleIllustration[], title: string): string {
   if (!illustrations || illustrations.length === 0) return '';
 
-  const header = `請幫我依據國小閱讀課文《${title}》，為課文關鍵場景分別生成 ${illustrations.length} 張風格完全統一的「16:9 兒童繪本水彩手繪插畫」：\n\n`;
+  const header = `請幫我依據國小閱讀課文《${title}》，為課文關鍵場景分別生成 ${illustrations.length} 張風格完全統一的「16:9 兒童繪本水彩手繪插畫」（等生成後將分別穿插在文章各對應段落之後）：\n\n`;
 
   const body = illustrations
     .map((ill, i) => {
       const promptText = ill.imagePrompt
         ? ill.imagePrompt.trim()
         : `請繪製：${ill.caption || `第 ${i + 1} 幅插圖`}`;
-      return `━━━━━━━━━━━━━━━━━━━━━\n【第 ${i + 1} 幅插圖】(${ill.caption || `場景 ${i + 1}`})\n${promptText}`;
+      const paraInfo = ill.paragraphNumber ? `建議穿插於第 ${ill.paragraphNumber} 段之後` : '穿插於文章合適段落';
+      return `━━━━━━━━━━━━━━━━━━━━━\n【第 ${i + 1} 幅插圖】(${ill.caption || `場景 ${i + 1}`} | ${paraInfo})\n${promptText}`;
     })
     .join('\n\n');
 
-  const footer = `\n\n━━━━━━━━━━━━━━━━━━━━━\n【全套統一視覺要求】：\n1. 藝術風格：溫馨柔和的兒童故事繪本手繪水彩風格，光影柔和溫暖，人物線條生動可愛。\n2. 規格比例：16:9 橫向寬螢幕構圖。\n3. 純淨畫面：畫面中切勿包含任何文字、標題或浮水印。`;
+  const footer = `\n\n━━━━━━━━━━━━━━━━━━━━━\n【全套統一視覺要求】：\n1. 藝術風格：溫馨柔和的兒童故事繪本手繪水彩風格，光影柔和溫暖，人物線條生動可愛。\n2. 規格比例：16:9 橫向寬螢幕構圖。\n3. 純淨畫面：畫面中切勿包含任何文字、標題或浮水印。\n4. 排版應用：每張插圖將穿插在對應段落下方配合課文情節閱讀。`;
 
   return header + body + footer;
 }
@@ -1242,8 +1261,9 @@ function generateMockAuthenticPIRLSTest(params: GenerateParams): TestPaper {
       {
         id: 'ill_1',
         paragraphNumber: 1,
-        caption: '圖 1：佇立在青雲山脊上守護村莊的兩百年巨木老松樹',
+        caption: '圖 1：【起·開端情境 / 穿插於第 1 段後】佇立在青雲山脊上守護村莊的兩百年巨木老松樹',
         type: 'svg_diagram',
+        imagePrompt: '【場景 1（起·開端情境，建議穿插於第 1 段之後）】：溫馨細緻的兒童繪本水彩手繪插畫：晴空下青雲山脊上巍峨聳立的兩百年巨木五葉松，山下恬靜的雲霧村炊煙裊裊，小女孩阿雅在木廊下拿著望遠鏡仰望，晨光柔和溫暖，16:9 橫向構圖。 / English prompt: Storybook watercolor illustration of majestic 200-year-old pine tree on mountain ridge overlooking peaceful village, young girl looking through binoculars, soft morning light --ar 16:9',
         svgCode: `<svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-sky-50 border border-sky-100 p-2">
           <path d="M 0 180 Q 200 130 400 180 L 400 200 L 0 200 Z" fill="#64748b"/>
           <path d="M 50 170 Q 200 80 350 170" fill="none" stroke="#475569" stroke-width="4"/>
@@ -1252,7 +1272,36 @@ function generateMockAuthenticPIRLSTest(params: GenerateParams): TestPaper {
           <polygon points="200,45 140,95 260,95" fill="#166534"/>
           <polygon points="200,70 130,120 270,120" fill="#14532d"/>
           <circle cx="340" cy="40" r="20" fill="#f59e0b" opacity="0.8"/>
-          <text x="130" y="190" font-size="12" fill="#334155" font-family="sans-serif">【圖 1：青雲山脊上的老松樹】</text>
+          <text x="110" y="190" font-size="12" fill="#334155" font-family="sans-serif">【圖 1：青雲山脊上的老松樹（穿插於第 1 段後）】</text>
+        </svg>`,
+      },
+      {
+        id: 'ill_2',
+        paragraphNumber: 3,
+        caption: '圖 2：【承轉·衝突高潮 / 穿插於第 3 段後】全體村民手牽手排成人鏈奮勇阻絕森林大火',
+        type: 'svg_diagram',
+        imagePrompt: '【場景 2（承轉·衝突高潮，建議穿插於第 3 段之後）】：緊張熱血的兒童繪本水彩手繪插畫：滾滾濃煙與橘紅火光中，阿雅滿臉煤灰卻眼神堅定地傳遞浸濕布袋，村民們緊密排成人鏈接力傳水，在老松樹前築起防線，動態張力十足，16:9 橫向構圖。 / English prompt: Dynamic children storybook watercolor illustration of courageous villagers and little girl Aya forming a human chain fighting forest fire with wet sacks and water buckets, dramatic smoke and fire glow, heroic atmosphere --ar 16:9',
+        svgCode: `<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-amber-50 border border-amber-200 p-2">
+          <rect width="400" height="180" fill="#fef3c7" rx="8"/>
+          <path d="M 10 140 Q 200 110 390 140" stroke="#b45309" stroke-width="3" fill="none"/>
+          <circle cx="80" cy="110" r="14" fill="#dc2626"/>
+          <circle cx="150" cy="105" r="14" fill="#ea580c"/>
+          <circle cx="220" cy="100" r="14" fill="#d97706"/>
+          <circle cx="290" cy="95" r="14" fill="#ca8a04"/>
+          <path d="M 80 110 L 150 105 L 220 100 L 290 95" stroke="#78350f" stroke-width="3" stroke-dasharray="4"/>
+          <text x="75" y="160" font-size="12" font-weight="bold" fill="#7c2d12">【圖 2：村民齊心排成人鏈滅火防線（穿插於第 3 段後）】</text>
+        </svg>`,
+      },
+      {
+        id: 'ill_3',
+        paragraphNumber: 4,
+        caption: '圖 3：【合·溫馨結局 / 穿插於第 4 段後】夕陽下老松樹巍然屹立與阿雅掌心青綠的松針',
+        type: 'svg_diagram',
+        imagePrompt: '【場景 3（合·溫馨結局，建議穿插於第 4 段之後）】：溫暖感動的兒童繪本水彩手繪插畫：金色夕陽灑落整片山脊，焦黑中老松樹迎風聳立，新芽微顫，老村長微笑將一片完好的青綠松針放在小女孩阿雅的掌心，溫馨治癒，16:9 橫向構圖。 / English prompt: Heartwarming children storybook watercolor illustration, sunset golden hour glowing over surviving pine tree, elder placing fresh green pine needles into young girl palm, touching emotional moment --ar 16:9',
+        svgCode: `<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-emerald-50 border border-emerald-200 p-2">
+          <circle cx="200" cy="90" r="70" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+          <path d="M 170 90 Q 200 60 230 90 Q 200 120 170 90" fill="#22c55e"/>
+          <text x="110" y="160" font-size="12" font-weight="bold" fill="#14532d">【圖 3：掌心松針與守護的心（穿插於第 4 段後）】</text>
         </svg>`,
       },
     ];
@@ -1510,15 +1559,28 @@ function generateMockAuthenticPIRLSTest(params: GenerateParams): TestPaper {
     const illustrations: ArticleIllustration[] = [
       {
         id: 'ill_info_1',
-        paragraphNumber: 3,
-        caption: '圖 1：黑熊在森林生態系中扮演「種子傳播與造林工程師」之循環示意圖',
+        paragraphNumber: 1,
+        caption: '圖 1：【引言·生態全景 / 穿插於第 1 段後】台灣黑熊胸前白色 V 字斑紋與高山棲地特徵',
         type: 'svg_diagram',
+        imagePrompt: '【場景 1（引言·生態全景，建議穿插於第 1 段之後）】：現代教育科普插畫：台灣高山雲霧森林中，一隻健壯的台灣黑熊站在覆滿青苔的巨木旁，胸前白色新月形 V 字斑紋清晰醒目，神情好奇友善，陽光透過針葉林灑落，8k 高解析度少兒科普風格。 / English prompt: Educational wildlife science illustration of Formosan black bear with distinct white V crescent mark on chest in misty Taiwanese mountain forest, bright daylight, National Geographic Kids style --ar 16:9',
+        svgCode: `<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-sky-50 border border-sky-100 p-2">
+          <circle cx="200" cy="80" r="45" fill="#1e293b"/>
+          <path d="M 180 75 Q 200 95 220 75" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+          <text x="100" y="155" font-size="12" font-weight="bold" fill="#0f172a">【圖 1：黑熊新月斑紋與高山棲地（穿插於第 1 段後）】</text>
+        </svg>`,
+      },
+      {
+        id: 'ill_info_2',
+        paragraphNumber: 3,
+        caption: '圖 2：【核心·生態循環 / 穿插於第 3 段後】黑熊在森林生態系中扮演「種子傳播與造林工程師」之循環示意圖',
+        type: 'svg_diagram',
+        imagePrompt: '【場景 2（核心·生態循環，建議穿插於第 3 段之後）】：清晰明瞭的生態科普圖表：黑熊進食青剛櫟果實、在遠方排出完整未消化種子、種子在天然肥料中萌芽長成新樹之三步驟生態循環流程圖，富教育意義與圖文對照。 / English prompt: Educational infographic of bear ecological cycle: eating oak acorns, dispersing seeds over long distances in feces, and new healthy oak saplings growing, clean colorful diagram --ar 16:9',
         svgCode: `<svg viewBox="0 0 450 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-emerald-50 border border-emerald-100 p-2">
           <circle cx="80" cy="100" r="45" fill="#bae6fd" stroke="#0284c7" stroke-width="2"/>
           <text x="50" y="95" font-size="12" font-weight="bold" fill="#0369a1">1.進食果實</text>
           <text x="45" y="115" font-size="10" fill="#0c4a6e">高山青剛櫟</text>
 
-          <path d="M 130 90 Q 170 70 210 90" fill="none" stroke="#059669" stroke-width="3" marker-end="url(#arrow)"/>
+          <path d="M 130 90 Q 170 70 210 90" fill="none" stroke="#059669" stroke-width="3"/>
           
           <circle cx="225" cy="100" r="45" fill="#fef08a" stroke="#ca8a04" stroke-width="2"/>
           <text x="195" y="95" font-size="12" font-weight="bold" fill="#854d0e">2.遠距傳播</text>
@@ -1530,7 +1592,25 @@ function generateMockAuthenticPIRLSTest(params: GenerateParams): TestPaper {
           <text x="340" y="95" font-size="12" font-weight="bold" fill="#15803d">3.健康造林</text>
           <text x="335" y="115" font-size="10" fill="#14532d">多樣樹種新生</text>
 
-          <text x="120" y="180" font-size="12" fill="#0f766e" font-family="sans-serif">【圖 1：黑熊傳播種子與森林生態循環圖】</text>
+          <text x="95" y="180" font-size="12" fill="#0f766e" font-family="sans-serif">【圖 2：黑熊種子傳播與造林循環（穿插於第 3 段後）】</text>
+        </svg>`,
+      },
+      {
+        id: 'ill_info_3',
+        paragraphNumber: 4,
+        caption: '圖 3：【體悟·人與自然 / 穿插於第 4 段後】保育巡護廊道與紅外線自動監測相機網絡',
+        type: 'svg_diagram',
+        imagePrompt: '【場景 3（體悟·人與自然，建議穿插於第 4 段之後）】：溫暖正向的生態保育科普插畫：巡護員與原住民夥伴在山林間檢查樹幹上的紅外線自動相機，遠處安全的林道上黑熊母子悠閒散步，展現人與野生動物和諧共存的保育希望。 / English prompt: Inspiring wildlife conservation illustration, rangers and indigenous guides installing infrared trail cameras on trees, wild bear family safely roaming in background forest corridor --ar 16:9',
+        svgCode: `<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-teal-50 border border-teal-200 p-2">
+          <rect x="50" y="40" width="300" height="90" fill="#ccfbf1" rx="10" stroke="#0d9488" stroke-width="2"/>
+          <circle cx="100" cy="85" r="22" fill="#0f766e"/>
+          <circle cx="200" cy="85" r="22" fill="#0f766e"/>
+          <circle cx="300" cy="85" r="22" fill="#0f766e"/>
+          <text x="75" y="90" font-size="10" fill="#ffffff" font-weight="bold">相機A</text>
+          <text x="175" y="90" font-size="10" fill="#ffffff" font-weight="bold">相機B</text>
+          <text x="275" y="90" font-size="10" fill="#ffffff" font-weight="bold">相機C</text>
+          <path d="M 125 85 L 175 85 M 225 85 L 275 85" stroke="#0f766e" stroke-width="2" stroke-dasharray="4"/>
+          <text x="100" y="160" font-size="12" font-weight="bold" fill="#115e59">【圖 3：安全巡護廊道與相機網絡（穿插於第 4 段後）】</text>
         </svg>`,
       },
     ];

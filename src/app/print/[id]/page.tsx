@@ -138,48 +138,59 @@ export default function PrintTestPaperPage() {
             </span>
           </div>
 
-          {/* 非連續性科學插圖 / 繪本情境圖 */}
-          {testPaper.illustrations && testPaper.illustrations.length > 0 && (
-            <div className={`my-3 border border-slate-300 rounded p-3 break-inside-avoid ${
-              testPaper.illustrations.length === 1
-                ? 'space-y-2'
-                : testPaper.illustrations.length === 2
-                ? 'grid grid-cols-2 gap-3'
-                : 'grid grid-cols-3 gap-3'
-            }`}>
-              {testPaper.illustrations.map((ill) => (
-                <div key={ill.id} className="space-y-1.5 flex flex-col justify-between text-center">
-                  {ill.imageUrl ? (
-                    <div className="w-full flex justify-center py-1">
-                      <img
-                        src={ill.imageUrl}
-                        alt={ill.caption || '課文插圖'}
-                        className="max-h-44 w-auto object-contain rounded border border-slate-200"
-                      />
-                    </div>
-                  ) : ill.svgCode ? (
-                    <div
-                      className="w-full flex justify-center overflow-hidden"
-                      dangerouslySetInnerHTML={{ __html: ill.svgCode }}
-                    />
-                  ) : null}
-                  {ill.caption && (
-                    <div className="text-center text-[11px] font-sans font-semibold text-slate-700">
-                      【圖】{ill.caption}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          {/* 文章段落與穿插於合適位置的情境插圖 */}
+          <article className="space-y-4 text-[15px] leading-relaxed text-justify text-slate-900">
+            {testPaper.paragraphs.map((p, pIdx) => {
+              const matchingIlls = (testPaper.illustrations || []).filter(
+                (ill) => (ill.paragraphNumber || 1) === p.paragraphNumber
+              );
+              const isLast = pIdx === testPaper.paragraphs.length - 1;
+              const trailingIlls = isLast
+                ? (testPaper.illustrations || []).filter(
+                    (ill) => (ill.paragraphNumber || 1) > testPaper.paragraphs.length
+                  )
+                : [];
+              const allIllsForThisPara = [...matchingIlls, ...trailingIlls];
 
-          {/* 文章段落 */}
-          <article className="space-y-3.5 text-[15px] leading-relaxed text-justify text-slate-900">
-            {testPaper.paragraphs.map((p) => (
-              <p key={p.paragraphNumber} className="indent-8">
-                {p.text}
-              </p>
-            ))}
+              return (
+                <div key={p.paragraphNumber} className="space-y-3">
+                  <p className="indent-8">
+                    {p.text}
+                  </p>
+
+                  {/* 穿插於本段落後的情境插圖 (A4 紙本列印最佳化) */}
+                  {allIllsForThisPara.map((ill) => {
+                    if (!ill.imageUrl && !ill.svgCode) return null;
+                    return (
+                      <div
+                        key={ill.id}
+                        className="my-3 py-1.5 flex flex-col items-center justify-center break-inside-avoid text-center"
+                      >
+                        {ill.imageUrl ? (
+                          <div className="w-full flex justify-center py-1">
+                            <img
+                              src={ill.imageUrl}
+                              alt={ill.caption || '課文插圖'}
+                              className="max-h-48 max-w-md w-auto object-contain rounded border border-slate-300 shadow-sm"
+                            />
+                          </div>
+                        ) : ill.svgCode ? (
+                          <div
+                            className="w-full max-w-md flex justify-center overflow-hidden"
+                            dangerouslySetInnerHTML={{ __html: ill.svgCode }}
+                          />
+                        ) : null}
+                        {ill.caption && (
+                          <div className="text-center text-[11px] font-sans font-semibold text-slate-700 mt-1">
+                            【圖】{ill.caption}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </article>
         </section>
 
