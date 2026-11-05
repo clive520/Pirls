@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import {
   FileSpreadsheet, BookOpen, Globe, Lock, BarChart3,
-  Send, Edit3, Printer, Trash2
+  Send, Edit3, Printer, Trash2, Sparkles
 } from 'lucide-react';
 import { TestPaper, ClassRoom } from '@/lib/types';
 
@@ -214,6 +214,16 @@ export const AssignmentTrackingTable: React.FC<AssignmentTrackingTableProps> = (
                             </div>
                           );
                         })}
+                        <div className="pt-1">
+                          <Link
+                            href={`/dashboard/teacher/test-papers/${t.id}/results#radar-analysis`}
+                            className="inline-flex items-center space-x-1 text-[10px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 px-1.5 py-0.5 rounded border border-purple-200 transition"
+                            title="查看全班四個思考能力雷達與思維落點"
+                          >
+                            <Sparkles className="w-3 h-3 text-purple-600" />
+                            <span>思維雷達落點</span>
+                          </Link>
+                        </div>
                       </div>
                     ) : (
                       <span className="text-[11px] text-slate-400 italic">尚無繳卷紀錄</span>
@@ -221,7 +231,7 @@ export const AssignmentTrackingTable: React.FC<AssignmentTrackingTableProps> = (
                   </td>
 
                   {/* 管理與快捷操作 */}
-                  <td className="px-4 py-4 text-right whitespace-nowrap min-w-[210px]">
+                  <td className="px-4 py-4 text-right whitespace-nowrap min-w-[240px]">
                     <div className="flex items-center justify-end space-x-1.5">
                       {/* 成績冊 */}
                       <Link
@@ -231,6 +241,16 @@ export const AssignmentTrackingTable: React.FC<AssignmentTrackingTableProps> = (
                       >
                         <BarChart3 className="w-3.5 h-3.5" />
                         <span>成績</span>
+                      </Link>
+
+                      {/* 雷達落點快捷鈕 */}
+                      <Link
+                        href={`/dashboard/teacher/test-papers/${t.id}/results#radar-analysis`}
+                        className="px-2 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold inline-flex items-center space-x-1 transition"
+                        title="查看 PIRLS 四個思考能力雷達與各層次思維能力落點分析"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>雷達</span>
                       </Link>
 
                       {/* 指派/調整 */}

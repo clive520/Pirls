@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration } from '@/lib/types';
 import { generateSmartImagePrompts, formatCombinedImagePrompt } from '@/lib/llm-adapter';
-import { QuestionEditCard, IllustrationStoryboard, AiConfigCard } from './components';
+import { CreateFormStep, ArticleEditor, QuestionEditorList } from './components';
 
 function TeacherCreateTestContent() {
   const router = useRouter();
@@ -690,224 +690,39 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
       {/* 主體區塊 */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {step === 'input' ? (
-          /* ==========================================================
-             第一步：出題設定與輸入介面
-             ========================================================== */
-          <div className="max-w-3xl mx-auto space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-black text-slate-900">打造高品質 PIRLS 素養考卷</h2>
-              <p className="text-sm text-slate-600">
-                可選擇「AI 主題自動寫文出題」或「貼上既有課文/科普文章」，系統將提煉完整題本與給分規準。
-              </p>
-            </div>
-
-            {errorMsg && (
-              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-start space-x-3 shadow-sm">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="font-bold text-red-900">AI 命題生成未成功</p>
-                  <p className="text-xs text-red-700 leading-relaxed break-all">{errorMsg}</p>
-                  <p className="text-[11px] text-red-600">
-                    💡 建議：請確認所填寫的 {provider === 'deepseek' ? 'DeepSeek' : provider === 'openrouter' ? 'OpenRouter' : provider === 'opencode' ? '自訂' : 'Google'} API Key 是否有效，或點擊下方「測試金鑰有效性」確認權限與額度。若暫無可用金鑰，可將金鑰欄位清空體驗內建的高品質示範題本。
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* 模式切換 Tabs */}
-            <div className="grid grid-cols-2 p-1.5 bg-slate-200/70 rounded-2xl">
-              <button
-                type="button"
-                onClick={() => setMode('theme')}
-                className={`py-3 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition ${
-                  mode === 'theme' ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>模式 A：AI 主題自動生文出題</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('paste')}
-                className={`py-3 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition ${
-                  mode === 'paste' ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <FileText className="w-4 h-4" />
-                <span>模式 B：貼上自選課文/文章</span>
-              </button>
-            </div>
-
-            <form onSubmit={handleGenerate} className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-              {mode === 'theme' ? (
-                /* 模式 A 欄位 */
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700">文章主題或核心思想</label>
-                    <input
-                      type="text"
-                      required
-                      value={theme}
-                      onChange={(e) => setTheme(e.target.value)}
-                      placeholder="例：台灣黑熊保育、面對挫折的勇氣、友誼與理解"
-                      className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700">文體類別</label>
-                      <select
-                        value={textType}
-                        onChange={(e) => setTextType(e.target.value as any)}
-                        className="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-sky-500 bg-white"
-                      >
-                        <option value="literary">文學性體驗（故事敘事、童話冒險、寓言）</option>
-                        <option value="informational">訊息性文本（自然科普、生態、實用說明文）</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700">目標年級</label>
-                      <select
-                        value={targetGrade}
-                        onChange={(e) => setTargetGrade(parseInt(e.target.value, 10))}
-                        className="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-sky-500 bg-white"
-                      >
-                        <option value={3}>國小三年級</option>
-                        <option value={4}>國小四年級 (PIRLS 國際官方基準)</option>
-                        <option value={5}>國小五年級</option>
-                        <option value={6}>國小六年級</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* 模式 B 欄位 */
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700">文章標題</label>
-                    <input
-                      type="text"
-                      required
-                      value={pastedTitle}
-                      onChange={(e) => setPastedTitle(e.target.value)}
-                      placeholder="例：國語課文第十課《落花生》"
-                      className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between items-center">
-                      <label className="block text-xs font-bold text-slate-700">自選文章正文 (建議 800~1,200 字)</label>
-                      <span className="text-xs text-slate-400">目前字數：{pastedText.length} 字</span>
-                    </div>
-                    <textarea
-                      required
-                      rows={8}
-                      value={pastedText}
-                      onChange={(e) => setPastedText(e.target.value)}
-                      placeholder="請直接貼上文章內文..."
-                      className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700">文體類別</label>
-                      <select
-                        value={textType}
-                        onChange={(e) => setTextType(e.target.value as any)}
-                        className="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-sky-500 bg-white"
-                      >
-                        <option value="literary">文學性文本</option>
-                        <option value="informational">訊息性文本</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700">適用年級</label>
-                      <select
-                        value={targetGrade}
-                        onChange={(e) => setTargetGrade(parseInt(e.target.value, 10))}
-                        className="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-sky-500 bg-white"
-                      >
-                        <option value={3}>國小三年級</option>
-                        <option value={4}>國小四年級</option>
-                        <option value={5}>國小五年級</option>
-                        <option value={6}>國小六年級</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 題量與圖文高階選項 */}
-              <div className="pt-4 border-t border-slate-100 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700">題本規模規格</label>
-                    <select
-                      value={questionCountMode}
-                      onChange={(e) => setQuestionCountMode(e.target.value as any)}
-                      className="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-sky-500 bg-white"
-                    >
-                      <option value="standard">PIRLS 官方正式題本規格 (12~14 題，含多題型與 1/2/3 階梯配分)</option>
-                      <option value="compact">課堂隨堂快測規格 (8 題，適合 15 分鐘小測)</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center pt-5">
-                    <label className="inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={includeDiagram}
-                        onChange={(e) => setIncludeDiagram(e.target.checked)}
-                        className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 w-4 h-4"
-                      />
-                      <span className="ml-2 text-xs font-bold text-slate-700">🎨 生成多模態配圖需求（AI 自動為文章構思中英文生圖提示詞，供複製生圖並上傳）</span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* 多 AI 介面與金鑰記憶設定區 */}
-                <AiConfigCard
-                  provider={provider}
-                  setProvider={handleProviderChange}
-                  apiKeys={apiKeys}
-                  onKeyChange={handleKeyChange}
-                  customBaseUrl={customBaseUrl}
-                  onBaseUrlChange={handleBaseUrlChange}
-                  preferredModels={preferredModels}
-                  onModelChange={handleModelChange}
-                  keyChecking={keyChecking}
-                  keyStatus={keyStatus}
-                  onVerifyKey={handleVerifyKey}
-                  onClearKeys={handleClearKeys}
-                />
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-base shadow-lg shadow-sky-500/20 transition flex items-center justify-center space-x-2 disabled:opacity-50"
-                >
-                  {loading ? (
-                    <>
-                      <RefreshCw className="w-5 h-5 animate-spin" />
-                      <span>PIRLS 專家大腦正在提煉文章與四層次試題中...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5" />
-                      <span>開始生成 PIRLS 題本</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : (
+          <CreateFormStep
+            mode={mode}
+            setMode={setMode}
+            theme={theme}
+            setTheme={setTheme}
+            textType={textType}
+            setTextType={setTextType}
+            targetGrade={targetGrade}
+            setTargetGrade={setTargetGrade}
+            pastedTitle={pastedTitle}
+            setPastedTitle={setPastedTitle}
+            pastedText={pastedText}
+            setPastedText={setPastedText}
+            questionCountMode={questionCountMode}
+            setQuestionCountMode={setQuestionCountMode}
+            includeDiagram={includeDiagram}
+            setIncludeDiagram={setIncludeDiagram}
+            loading={loading}
+            errorMsg={errorMsg}
+            onSubmit={handleGenerate}
+            provider={provider}
+            setProvider={handleProviderChange}
+            apiKeys={apiKeys}
+            onKeyChange={handleKeyChange}
+            customBaseUrl={customBaseUrl}
+            onBaseUrlChange={handleBaseUrlChange}
+            preferredModels={preferredModels}
+            onModelChange={handleModelChange}
+            keyChecking={keyChecking}
+            keyStatus={keyStatus}
+            onVerifyKey={handleVerifyKey}
+            onClearKeys={handleClearKeys}
+          />) : (
           /* ==========================================================
              第二步：人機協同試題編輯器 (Human-in-the-Loop Editor)
              ========================================================== */
@@ -970,220 +785,45 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
 
               {/* 雙欄主視圖 */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* 左欄：文章閱讀與圖表呈現 (佔 5 欄) */}
-                <div className={`lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 ${activeTab === 'questions' ? 'hidden lg:block' : 'block'}`}>
-                  <div className="flex items-center justify-between border-b pb-3">
-                    <span className="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
-                      <BookOpen className="w-4 h-4 text-sky-600" />
-                      <span>閱讀文本正文與分段編輯</span>
-                    </span>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-slate-400 font-mono">{testPaper.wordCount} 字</span>
-                      <button
-                        type="button"
-                        onClick={handleAddParagraph}
-                        className="text-xs text-sky-600 hover:text-sky-800 font-bold px-2.5 py-1 rounded-lg bg-sky-50 border border-sky-100 hover:bg-sky-100 transition flex items-center space-x-1"
-                        title="在文末增加一個新段落"
-                      >
-                        <PlusCircle className="w-3.5 h-3.5" />
-                        <span>新增段落</span>
-                      </button>
-                    </div>
-                  </div>
+                {/* 左欄：文章閱讀與圖表呈現 */}
+                <ArticleEditor
+                  testPaper={testPaper}
+                  activeTab={activeTab}
+                  editingParaIdx={editingParaIdx}
+                  setEditingParaIdx={setEditingParaIdx}
+                  onUpdateTitle={updateTitle}
+                  onUpdateParagraphText={updateParagraphText}
+                  onAddParagraph={handleAddParagraph}
+                  onDeleteParagraph={handleDeleteParagraph}
+                  activeSceneIdx={activeSceneIdx}
+                  setActiveSceneIdx={setActiveSceneIdx}
+                  copiedCombined={copiedCombined}
+                  copiedSingle={copiedSingle}
+                  onCopyCombinedPrompt={handleCopyCombinedPrompt}
+                  onCopySinglePrompt={handleCopySinglePrompt}
+                  onAddScene={handleAddScene}
+                  onRemoveScene={handleRemoveScene}
+                  onParagraphChange={handleParagraphChange}
+                  onCaptionChange={handleCaptionChange}
+                  onImageUpload={handleImageUpload}
+                  onPasteImage={handlePasteImage}
+                  onRemoveImage={handleRemoveImage}
+                  onGenerateScenesForPasted={handleGenerateScenesForPasted}
+                />
 
-                  {/* 文章標題編輯欄位 */}
-                  <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200 space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 block">文章標題 (可直接修改)</label>
-                    <input
-                      type="text"
-                      value={testPaper.title}
-                      onChange={(e) => updateTitle(e.target.value)}
-                      className="w-full text-sm font-bold text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-sky-500 focus:outline-none"
-                    />
-                  </div>
-
-                  {/* PIRLS 多模態課文繪本配圖與 3 幅關鍵場景生圖助手 */}
-                  <IllustrationStoryboard
-                    illustrations={testPaper.illustrations || []}
-                    paragraphs={testPaper.paragraphs}
-                    activeSceneIdx={activeSceneIdx}
-                    setActiveSceneIdx={setActiveSceneIdx}
-                    copiedCombined={copiedCombined}
-                    copiedSingle={copiedSingle}
-                    onCopyCombinedPrompt={handleCopyCombinedPrompt}
-                    onCopySinglePrompt={handleCopySinglePrompt}
-                    onAddScene={handleAddScene}
-                    onRemoveScene={handleRemoveScene}
-                    onParagraphChange={handleParagraphChange}
-                    onCaptionChange={handleCaptionChange}
-                    onImageUpload={handleImageUpload}
-                    onPasteImage={handlePasteImage}
-                    onRemoveImage={handleRemoveImage}
-                    onGenerateScenesForPasted={handleGenerateScenesForPasted}
-                  />
-
-                  {/* 內文各段落與穿插的情境插圖預覽 */}
-                  <div className="space-y-4 text-sm text-slate-700 leading-relaxed font-sans max-h-[650px] overflow-y-auto pr-2">
-                    {testPaper.paragraphs.map((p, pIdx) => {
-                      const matchingIlls = (testPaper.illustrations || [])
-                        .map((ill, illIdx) => ({ ill, illIdx }))
-                        .filter(({ ill }) => (ill.paragraphNumber || 1) === p.paragraphNumber);
-                      const isLast = pIdx === testPaper.paragraphs.length - 1;
-                      const trailingIlls = isLast
-                        ? (testPaper.illustrations || [])
-                            .map((ill, illIdx) => ({ ill, illIdx }))
-                            .filter(({ ill }) => (ill.paragraphNumber || 1) > testPaper.paragraphs.length)
-                        : [];
-                      const allIllsForThisPara = [...matchingIlls, ...trailingIlls];
-
-                      return (
-                        <div key={p.paragraphNumber} className="space-y-3">
-                          <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[11px] font-bold text-slate-500 bg-slate-200/70 px-2 py-0.5 rounded">
-                                第 {p.paragraphNumber} 段
-                              </span>
-                              <div className="flex items-center space-x-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingParaIdx(editingParaIdx === pIdx ? null : pIdx)}
-                                  className="text-[11px] text-sky-600 hover:text-sky-800 font-bold px-2 py-0.5 rounded bg-white border border-slate-200 hover:bg-sky-50 transition"
-                                >
-                                  {editingParaIdx === pIdx ? '收合編輯' : '✏️ 編輯文字'}
-                                </button>
-                                {testPaper.paragraphs.length > 1 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteParagraph(pIdx)}
-                                    className="p-1 text-slate-400 hover:text-rose-600 transition"
-                                    title="刪除此段落"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-
-                            {editingParaIdx === pIdx ? (
-                              <div className="space-y-2 pt-1">
-                                <textarea
-                                  rows={5}
-                                  value={p.text}
-                                  onChange={(e) => updateParagraphText(pIdx, e.target.value)}
-                                  className="w-full text-sm font-normal text-slate-800 bg-white border border-sky-300 rounded-lg p-2.5 focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                                />
-                                <div className="flex justify-end">
-                                  <button
-                                    type="button"
-                                    onClick={() => setEditingParaIdx(null)}
-                                    className="text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 px-3 py-1 rounded-lg"
-                                  >
-                                    完成段落修訂
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <p className="text-slate-800 leading-relaxed whitespace-pre-line text-sm">
-                                {p.text}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* 穿插於本段落後的情境圖預覽卡片 */}
-                          {allIllsForThisPara.map(({ ill, illIdx }) => (
-                            <div
-                              key={ill.id}
-                              className="rounded-xl border border-dashed border-indigo-200 bg-indigo-50/30 p-3 space-y-2 transition hover:border-indigo-300"
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="text-[11px] font-bold text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded-md flex items-center space-x-1">
-                                  <span>🖼️ 場景 {illIdx + 1} 穿插於此</span>
-                                  <span className="text-slate-500 font-normal">（第 {p.paragraphNumber} 段後）</span>
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setActiveSceneIdx(illIdx);
-                                    window.scrollTo({ top: 350, behavior: 'smooth' });
-                                  }}
-                                  className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline"
-                                >
-                                  {ill.imageUrl ? '管理/更換圖片' : '前往複製提示詞/上傳圖片 →'}
-                                </button>
-                              </div>
-
-                              {ill.imageUrl ? (
-                                <div className="flex flex-col items-center pt-1">
-                                  <img
-                                    src={ill.imageUrl}
-                                    alt={ill.caption || '情境圖'}
-                                    className="max-h-48 w-auto object-contain rounded-lg border border-slate-200 shadow-sm bg-white"
-                                  />
-                                  <p className="text-xs text-center text-slate-600 font-medium mt-1.5">
-                                    {ill.caption}
-                                  </p>
-                                </div>
-                              ) : ill.svgCode ? (
-                                <div className="flex flex-col items-center pt-1">
-                                  <div dangerouslySetInnerHTML={{ __html: ill.svgCode }} className="w-full flex justify-center" />
-                                  <p className="text-xs text-center text-slate-600 font-medium mt-1.5">
-                                    {ill.caption}
-                                  </p>
-                                </div>
-                              ) : (
-                                <div className="text-xs text-slate-500 py-1 flex items-center justify-between">
-                                  <span className="line-clamp-1 italic text-slate-400">
-                                    {ill.caption || '尚未上傳真實圖片，完成出題後可複製上方提示詞生圖'}
-                                  </span>
-                                  <span className="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 flex-shrink-0 ml-2">
-                                    待生圖上傳
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 右欄：四層次題目微調編輯區 (佔 7 欄) */}
-                <div className={`lg:col-span-7 space-y-4 ${activeTab === 'article' ? 'hidden lg:block' : 'block'}`}>
-                  {testPaper.questions.map((q, qIdx) => (
-                    <QuestionEditCard
-                      key={q.id}
-                      question={q}
-                      index={qIdx}
-                      onUpdatePoints={updateQuestionPoints}
-                      onUpdatePrompt={updateQuestionPrompt}
-                      onUpdateOptionText={updateOptionText}
-                      onDeleteQuestion={handleDeleteQuestion}
-                      onSetCorrectOption={setCorrectOption}
-                    />
-                  ))}
-
-                  {/* 底部保存大按鈕 */}
-                  <div className="pt-4 flex justify-end">
-                    <button
-                      onClick={handleSaveTestPaper}
-                      disabled={saving}
-                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 disabled:opacity-50 text-white font-bold text-sm shadow-md transition flex items-center space-x-2"
-                    >
-                      {saving ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>{isEditing ? '更新儲存中...' : '寫入題庫與雲端同調中...'}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4" />
-                          <span>{isEditing ? '確認完成微調，儲存更新至題庫' : '確認完成微調，儲存至題庫'}</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
+                {/* 右欄：四層次題目微調編輯區 */}
+                <QuestionEditorList
+                  testPaper={testPaper}
+                  activeTab={activeTab}
+                  isEditing={isEditing}
+                  saving={saving}
+                  onSave={handleSaveTestPaper}
+                  onUpdatePoints={updateQuestionPoints}
+                  onUpdatePrompt={updateQuestionPrompt}
+                  onUpdateOptionText={updateOptionText}
+                  onSetCorrectOption={setCorrectOption}
+                  onDeleteQuestion={handleDeleteQuestion}
+                />
               </div>
             </div>
           )

@@ -14,6 +14,7 @@ import {
 import { BenchmarkKey, ExamSubmission, TestPaper } from '@/lib/types';
 import { getBenchmarkInfo } from '@/lib/pirls-norm';
 import { ArticleContent } from '@/components/article';
+import { ThinkingSkillsRadarCard } from '@/components/analytics';
 
 interface SiblingItem {
   id: string;
@@ -115,6 +116,65 @@ export default function TeacherReviewSubmissionPage() {
         return acc + score;
       }, 0)
     : 0;
+
+  // 即時計算四層次思維能力得分與掌握率（隨教師改分動態更新）
+  const dynamicProcessScores = React.useMemo(() => {
+    if (!submission || !testPaper) {
+      return {
+        level1: { earned: 0, total: 1, percentage: 0 },
+        level2: { earned: 0, total: 1, percentage: 0 },
+        level3: { earned: 0, total: 1, percentage: 0 },
+        level4: { earned: 0, total: 1, percentage: 0 },
+      };
+    }
+
+    const levels: Record<'level1' | 'level2' | 'level3' | 'level4', { earned: number; total: number }> = {
+      level1: { earned: 0, total: 0 },
+      level2: { earned: 0, total: 0 },
+      level3: { earned: 0, total: 0 },
+      level4: { earned: 0, total: 0 },
+    };
+
+    submission.answers.forEach((ans) => {
+      const q = testPaper.questions?.find((item) => item.id === ans.questionId);
+      const lvlNum = q?.processLevelNumber;
+      let targetLevel: 'level1' | 'level2' | 'level3' | 'level4' = 'level1';
+      if (lvlNum === 2 || q?.processLevel === 'inference') targetLevel = 'level2';
+      else if (lvlNum === 3 || q?.processLevel === 'interpret') targetLevel = 'level3';
+      else if (lvlNum === 4 || q?.processLevel === 'evaluate') targetLevel = 'level4';
+
+      const curScore = modifiedScores[ans.questionId] !== undefined ? modifiedScores[ans.questionId] : ans.score;
+      levels[targetLevel].earned += curScore;
+      levels[targetLevel].total += ans.maxScore;
+    });
+
+    return {
+      level1: {
+        earned: levels.level1.earned,
+        total: levels.level1.total,
+        percentage: levels.level1.total > 0 ? Math.round((levels.level1.earned / levels.level1.total) * 100) : 0,
+        description: '能快速鎖定時間、人物與具體事實。',
+      },
+      level2: {
+        earned: levels.level2.earned,
+        total: levels.level2.total,
+        percentage: levels.level2.total > 0 ? Math.round((levels.level2.earned / levels.level2.total) * 100) : 0,
+        description: '能順利串聯線索，理解隱含的因果關係。',
+      },
+      level3: {
+        earned: levels.level3.earned,
+        total: levels.level3.total,
+        percentage: levels.level3.total > 0 ? Math.round((levels.level3.earned / levels.level3.total) * 100) : 0,
+        description: '能跨越段落歸納文章主旨與人物心態。',
+      },
+      level4: {
+        earned: levels.level4.earned,
+        total: levels.level4.total,
+        percentage: levels.level4.total > 0 ? Math.round((levels.level4.earned / levels.level4.total) * 100) : 0,
+        description: '能客觀反思寫作手法並連結現實經驗。',
+      },
+    };
+  }, [submission, testPaper, modifiedScores]);
 
   // 切換題目給分
   const handleScoreChange = (qId: string, newScore: number) => {
@@ -571,47 +631,14 @@ export default function TeacherReviewSubmissionPage() {
                 </div>
               </div>
 
-              {/* 四大維度表現進度條 */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-                <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-100">
-                  <div className="text-[11px] font-bold text-blue-900">L1 直接提取</div>
-                  <div className="text-base font-black text-blue-700 mt-0.5">
-                    {submission.processScores?.level1?.percentage ?? 0}%
-                  </div>
-                  <div className="text-[10px] text-blue-600 mt-0.5">
-                    得分 {submission.processScores?.level1?.earned} / {submission.processScores?.level1?.total} 分
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-100">
-                  <div className="text-[11px] font-bold text-emerald-900">L2 直接推論</div>
-                  <div className="text-base font-black text-emerald-700 mt-0.5">
-                    {submission.processScores?.level2?.percentage ?? 0}%
-                  </div>
-                  <div className="text-[10px] text-emerald-600 mt-0.5">
-                    得分 {submission.processScores?.level2?.earned} / {submission.processScores?.level2?.total} 分
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-100">
-                  <div className="text-[11px] font-bold text-amber-900">L3 詮釋整合</div>
-                  <div className="text-base font-black text-amber-700 mt-0.5">
-                    {submission.processScores?.level3?.percentage ?? 0}%
-                  </div>
-                  <div className="text-[10px] text-amber-600 mt-0.5">
-                    得分 {submission.processScores?.level3?.earned} / {submission.processScores?.level3?.total} 分
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-100">
-                  <div className="text-[11px] font-bold text-purple-900">L4 檢驗評估</div>
-                  <div className="text-base font-black text-purple-700 mt-0.5">
-                    {submission.processScores?.level4?.percentage ?? 0}%
-                  </div>
-                  <div className="text-[10px] text-purple-600 mt-0.5">
-                    得分 {submission.processScores?.level4?.earned} / {submission.processScores?.level4?.total} 分
-                  </div>
-                </div>
+              {/* 四大思維能力雷達圖與層次落點解析 (即時連動) */}
+              <div className="pt-2">
+                <ThinkingSkillsRadarCard
+                  title="各層次思維能力落點分析"
+                  subtitle="隨教師核定給分即時重新試算四層次掌握率"
+                  radarTitle="PIRLS 四個思考能力雷達"
+                  data={dynamicProcessScores}
+                />
               </div>
             </div>
 

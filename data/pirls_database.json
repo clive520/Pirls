@@ -489,7 +489,7 @@
       "isPublic": false,
       "timeLimitMinutes": 40,
       "createdAt": "2026-10-28T09:46:02.459Z",
-      "updatedAt": "2026-11-05T22:34:31.915Z",
+      "updatedAt": "2026-11-05T22:51:29.680Z",
       "assignedClassIds": [
         "cls_1793180762488_hiiv"
       ],
@@ -5363,7 +5363,7 @@
       "benchmarkDescription": "具備基本完整的字面理解力。能準確找出文章直接陳述的訊息，並能進行初步的淺層推論（如單一原因與結果）；能理解科普圖表的直接圖意，但在跨段落綜合與深層觀點統整上需要指引。",
       "normPR": 40,
       "isTeacherReviewed": true,
-      "reviewedAt": "2026-11-05T22:34:32.109Z",
+      "reviewedAt": "2026-11-05T22:51:29.838Z",
       "reviewedBy": "測試教師",
       "teacherGeneralNote": "持續保持對文字的敏銳度！",
       "aiPedagogicalAdvice": {
@@ -5374,7 +5374,7 @@
           "嘗試將故事角色的抉擇與自身生活經驗作對比。"
         ],
         "actionPlan": "建議每日閱讀 1 篇短篇寓言，並練習口頭回答「如果你是主角會怎麼做？為什麼？」",
-        "generatedAt": "2026-11-05T22:34:32.106Z"
+        "generatedAt": "2026-11-05T22:51:29.838Z"
       },
       "classPR": 50
     },

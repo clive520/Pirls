@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { BenchmarkKey, ExamSubmission, TestPaper } from '@/lib/types';
 import { getBenchmarkInfo } from '@/lib/pirls-norm';
+import { ThinkingSkillsRadarCard } from '@/components/analytics';
 
 interface SubmissionItem {
   id: string;
@@ -371,68 +372,32 @@ export default function TeacherTestResultsPage() {
           </div>
         )}
 
-        {/* 四層次能力全班得分率診斷長條 */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-bold text-slate-900">PIRLS 四大認知歷程 全班平均掌握率</h2>
-              <p className="text-xs text-slate-500">檢視班級在直接提取、直接推論、詮釋整合、評估檢驗的素養分佈</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-            <div className="p-4 bg-sky-50/50 rounded-2xl border border-sky-100 space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-sky-800">L1 提取特定資訊</span>
-                <span className="font-black text-sky-700">{l1Avg}%</span>
-              </div>
-              <div className="w-full h-2.5 bg-sky-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-sky-500 rounded-full transition-all duration-500"
-                  style={{ width: `${l1Avg}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-indigo-800">L2 推論主要觀點</span>
-                <span className="font-black text-indigo-700">{l2Avg}%</span>
-              </div>
-              <div className="w-full h-2.5 bg-indigo-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                  style={{ width: `${l2Avg}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="p-4 bg-violet-50/50 rounded-2xl border border-violet-100 space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-violet-800">L3 詮釋整合訊息</span>
-                <span className="font-black text-violet-700">{l3Avg}%</span>
-              </div>
-              <div className="w-full h-2.5 bg-violet-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-violet-500 rounded-full transition-all duration-500"
-                  style={{ width: `${l3Avg}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100 space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-rose-800">L4 檢驗評估內容形式</span>
-                <span className="font-black text-rose-700">{l4Avg}%</span>
-              </div>
-              <div className="w-full h-2.5 bg-rose-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-rose-500 rounded-full transition-all duration-500"
-                  style={{ width: `${l4Avg}%` }}
-                />
-              </div>
-            </div>
-          </div>
+        {/* PIRLS 四維思考能力雷達與全班各層次思維能力落點分析 */}
+        <div id="radar-analysis">
+          <ThinkingSkillsRadarCard
+            title="各層次思維能力落點分析"
+            subtitle="PIRLS 四大思考歷程 全班平均掌握率與能力落點診斷"
+            radarTitle="PIRLS 四個思考能力雷達"
+            data={{
+              level1: {
+                percentage: l1Avg,
+                description: '全班在時間、人物與具體事實之直接提取平均掌握率。',
+              },
+              level2: {
+                percentage: l2Avg,
+                description: '全班在線索串聯與因果推論之直接推論平均掌握率。',
+              },
+              level3: {
+                percentage: l3Avg,
+                description: '全班在跨段落主旨與心理歸納之詮釋整合平均掌握率。',
+              },
+              level4: {
+                percentage: l4Avg,
+                description: '全班在寫作手法反思與情境連結之檢驗評估平均掌握率。',
+              },
+            }}
+            isClassAggregate={true}
+          />
         </div>
 
         {/* 學生名冊與作答記錄表格 (擴充量尺分、基準與常模 PR) */}
