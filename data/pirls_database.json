@@ -85,6 +85,36 @@
       "initialPassword": "1234",
       "createdAt": "2026-10-29T11:07:22.752Z"
     },
+    "stu_1793920975847_tavkl": {
+      "role": "student",
+      "displayName": "林小華",
+      "className": "四年六班 (實驗班)",
+      "passwordHash": "$2a$10$5T0vBdIIHAzF0IOoUSDj2.ot0778l3MA5RusKFiyvFVBzbGS7b2A6",
+      "seatNumber": 1,
+      "createdAt": "2026-11-05T23:22:55.847Z",
+      "classId": "cls_1793920975547_w1oo",
+      "gradeLevel": 4,
+      "teacherId": "teacher_comparative_eval",
+      "initialPassword": "130835",
+      "id": "stu_1793920975847_tavkl",
+      "status": "active",
+      "username": "stu_eva_1"
+    },
+    "stu_1793920975903_107qh": {
+      "role": "student",
+      "displayName": "張小美",
+      "className": "四年六班 (實驗班)",
+      "passwordHash": "$2a$10$ZqUQ2TVVHpUnfNu00UYceeeziXP2OYpevUUtcLhbwUm38OQ4bt1HG",
+      "seatNumber": 2,
+      "createdAt": "2026-11-05T23:22:55.903Z",
+      "classId": "cls_1793920975547_w1oo",
+      "gradeLevel": 4,
+      "teacherId": "teacher_comparative_eval",
+      "initialPassword": "125212",
+      "id": "stu_1793920975903_107qh",
+      "status": "active",
+      "username": "stu_eva_2"
+    },
     "usr_1793188060743_7v3zb": {
       "username": "teacher",
       "passwordHash": "$2a$10$jgubSHwUDgeZ2Y/MmTkVPuUt1EvruIGK7Sn6SCsNffeBsRPRUQg6O",
@@ -121,35 +151,35 @@
       "id": "usr_1793239746980_7s7k1",
       "createdAt": "2026-10-29T02:09:06.980Z"
     },
-    "stu_1793920975847_tavkl": {
-      "id": "stu_1793920975847_tavkl",
-      "username": "stu_eva_1",
-      "passwordHash": "$2a$10$5T0vBdIIHAzF0IOoUSDj2.ot0778l3MA5RusKFiyvFVBzbGS7b2A6",
-      "displayName": "林小華",
-      "role": "student",
+    "usr_1793922117408_bhnit": {
+      "displayName": "張導師 (班導)",
+      "username": "t_mentor_1793922116518",
+      "passwordHash": "hash123",
+      "role": "teacher",
       "status": "active",
-      "teacherId": "teacher_comparative_eval",
-      "classId": "cls_1793920975547_w1oo",
-      "className": "四年六班 (實驗班)",
-      "seatNumber": 1,
-      "gradeLevel": 4,
-      "initialPassword": "130835",
-      "createdAt": "2026-11-05T23:22:55.847Z"
+      "school": "博愛國小",
+      "id": "usr_1793922117408_bhnit",
+      "createdAt": "2026-11-05T23:41:57.408Z"
     },
-    "stu_1793920975903_107qh": {
-      "id": "stu_1793920975903_107qh",
-      "username": "stu_eva_2",
-      "passwordHash": "$2a$10$ZqUQ2TVVHpUnfNu00UYceeeziXP2OYpevUUtcLhbwUm38OQ4bt1HG",
-      "displayName": "張小美",
-      "role": "student",
+    "usr_1793922117625_dv7j1": {
+      "displayName": "李老師 (國語科任)",
+      "username": "t_subject_1793922116518",
+      "passwordHash": "hash123",
+      "role": "teacher",
       "status": "active",
-      "teacherId": "teacher_comparative_eval",
-      "classId": "cls_1793920975547_w1oo",
-      "className": "四年六班 (實驗班)",
-      "seatNumber": 2,
-      "gradeLevel": 4,
-      "initialPassword": "125212",
-      "createdAt": "2026-11-05T23:22:55.903Z"
+      "school": "博愛國小",
+      "id": "usr_1793922117625_dv7j1",
+      "createdAt": "2026-11-05T23:41:57.625Z"
+    },
+    "usr_1793922117825_2n24k": {
+      "displayName": "王老師 (閱推教師)",
+      "username": "t_reading_1793922116518",
+      "passwordHash": "hash123",
+      "role": "teacher",
+      "status": "active",
+      "school": "博愛國小",
+      "id": "usr_1793922117825_2n24k",
+      "createdAt": "2026-11-05T23:41:57.825Z"
     }
   },
   "classes": {
@@ -182,8 +212,8 @@
       "name": "四年六班 (實驗班)",
       "gradeLevel": 4,
       "teacherId": "teacher_comparative_eval",
-      "studentCount": 2,
-      "createdAt": "2026-11-05T23:22:55.547Z"
+      "createdAt": "2026-11-05T23:22:55.547Z",
+      "studentCount": 2
     }
   },
   "testPapers": {

@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw, TrendingUp } from 'lucide-react';
+import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw, TrendingUp, Crown, Handshake } from 'lucide-react';
+import api from '@/lib/api-client';
+import { CoTeacherManageModal } from '@/components/teacher';
 
 export default function TeacherDashboardPage() {
   const router = useRouter();
@@ -36,6 +38,9 @@ export default function TeacherDashboardPage() {
   const [editNewPassword, setEditNewPassword] = useState('');
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
+
+  // 協同教師管理彈窗狀態
+  const [showCoTeacherModal, setShowCoTeacherModal] = useState(false);
 
   // 取得當前使用者與班級清單
   const initData = async (targetClassId?: string) => {
@@ -127,17 +132,33 @@ export default function TeacherDashboardPage() {
     }
 
     try {
-      const res = await fetch(`/api/teacher/classes?classId=${classId}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (res.ok) {
+      const res = await api.teacher.deleteClass(classId);
+      if (res.success) {
         await initData();
       } else {
-        alert(data.error || '刪除失敗');
+        alert(res.message || '刪除失敗');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      alert(err.message || '刪除失敗');
+    }
+  };
+
+  // 協同教師主動退出共同管理
+  const handleLeaveCoTeaching = async (classId: string) => {
+    const cls = classes.find((c) => c.id === classId);
+    if (!confirm(`確定要退出「${cls?.name || '此班級'}」的共同管理嗎？退出後您將無法再檢視該班級學生與指派測驗。`)) {
+      return;
+    }
+
+    try {
+      if (!currentUser?.id) return;
+      const res = await api.teacher.removeCoTeacher(classId, currentUser.id);
+      if (res.success) {
+        alert('已成功退出該班級的共同管理！');
+        await initData();
+      }
+    } catch (err: any) {
+      alert(err.message || '退出共同管理失敗');
     }
   };
 
@@ -384,62 +405,115 @@ export default function TeacherDashboardPage() {
       {/* 主體區塊 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* 班級選擇列 */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <Users className="w-6 h-6 text-sky-600 flex-shrink-0" />
-            <div className="flex-1">
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">目前管理之班級</label>
-              {classes.length === 0 ? (
-                <div className="text-sm font-bold text-slate-800">尚未建立班級，請點擊右側「新增班級」開始使用</div>
-              ) : (
-                <div className="flex items-center space-x-2 mt-0.5">
-                  <select
-                    value={selectedClassId}
-                    onChange={(e) => setSelectedClassId(e.target.value)}
-                    className="block w-full rounded-lg border-slate-300 text-sm font-bold text-slate-900 focus:ring-sky-500 focus:border-sky-500 py-1.5 px-3 bg-slate-50 border"
-                  >
-                    {classes.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} (國小 {c.gradeLevel} 年級) - 共 {c.studentCount} 位學生
-                      </option>
-                    ))}
-                  </select>
-                  {selectedClassId && (
-                    <button
-                      onClick={() => handleDeleteClass(selectedClassId)}
-                      className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-rose-100"
-                      title="刪除目前選取的班級"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+        {(() => {
+          const currentClass = classes.find((c) => c.id === selectedClassId);
+          return (
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center space-x-3 flex-1">
+                <Users className="w-6 h-6 text-sky-600 flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      目前管理之班級
+                    </label>
+                    {currentClass && (
+                      currentClass.isOwner ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/60">
+                          <Crown className="w-3 h-3 text-amber-600" />
+                          班級主責導師
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200/60">
+                          <Handshake className="w-3 h-3 text-indigo-600" />
+                          協同教學 (導師：{currentClass.primaryTeacherName})
+                        </span>
+                      )
+                    )}
+                  </div>
+
+                  {classes.length === 0 ? (
+                    <div className="text-sm font-bold text-slate-800">尚未建立班級，請點擊右側「新增班級」開始使用</div>
+                  ) : (
+                    <div className="flex items-center space-x-2 mt-0.5">
+                      <select
+                        value={selectedClassId}
+                        onChange={(e) => setSelectedClassId(e.target.value)}
+                        className="block w-full max-w-xl rounded-lg border-slate-300 text-sm font-bold text-slate-900 focus:ring-sky-500 focus:border-sky-500 py-1.5 px-3 bg-slate-50 border"
+                      >
+                        {classes.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} (國小 {c.gradeLevel} 年級) - 共 {c.studentCount} 位學生 {c.isOwner ? '👑 (主責)' : `🤝 (協同 - ${c.primaryTeacherName || '導師'})`}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* 主責導師顯示刪除班級按鈕 */}
+                      {selectedClassId && currentClass?.isOwner && (
+                        <button
+                          onClick={() => handleDeleteClass(selectedClassId)}
+                          className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-rose-100 flex-shrink-0"
+                          title="刪除目前選取的班級（限主責導師）"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+
+                      {/* 協同教師顯示退出共同管理按鈕 */}
+                      {selectedClassId && currentClass?.isCoTeacher && (
+                        <button
+                          onClick={() => handleLeaveCoTeaching(selectedClassId)}
+                          className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-rose-100 flex-shrink-0"
+                          title="退出此班級的共同管理"
+                        >
+                          <LogOut className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setShowClassModal(true)}
-              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold inline-flex items-center space-x-1.5 transition"
-            >
-              <PlusCircle className="w-4 h-4 text-sky-600" />
-              <span>新增班級</span>
-            </button>
-            {selectedClassId && (
-              <button
-                onClick={() => {
-                  setCreatedStudentSlips([]);
-                  setShowBatchModal(true);
-                }}
-                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold inline-flex items-center space-x-1.5 transition shadow-sm"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span>建立學生帳號</span>
-              </button>
-            )}
-          </div>
-        </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedClassId && currentClass && (
+                  <button
+                    onClick={() => setShowCoTeacherModal(true)}
+                    className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs sm:text-sm font-bold inline-flex items-center space-x-1.5 transition border border-indigo-200/70 shadow-sm"
+                    title="管理共同管理教師或邀請其他老師"
+                  >
+                    <Handshake className="w-4 h-4 text-indigo-600" />
+                    <span>
+                      {currentClass.isOwner ? '👥 協同教師管理' : '👥 協同教學名單'}
+                      {currentClass.coTeacherNames && currentClass.coTeacherNames.length > 0
+                        ? ` (${currentClass.coTeacherNames.length})`
+                        : ''}
+                    </span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setShowClassModal(true)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold inline-flex items-center space-x-1.5 transition"
+                >
+                  <PlusCircle className="w-4 h-4 text-sky-600" />
+                  <span>新增班級</span>
+                </button>
+
+                {selectedClassId && (
+                  <button
+                    onClick={() => {
+                      setCreatedStudentSlips([]);
+                      setShowBatchModal(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold inline-flex items-center space-x-1.5 transition shadow-sm"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>建立學生帳號</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 學生名冊清單 */}
         {selectedClassId && (
@@ -895,6 +969,19 @@ export default function TeacherDashboardPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* 協同教師共同管理彈窗 */}
+      {selectedClassId && (
+        <CoTeacherManageModal
+          isOpen={showCoTeacherModal}
+          classId={selectedClassId}
+          className={classes.find((c) => c.id === selectedClassId)?.name || ''}
+          onClose={() => setShowCoTeacherModal(false)}
+          onUpdated={() => {
+            initData(selectedClassId);
+          }}
+        />
       )}
     </div>
   );

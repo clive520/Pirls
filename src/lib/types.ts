@@ -22,9 +22,35 @@ export interface ClassRoom {
   id: string;
   name: string;
   gradeLevel: number;
-  teacherId: string;
+  teacherId: string; // 主責導師 / 建立者 ID
+  coTeacherIds?: string[]; // 共同管理該班級的教師 IDs
   studentCount: number;
   createdAt: string;
+  // 前端檢視輔助屬性
+  isOwner?: boolean; // 當前登入教師是否為該班主責建立者
+  isCoTeacher?: boolean; // 當前登入教師是否為受邀協同教師
+  primaryTeacherName?: string; // 主責導師顯示名稱
+  coTeacherNames?: string[]; // 協同教師顯示名稱清單
+}
+
+export interface CoTeacherMember {
+  id: string;
+  displayName: string;
+  username: string;
+  school?: string;
+  role: UserRole;
+  isOwner?: boolean;
+}
+
+export interface ClassCoTeachersData {
+  classId: string;
+  className: string;
+  gradeLevel: number;
+  owner: CoTeacherMember;
+  coTeachers: CoTeacherMember[];
+  availableTeachers: CoTeacherMember[];
+  isOwner: boolean;
+  isCoTeacher: boolean;
 }
 
 export interface AuthSession {

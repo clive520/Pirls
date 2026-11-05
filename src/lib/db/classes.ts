@@ -1,4 +1,4 @@
-import { User, ClassRoom } from '../types';
+import { User, ClassRoom, ClassCoTeachersData, CoTeacherMember } from '../types';
 import { hashPassword } from '../auth';
 import {
   ensureLocalDB,
@@ -37,11 +37,37 @@ export async function createClass(
 export async function getTeacherClasses(teacherId: string, role?: string): Promise<ClassRoom[]> {
   await syncCloudOnBoot();
   const state = ensureLocalDB();
+  const userMap = new Map<string, User>();
+  Object.values(state.users).forEach((u) => userMap.set(u.id, u));
+
+  let classList: ClassRoom[] = [];
   if (role === 'admin') {
     // 系統管理員可檢視與管理全校所有班級（含自己建立的班級）
-    return Object.values(state.classes);
+    classList = Object.values(state.classes);
+  } else {
+    // 一般教師可存取：自己建立之主責班級 OR 受邀為共同管理之協同班級
+    classList = Object.values(state.classes).filter(
+      (c) => c.teacherId === teacherId || (c.coTeacherIds && c.coTeacherIds.includes(teacherId))
+    );
   }
-  return Object.values(state.classes).filter((c) => c.teacherId === teacherId);
+
+  // 排序並附加主責與協同教師資訊
+  return classList
+    .sort((a, b) => a.gradeLevel - b.gradeLevel || a.name.localeCompare(b.name, 'zh-TW'))
+    .map((c) => {
+      const ownerUser = userMap.get(c.teacherId);
+      const coTeacherNames = (c.coTeacherIds || [])
+        .map((cid) => userMap.get(cid)?.displayName)
+        .filter((name): name is string => Boolean(name));
+
+      return {
+        ...c,
+        isOwner: c.teacherId === teacherId || role === 'admin',
+        isCoTeacher: Boolean(c.coTeacherIds && c.coTeacherIds.includes(teacherId)),
+        primaryTeacherName: ownerUser?.displayName || '未知主責導師',
+        coTeacherNames,
+      };
+    });
 }
 
 export async function createStudentsBatch(
@@ -280,27 +306,207 @@ export async function getStudentLoginDirectory(): Promise<PublicClassDirectoryTe
   return result;
 }
 
-export async function deleteClass(classId: string): Promise<boolean> {
+export async function deleteClass(
+  classId: string,
+  operatorId?: string,
+  role?: string
+): Promise<{ success: boolean; error?: string }> {
   await syncCloudOnBoot();
   const state = ensureLocalDB();
-  if (state.classes[classId]) {
-    delete state.classes[classId];
-    const studentIdsToDelete: string[] = [];
-    for (const [uid, user] of Object.entries(state.users)) {
-      if (user.classId === classId) {
-        delete state.users[uid];
-        studentIdsToDelete.push(uid);
-      }
-    }
-    saveLocalDB(state);
-
-    const toDelete = [
-      { collection: 'classes', id: classId },
-      ...studentIdsToDelete.map((id) => ({ collection: 'users', id })),
-    ];
-    await batchDeleteFromFirestore(toDelete);
-    await syncToBlob(state);
-    return true;
+  const targetClass = state.classes[classId];
+  if (!targetClass) {
+    return { success: false, error: '找不到該班級' };
   }
-  return false;
+
+  // 權限檢查：只有主責建立者 (teacherId) 或全站管理員 (admin) 才能刪除該班級
+  if (operatorId && role !== 'admin' && targetClass.teacherId !== operatorId) {
+    return {
+      success: false,
+      error: '您是受邀協同教師，無權刪除此班級。如不再共同管理，請選擇「退出共同管理」。',
+    };
+  }
+
+  delete state.classes[classId];
+  const studentIdsToDelete: string[] = [];
+  for (const [uid, user] of Object.entries(state.users)) {
+    if (user.classId === classId) {
+      delete state.users[uid];
+      studentIdsToDelete.push(uid);
+    }
+  }
+  saveLocalDB(state);
+
+  const toDelete = [
+    { collection: 'classes', id: classId },
+    ...studentIdsToDelete.map((id) => ({ collection: 'users', id })),
+  ];
+  await batchDeleteFromFirestore(toDelete);
+  await syncToBlob(state);
+  return { success: true };
+}
+
+/**
+ * 取得特定班級之共同管理成員 (主責導師、協同教師清單，以及全校可邀請之合格教師)
+ */
+export async function getClassCoTeachers(
+  classId: string,
+  currentTeacherId: string,
+  role?: string
+): Promise<ClassCoTeachersData | null> {
+  await syncCloudOnBoot();
+  const state = ensureLocalDB();
+  const targetClass = state.classes[classId];
+  if (!targetClass) return null;
+
+  const isOwner = targetClass.teacherId === currentTeacherId || role === 'admin';
+  const isCoTeacher = Boolean(targetClass.coTeacherIds?.includes(currentTeacherId));
+
+  // 若既非建立者、非協同教師、也非管理員，則無權檢視
+  if (!isOwner && !isCoTeacher && role !== 'admin') {
+    return null;
+  }
+
+  const userMap = new Map<string, User>();
+  Object.values(state.users).forEach((u) => userMap.set(u.id, u));
+
+  // 1. 主責導師
+  const ownerUser = userMap.get(targetClass.teacherId);
+  const ownerMember: CoTeacherMember = {
+    id: targetClass.teacherId,
+    displayName: ownerUser?.displayName || '未知教師',
+    username: ownerUser?.username || '',
+    school: ownerUser?.school,
+    role: ownerUser?.role || 'teacher',
+    isOwner: true,
+  };
+
+  // 2. 目前已加入之協同教師
+  const coTeachers: CoTeacherMember[] = [];
+  for (const tid of targetClass.coTeacherIds || []) {
+    const u = userMap.get(tid);
+    if (u) {
+      coTeachers.push({
+        id: u.id,
+        displayName: u.displayName,
+        username: u.username,
+        school: u.school,
+        role: u.role,
+        isOwner: false,
+      });
+    }
+  }
+
+  // 3. 全校其他已審核通過且啟用的教師（排除主責導師與目前協同教師）
+  const excludedIds = new Set<string>([targetClass.teacherId, ...(targetClass.coTeacherIds || [])]);
+  const availableTeachers: CoTeacherMember[] = Object.values(state.users)
+    .filter(
+      (u) =>
+        (u.role === 'teacher' || u.role === 'admin') &&
+        u.status === 'active' &&
+        !excludedIds.has(u.id)
+    )
+    .sort((a, b) => a.displayName.localeCompare(b.displayName, 'zh-TW'))
+    .map((u) => ({
+      id: u.id,
+      displayName: u.displayName,
+      username: u.username,
+      school: u.school,
+      role: u.role,
+      isOwner: false,
+    }));
+
+  return {
+    classId: targetClass.id,
+    className: targetClass.name,
+    gradeLevel: targetClass.gradeLevel,
+    owner: ownerMember,
+    coTeachers,
+    availableTeachers,
+    isOwner,
+    isCoTeacher,
+  };
+}
+
+/**
+ * 邀請 / 新增共同管理教師至班級
+ */
+export async function addCoTeacherToClass(
+  classId: string,
+  targetTeacherId: string,
+  operatorId: string,
+  role?: string
+): Promise<{ success: boolean; error?: string; class?: ClassRoom }> {
+  await syncCloudOnBoot();
+  const state = ensureLocalDB();
+  const targetClass = state.classes[classId];
+  if (!targetClass) {
+    return { success: false, error: '找不到該班級' };
+  }
+
+  // 只有主責導師或管理員可邀請協同教師
+  const isOwner = targetClass.teacherId === operatorId || role === 'admin';
+  if (!isOwner) {
+    return { success: false, error: '只有班級主責導師或管理員可以邀請其他老師共同管理' };
+  }
+
+  // 檢查目標教師是否存在
+  const targetTeacher = state.users[targetTeacherId];
+  if (!targetTeacher || (targetTeacher.role !== 'teacher' && targetTeacher.role !== 'admin')) {
+    return { success: false, error: '找不到該教師帳號或該帳號非合格教師' };
+  }
+
+  if (targetTeacherId === targetClass.teacherId) {
+    return { success: false, error: '該教師已是此班級的主責導師，無須重複邀請' };
+  }
+
+  if (!targetClass.coTeacherIds) {
+    targetClass.coTeacherIds = [];
+  }
+
+  if (targetClass.coTeacherIds.includes(targetTeacherId)) {
+    return { success: false, error: '該教師已經在共同管理名單中' };
+  }
+
+  targetClass.coTeacherIds.push(targetTeacherId);
+  saveLocalDB(state);
+  await syncClassToFirestore(targetClass);
+  await syncToBlob(state);
+
+  return { success: true, class: targetClass };
+}
+
+/**
+ * 移除協同教師 / 協同教師主動退出共同管理
+ */
+export async function removeCoTeacherFromClass(
+  classId: string,
+  targetTeacherId: string,
+  operatorId: string,
+  role?: string
+): Promise<{ success: boolean; error?: string; class?: ClassRoom }> {
+  await syncCloudOnBoot();
+  const state = ensureLocalDB();
+  const targetClass = state.classes[classId];
+  if (!targetClass) {
+    return { success: false, error: '找不到該班級' };
+  }
+
+  const isOwner = targetClass.teacherId === operatorId || role === 'admin';
+  const isSelfLeaving = operatorId === targetTeacherId;
+
+  // 允許主責導師/管理員移除指定的協同教師，也允許協同教師本人自願退出
+  if (!isOwner && !isSelfLeaving) {
+    return { success: false, error: '只有主責導師、管理員或協同教師本人可執行此操作' };
+  }
+
+  if (!targetClass.coTeacherIds || !targetClass.coTeacherIds.includes(targetTeacherId)) {
+    return { success: false, error: '該教師不在共同管理名單中' };
+  }
+
+  targetClass.coTeacherIds = targetClass.coTeacherIds.filter((id) => id !== targetTeacherId);
+  saveLocalDB(state);
+  await syncClassToFirestore(targetClass);
+  await syncToBlob(state);
+
+  return { success: true, class: targetClass };
 }

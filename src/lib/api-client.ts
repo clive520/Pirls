@@ -6,6 +6,7 @@ import {
   AiPedagogicalAdvice,
   BenchmarkKey,
   ComparativeAnalysisData,
+  ClassCoTeachersData,
 } from './types';
 
 export class ApiClientError extends Error {
@@ -243,6 +244,37 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ name, gradeLevel }),
       }),
+
+    /** 刪除班級（限主責導師與管理員） */
+    deleteClass: (classId: string) =>
+      request<{ success: boolean; message?: string }>(`/api/teacher/classes?classId=${classId}`, {
+        method: 'DELETE',
+      }),
+
+    /** 取得班級協同教學與共同管理名單 */
+    getClassCoTeachers: (classId: string) =>
+      request<{ success: boolean; data: ClassCoTeachersData }>(
+        `/api/teacher/classes/${classId}/co-teachers`
+      ),
+
+    /** 邀請其他老師加入班級共同管理（限主責導師與管理員） */
+    addCoTeacher: (classId: string, teacherId: string) =>
+      request<{ success: boolean; message: string; data: ClassCoTeachersData }>(
+        `/api/teacher/classes/${classId}/co-teachers`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ teacherId }),
+        }
+      ),
+
+    /** 移除協同教師 / 協同教師本人主動退出共同管理 */
+    removeCoTeacher: (classId: string, teacherId: string) =>
+      request<{ success: boolean; message: string; data: ClassCoTeachersData }>(
+        `/api/teacher/classes/${classId}/co-teachers?teacherId=${teacherId}`,
+        {
+          method: 'DELETE',
+        }
+      ),
 
     /** 取得班級學生名冊 */
     getStudents: (classId: string) =>

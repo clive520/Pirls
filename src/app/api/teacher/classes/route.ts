@@ -62,10 +62,10 @@ export async function DELETE(req: NextRequest) {
   }
 
   const { deleteClass } = await import('@/lib/db');
-  const success = await deleteClass(classId);
+  const result = await deleteClass(classId, teacher.userId, teacher.role);
 
-  if (!success) {
-    return NextResponse.json({ error: '找不到該班級或刪除失敗' }, { status: 404 });
+  if (!result.success) {
+    return NextResponse.json({ error: result.error || '找不到該班級或刪除失敗' }, { status: 400 });
   }
 
   return NextResponse.json({ success: true, message: '班級及所屬學生已成功刪除' });
