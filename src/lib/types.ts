@@ -214,10 +214,12 @@ export interface ExamSubmission {
   reviewedAt?: string;
   reviewedBy?: string;
   teacherGeneralNote?: string;
-  aiPedagogicalAdvice?: {
-    levelAnalysis: string; // 各層次思維能力落點分析
-    improvementSuggestions: string[]; // 給學生的閱讀具體改進建議事項
-    actionPlan?: string; // 具體行動計畫
-    generatedAt?: string;
-  };
+  aiPedagogicalAdvice?: AiPedagogicalAdvice;
+}
+
+export interface AiPedagogicalAdvice {
+  levelAnalysis: string; // 各層次思維能力落點分析
+  improvementSuggestions: string[]; // 給學生的閱讀具體改進建議事項
+  actionPlan?: string; // 具體行動計畫
+  generatedAt?: string;
 }

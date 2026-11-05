@@ -11,6 +11,7 @@ import {
 import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration } from '@/lib/types';
 import { generateSmartImagePrompts, formatCombinedImagePrompt } from '@/lib/llm-adapter';
 import { CreateFormStep, ArticleEditor, QuestionEditorList } from './components';
+import { api, ApiClientError } from '@/lib/api-client';
 
 function TeacherCreateTestContent() {
   const router = useRouter();
@@ -36,19 +37,17 @@ function TeacherCreateTestContent() {
     const loadExistingPaper = async () => {
       setLoadingEdit(true);
       try {
-        const res = await fetch(`/api/teacher/test-papers/${editId}`, { cache: 'no-store' });
-        const data = await res.json();
-        if (!res.ok) {
-          alert(data.error || '無法載入該試卷進行編輯');
-          router.push('/dashboard/teacher/test-papers');
-          return;
-        }
+        const data = await api.teacher.getTestPaper(editId);
         setTestPaper(data.testPaper);
         setIsEditing(true);
         setEditingId(editId);
         setStep('editor');
       } catch (err: any) {
         console.error(err);
+        if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
+          router.push('/login');
+          return;
+        }
         alert('載入試卷失敗：' + (err.message || '請確認網路狀態'));
         router.push('/dashboard/teacher/test-papers');
       } finally {
@@ -178,22 +177,13 @@ function TeacherCreateTestContent() {
     setKeyChecking(true);
     setKeyStatus(null);
     try {
-      const res = await fetch('/api/ai/verify-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          provider,
-          apiKey: currentKey,
-          customBaseUrl,
-          preferredModel: preferredModels[provider] || 'auto',
-        }),
+      const data = await api.ai.verifyKey({
+        provider,
+        apiKey: currentKey,
+        customBaseUrl,
+        model: preferredModels[provider] || 'auto',
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setKeyStatus({ ok: true, message: data.message });
-      } else {
-        setKeyStatus({ ok: false, message: data.error || '金鑰驗證失敗' });
-      }
+      setKeyStatus({ ok: data.ok, message: data.message });
     } catch (err: any) {
       setKeyStatus({ ok: false, message: err.message || '連線逾時，無法驗證金鑰' });
     } finally {
@@ -446,32 +436,25 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
 
     try {
       const currentKey = (apiKeys[provider] || '').trim();
-      const res = await fetch('/api/ai/generate-test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode,
-          theme,
-          pastedTitle,
-          pastedText,
-          targetGrade,
-          textType,
-          questionCountMode,
-          includeDiagram,
-          provider,
-          apiKey: currentKey || undefined,
-          customBaseUrl: customBaseUrl.trim() || undefined,
-          preferredModel: preferredModels[provider] || 'auto',
-        }),
+      const data = await api.ai.generateTest({
+        mode,
+        theme,
+        pastedTitle,
+        pastedText,
+        targetGrade,
+        textType,
+        questionCountMode,
+        includeDiagram,
+        provider,
+        apiKey: currentKey || undefined,
+        customBaseUrl: customBaseUrl.trim() || undefined,
+        preferredModel: preferredModels[provider] || 'auto',
       });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || '生成試卷失敗');
 
       setTestPaper(data.testPaper);
       setStep('editor');
     } catch (err: any) {
-      setErrorMsg(err.message);
+      setErrorMsg(err.message || '生成試卷失敗');
     } finally {
       setLoading(false);
     }
@@ -484,21 +467,14 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
     if (!testPaper || saving) return;
     try {
       setSaving(true);
-      const url = isEditing && editingId ? `/api/teacher/test-papers/${editingId}` : '/api/teacher/test-papers';
-      const method = isEditing && editingId ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(testPaper),
-      });
-      const data = await res.json();
-      if (res.ok && (data.success || data.testPaper)) {
-        alert(isEditing ? '🎉 試卷已成功更新並同步至個人題庫！' : '🎉 試卷已成功寫入資料庫並同步至個人題庫！');
-        router.push('/dashboard/teacher/test-papers');
+      if (isEditing && editingId) {
+        await api.teacher.updateTestPaper(editingId, testPaper);
+        alert('🎉 試卷已成功更新並同步至個人題庫！');
       } else {
-        alert(data.error || '儲存失敗，請檢查資料完整度');
+        await api.teacher.createTestPaper(testPaper);
+        alert('🎉 試卷已成功寫入資料庫並同步至個人題庫！');
       }
+      router.push('/dashboard/teacher/test-papers');
     } catch (err: any) {
       console.error(err);
       alert('儲存過程發生錯誤：' + (err.message || '請確認網路狀態'));

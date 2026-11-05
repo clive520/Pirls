@@ -28,7 +28,7 @@
     "stu_1793272042399_b9emb": {
       "id": "stu_1793272042399_b9emb",
       "username": "s602_02",
-      "passwordHash": "$2a$10$gs17Hzyh.4SQ4SziPmIog.bDN8fBgBrYfQWFQ/k8WQlXm3maB6OcC",
+      "passwordHash": "$2a$10$3v5h9b.U6YSG.VfeX6Kbfe0MIQtcbtJABZ3Bmz7IHiKgD84AucTsS",
       "displayName": "六年級二班 2號",
       "role": "student",
       "status": "active",
@@ -37,13 +37,13 @@
       "className": "六年級二班",
       "seatNumber": 2,
       "gradeLevel": 6,
-      "initialPassword": "204986",
+      "initialPassword": "1234",
       "createdAt": "2026-10-29T11:07:22.399Z"
     },
     "stu_1793272042517_9fbfj": {
       "id": "stu_1793272042517_9fbfj",
       "username": "s602_03",
-      "passwordHash": "$2a$10$FWd9BCADdxXJffUJU9cwZul4GtAuLijUL/ZtT2eeoJFrvqSthoHCi",
+      "passwordHash": "$2a$10$9Y7JLqUeinULTOzDYDFfyutZoprfEc3tLDYz627sr9ITzDoQkMS8G",
       "displayName": "六年級二班 3號",
       "role": "student",
       "status": "active",
@@ -52,13 +52,13 @@
       "className": "六年級二班",
       "seatNumber": 3,
       "gradeLevel": 6,
-      "initialPassword": "913862",
+      "initialPassword": "1234",
       "createdAt": "2026-10-29T11:07:22.517Z"
     },
     "stu_1793272042634_zuov0": {
       "id": "stu_1793272042634_zuov0",
       "username": "s602_04",
-      "passwordHash": "$2a$10$EFHGkRvBH4SWndgqZTqndern2okYJUXVaa0Sd/KXmJPmkNr7E6I4i",
+      "passwordHash": "$2a$10$7hiX/95KhCvxEVRSvs/MVOL0hfL78SD.PaKTuGrWIW0MNTkMcX2ue",
       "displayName": "六年級二班 4號",
       "role": "student",
       "status": "active",
@@ -67,13 +67,13 @@
       "className": "六年級二班",
       "seatNumber": 4,
       "gradeLevel": 6,
-      "initialPassword": "345865",
+      "initialPassword": "1234",
       "createdAt": "2026-10-29T11:07:22.634Z"
     },
     "stu_1793272042752_hw9n3": {
       "id": "stu_1793272042752_hw9n3",
       "username": "s602_05",
-      "passwordHash": "$2a$10$lHTl/BFIqtuAb1WqJZJFOOwtpfP711WbpCOX9Y/HfUH6IwDb.FVye",
+      "passwordHash": "$2a$10$81bjtNFbWoxV7F2NrPPD9uZO8Pz9rjPfSd6Dq6QaDNF3KWNfm3Ps.",
       "displayName": "六年級二班 5號",
       "role": "student",
       "status": "active",
@@ -82,7 +82,7 @@
       "className": "六年級二班",
       "seatNumber": 5,
       "gradeLevel": 6,
-      "initialPassword": "216808",
+      "initialPassword": "1234",
       "createdAt": "2026-10-29T11:07:22.752Z"
     },
     "usr_1793188060743_7v3zb": {
@@ -489,7 +489,7 @@
       "isPublic": false,
       "timeLimitMinutes": 40,
       "createdAt": "2026-10-28T09:46:02.459Z",
-      "updatedAt": "2026-11-05T22:51:29.680Z",
+      "updatedAt": "2026-11-05T23:09:28.214Z",
       "assignedClassIds": [
         "cls_1793180762488_hiiv"
       ],
@@ -5363,7 +5363,7 @@
       "benchmarkDescription": "具備基本完整的字面理解力。能準確找出文章直接陳述的訊息，並能進行初步的淺層推論（如單一原因與結果）；能理解科普圖表的直接圖意，但在跨段落綜合與深層觀點統整上需要指引。",
       "normPR": 40,
       "isTeacherReviewed": true,
-      "reviewedAt": "2026-11-05T22:51:29.838Z",
+      "reviewedAt": "2026-11-05T23:09:28.391Z",
       "reviewedBy": "測試教師",
       "teacherGeneralNote": "持續保持對文字的敏銳度！",
       "aiPedagogicalAdvice": {
@@ -5374,7 +5374,7 @@
           "嘗試將故事角色的抉擇與自身生活經驗作對比。"
         ],
         "actionPlan": "建議每日閱讀 1 篇短篇寓言，並練習口頭回答「如果你是主角會怎麼做？為什麼？」",
-        "generatedAt": "2026-11-05T22:51:29.838Z"
+        "generatedAt": "2026-11-05T23:09:28.390Z"
       },
       "classPR": 50
     },

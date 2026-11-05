@@ -15,6 +15,7 @@ import { BenchmarkKey, ExamSubmission, TestPaper } from '@/lib/types';
 import { getBenchmarkInfo } from '@/lib/pirls-norm';
 import { ArticleContent } from '@/components/article';
 import { ThinkingSkillsRadarCard } from '@/components/analytics';
+import { api, ApiClientError } from '@/lib/api-client';
 
 interface SiblingItem {
   id: string;
@@ -65,12 +66,7 @@ export default function TeacherReviewSubmissionPage() {
     try {
       setLoading(true);
       setError('');
-      const res = await fetch(`/api/teacher/submissions/${subId}`, { cache: 'no-store' });
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || '載入作答資料失敗');
-      }
+      const data = await api.teacher.getSubmissionDetail(subId);
 
       setSubmission(data.submission);
       setTestPaper(data.testPaper);
@@ -92,6 +88,10 @@ export default function TeacherReviewSubmissionPage() {
       setAiRegradeResults({});
     } catch (err: any) {
       console.error(err);
+      if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
+        router.push('/login');
+        return;
+      }
       setError(err.message || '載入失敗');
     } finally {
       setLoading(false);
@@ -191,20 +191,13 @@ export default function TeacherReviewSubmissionPage() {
     if (!submission) return;
     try {
       setAiRegradeLoading((prev) => ({ ...prev, [questionId]: true }));
-      const res = await fetch(`/api/teacher/submissions/${submission.id}/ai-regrade`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setAiRegradeResults((prev) => ({ ...prev, [questionId]: data.regradeResult }));
-      } else {
-        alert(data.error || 'AI 深度再閱失敗');
+      const data = await api.teacher.aiRegradeQuestion(submission.id, questionId);
+      if (data.results && data.results.length > 0) {
+        setAiRegradeResults((prev) => ({ ...prev, [questionId]: data.results[0] }));
       }
     } catch (err: any) {
       console.error(err);
-      alert('AI 深度再閱連線異常：' + err.message);
+      alert('AI 深度再閱連線異常：' + (err.message || '請確認網路'));
     } finally {
       setAiRegradeLoading((prev) => ({ ...prev, [questionId]: false }));
     }
@@ -226,27 +219,18 @@ export default function TeacherReviewSubmissionPage() {
     if (!submission) return;
     try {
       setLoadingAiAdvice(true);
-      const res = await fetch(`/api/teacher/submissions/${submission.id}/ai-pedagogical-advice`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currentScores: modifiedScores,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setAiAdvice(data.pedagogicalAdvice);
-        if (data.pedagogicalAdvice?.teacherFeedbackDraft && !teacherGeneralNote) {
-          setTeacherGeneralNote(data.pedagogicalAdvice.teacherFeedbackDraft);
+      const data = await api.teacher.getAiPedagogicalAdvice(submission.id, modifiedScores);
+      if (data.advice) {
+        setAiAdvice(data.advice);
+        if ((data.advice as any)?.teacherFeedbackDraft && !teacherGeneralNote) {
+          setTeacherGeneralNote((data.advice as any).teacherFeedbackDraft);
         }
         setToastMsg('✨ AI 已成功生成四層次思維落點分析與學生改進建議！');
         setTimeout(() => setToastMsg(''), 4000);
-      } else {
-        alert(data.error || 'AI 落點分析生成失敗');
       }
     } catch (err: any) {
       console.error(err);
-      alert('AI 連線異常：' + err.message);
+      alert('AI 連線異常：' + (err.message || '生成失敗'));
     } finally {
       setLoadingAiAdvice(false);
     }
@@ -263,33 +247,24 @@ export default function TeacherReviewSubmissionPage() {
         teacherComment: modifiedComments[ans.questionId] !== undefined ? modifiedComments[ans.questionId] : (ans.teacherComment || ''),
       }));
 
-      const res = await fetch(`/api/teacher/submissions/${submission.id}/review`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          answersUpdates,
-          teacherGeneralNote: teacherGeneralNote.trim(),
-          aiPedagogicalAdvice: aiAdvice,
-        }),
+      await api.teacher.reviewSubmission(submission.id, {
+        answersUpdates,
+        teacherGeneralNote: teacherGeneralNote.trim(),
+        aiPedagogicalAdvice: aiAdvice,
       });
 
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setToastMsg(`🎉 已核定 ${submission.studentName} 的閱卷成績！常模與 PR 已重新計算。`);
-        setTimeout(() => setToastMsg(''), 3500);
+      setToastMsg(`🎉 已核定 ${submission.studentName} 的閱卷成績！常模與 PR 已重新計算。`);
+      setTimeout(() => setToastMsg(''), 3500);
 
-        if (andGoToNext && nextStudent) {
-          router.push(`/dashboard/teacher/submissions/${nextStudent.id}`);
-        } else {
-          // 重新整理當前頁面資料
-          fetchSubmissionData(submission.id);
-        }
+      if (andGoToNext && nextStudent) {
+        router.push(`/dashboard/teacher/submissions/${nextStudent.id}`);
       } else {
-        alert(data.error || '儲存複閱成績失敗');
+        // 重新整理當前頁面資料
+        fetchSubmissionData(submission.id);
       }
     } catch (err: any) {
       console.error(err);
-      alert('儲存過程發生錯誤：' + err.message);
+      alert('儲存過程發生錯誤：' + (err.message || '請確認網路狀態'));
     } finally {
       setSavingReview(false);
     }

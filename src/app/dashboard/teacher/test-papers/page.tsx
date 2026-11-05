@@ -7,6 +7,7 @@ import {
   BookOpen, PlusCircle, ArrowLeft, FileSpreadsheet
 } from 'lucide-react';
 import { TestPaper, ClassRoom } from '@/lib/types';
+import { api, ApiClientError } from '@/lib/api-client';
 import {
   TestPaperKpiHeader,
   AssignModal,
@@ -54,18 +55,10 @@ export default function TeacherTestPapersPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [testRes, clsRes] = await Promise.all([
-        fetch('/api/teacher/test-papers', { cache: 'no-store' }),
-        fetch('/api/teacher/classes', { cache: 'no-store' }),
+      const [testData, clsData] = await Promise.all([
+        api.teacher.getTestPapers(),
+        api.teacher.getClasses(),
       ]);
-
-      if (testRes.status === 401 || testRes.status === 403) {
-        router.push('/login');
-        return;
-      }
-
-      const testData = await testRes.json();
-      const clsData = await clsRes.json();
 
       setTestPapers(testData.testPapers || []);
       setAssignmentStats(testData.assignmentStats || {});
@@ -73,8 +66,11 @@ export default function TeacherTestPapersPage() {
       setCurrentUserName(testData.currentUserName || '');
       setIsAdmin(!!testData.isAdmin);
       setClasses(clsData.classes || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
+        router.push('/login');
+      }
     } finally {
       setLoading(false);
     }
@@ -88,17 +84,12 @@ export default function TeacherTestPapersPage() {
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`確定要刪除試卷《${title}》嗎？此操作將永久自題庫中移除該試卷。`)) return;
     try {
-      const res = await fetch(`/api/teacher/test-papers/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setTestPapers((prev) => prev.filter((t) => t.id !== id));
-        alert('🎉 試卷已成功刪除！');
-      } else {
-        alert(data.error || '刪除失敗，您只能刪除自己建立的試卷');
-      }
+      await api.teacher.deleteTestPaper(id);
+      setTestPapers((prev) => prev.filter((t) => t.id !== id));
+      alert('🎉 試卷已成功刪除！');
     } catch (err: any) {
       console.error(err);
-      alert('刪除過程發生錯誤：' + (err.message || '請確認網路狀態'));
+      alert('刪除失敗：' + (err.message || '您只能刪除自己建立的試卷'));
     }
   };
 
@@ -116,26 +107,18 @@ export default function TeacherTestPapersPage() {
     if (!assignModalTest) return;
     try {
       setAssigning(true);
-      const res = await fetch(`/api/teacher/test-papers/${assignModalTest.id}/assign`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          classIds: selectedClassIds,
-          isPublic: modalIsPublic,
-          examCode: modalExamCode,
-          allowRetake: modalAllowRetake,
-        }),
+      const data = await api.teacher.assignTestPaper(assignModalTest.id, {
+        classIds: selectedClassIds,
+        isPublic: modalIsPublic,
+        examCode: modalExamCode,
+        allowRetake: modalAllowRetake,
       });
-      const data = await res.json();
-      if (res.ok) {
-        alert(data.message || '派卷設定已更新！');
-        setAssignModalTest(null);
-        fetchData();
-      } else {
-        alert(data.error || '派卷失敗');
-      }
-    } catch (err) {
+      alert(data.message || '派卷設定已更新！');
+      setAssignModalTest(null);
+      fetchData();
+    } catch (err: any) {
       console.error(err);
+      alert(err.message || '派卷失敗');
     } finally {
       setAssigning(false);
     }

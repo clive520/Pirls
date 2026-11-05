@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { TestPaper, TestQuestion } from '@/lib/types';
 import { ArticleContent, ArticleModal } from '@/components/article';
+import { api, ApiClientError } from '@/lib/api-client';
 
 export default function StudentExamPage() {
   const router = useRouter();
@@ -36,10 +37,7 @@ export default function StudentExamPage() {
     const fetchExam = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/student/exam/${testId}`);
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || '載入試卷失敗');
+        const data = await api.student.getExam(testId);
 
         if (data.alreadySubmitted) {
           if (!data.allowRetake) {
@@ -62,7 +60,11 @@ export default function StudentExamPage() {
           setActiveQuestionId(data.testPaper.questions[0].id);
         }
       } catch (err: any) {
-        setErrorMsg(err.message);
+        if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
+          router.push('/login');
+          return;
+        }
+        setErrorMsg(err.message || '載入試卷失敗');
       } finally {
         setLoading(false);
       }
@@ -96,21 +98,14 @@ export default function StudentExamPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/student/submit-exam', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          testPaperId: testPaper.id,
-          rawAnswers: answers,
-        }),
+      const data = await api.student.submitExam({
+        testPaperId: testPaper.id,
+        rawAnswers: answers,
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '交卷失敗');
 
       router.push(`/dashboard/student/result/${data.submissionId}`);
     } catch (err: any) {
-      alert(err.message);
+      alert(err.message || '交卷失敗');
       setSubmitting(false);
     }
   };

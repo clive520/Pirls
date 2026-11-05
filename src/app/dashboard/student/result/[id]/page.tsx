@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { ExamSubmission, TestPaper } from '@/lib/types';
 import { ThinkingSkillsRadarCard } from '@/components/analytics';
+import { api, ApiClientError } from '@/lib/api-client';
 import {
   calculatePIRLSScaleScore,
   getBenchmarkInfo,
@@ -30,20 +31,21 @@ export default function StudentResultPage() {
     const fetchResult = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/student/submissions/${submissionId}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || '載入報告失敗');
-
+        const data = await api.student.getSubmission(submissionId);
         setSubmission(data.submission);
         setTestPaper(data.testPaper);
       } catch (err: any) {
-        setErrorMsg(err.message);
+        if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
+          router.push('/login');
+          return;
+        }
+        setErrorMsg(err.message || '載入報告失敗');
       } finally {
         setLoading(false);
       }
     };
     if (submissionId) fetchResult();
-  }, [submissionId]);
+  }, [submissionId, router]);
 
   if (loading) {
     return (

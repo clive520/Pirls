@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { api, ApiClientError } from '@/lib/api-client';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -90,18 +91,17 @@ export default function AdminDashboardPage() {
     try {
       setLoading(true);
       setErrorMsg('');
-      const res = await fetch('/api/admin/teachers', { cache: 'no-store' });
-      if (res.status === 401 || res.status === 403) {
-        router.push('/login');
-        return;
-      }
-      const data = await res.json();
+      const data = await api.admin.getTeachers();
       setPendingTeachers(data.pendingTeachers || []);
       setApprovedTeachers(data.approvedTeachers || []);
       setAdmins(data.admins || []);
       setTransferTargets(data.availableTransferTargets || []);
     } catch (err: any) {
       console.error(err);
+      if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
+        router.push('/login');
+        return;
+      }
       setErrorMsg('獲取教師資料失敗，請稍後重試');
     } finally {
       setLoading(false);
@@ -141,18 +141,9 @@ export default function AdminDashboardPage() {
     }
 
     try {
-      const res = await fetch('/api/admin/teachers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacherId, action }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        triggerToast(data.message);
-        fetchTeachers();
-      } else {
-        triggerToast(data.error || '操作失敗', true);
-      }
+      const data = await api.admin.manageTeacher({ teacherId, action });
+      triggerToast(data.message || '操作成功');
+      fetchTeachers();
     } catch (err: any) {
       triggerToast(err.message || '操作異常', true);
     }
@@ -294,8 +285,11 @@ export default function AdminDashboardPage() {
   };
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
+    try {
+      await api.auth.logout();
+    } finally {
+      router.push('/login');
+    }
   };
 
   const validTransferOptions = transferTargets.filter(

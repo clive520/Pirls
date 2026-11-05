@@ -12,6 +12,7 @@ import {
 import { BenchmarkKey, ExamSubmission, TestPaper } from '@/lib/types';
 import { getBenchmarkInfo } from '@/lib/pirls-norm';
 import { ThinkingSkillsRadarCard } from '@/components/analytics';
+import { api, ApiClientError } from '@/lib/api-client';
 
 interface SubmissionItem {
   id: string;
@@ -84,20 +85,14 @@ export default function TeacherTestResultsPage() {
   const fetchResults = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/teacher/test-papers/${testId}/submissions`);
-      if (res.status === 401 || res.status === 403) {
+      const json = await api.teacher.getTestSubmissions(testId);
+      setData(json as any);
+    } catch (err: any) {
+      if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
         router.push('/login');
         return;
       }
-      if (!res.ok) {
-        const errData = await res.json();
-        setError(errData.error || '載入受測成績失敗');
-        return;
-      }
-      const json = await res.json();
-      setData(json);
-    } catch (err: any) {
-      setError(err.message || '連線異常');
+      setError(err.message || '載入受測成績失敗');
     } finally {
       setLoading(false);
     }
