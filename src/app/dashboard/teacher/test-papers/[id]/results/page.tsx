@@ -208,6 +208,15 @@ export default function TeacherTestResultsPage() {
               <span>A4 解答卷</span>
             </a>
 
+            <Link
+              href={`/dashboard/teacher/analytics/comparative?preTestId=${testPaper.id}`}
+              className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold inline-flex items-center space-x-1 transition border border-indigo-200/60 shadow-sm text-xs"
+              title="以此卷為基準，展開前後測四維雷達對照"
+            >
+              <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
+              <span>前後測雷達對照</span>
+            </Link>
+
             <a
               href={`/api/teacher/test-papers/${testPaper.id}/export`}
               download

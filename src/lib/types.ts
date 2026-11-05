@@ -223,3 +223,77 @@ export interface AiPedagogicalAdvice {
   actionPlan?: string; // 具體行動計畫
   generatedAt?: string;
 }
+
+/* ==========================================================
+   PIRLS 前後測歷程對照分析型別 (Longitudinal Pre/Post Analysis)
+   ========================================================== */
+
+export interface LevelComparisonItem {
+  level: 'level1' | 'level2' | 'level3' | 'level4';
+  name: string;
+  shortName: string;
+  prePercentage: number;
+  postPercentage: number;
+  deltaPercentage: number;
+  preEarned?: number;
+  preTotal?: number;
+  postEarned?: number;
+  postTotal?: number;
+  description: string;
+}
+
+export interface StudentComparativeItem {
+  studentId: string;
+  studentName: string;
+  seatNumber?: number;
+  hasBoth: boolean;
+  preScore?: number;
+  postScore?: number;
+  preMaxScore?: number;
+  postMaxScore?: number;
+  scoreDelta?: number;
+  preScaleScore?: number;
+  postScaleScore?: number;
+  scaleScoreDelta?: number;
+  l1Delta?: number;
+  l2Delta?: number;
+  l3Delta?: number;
+  l4Delta?: number;
+}
+
+export interface ComparativeAnalysisData {
+  scope: 'class' | 'student';
+  classId: string;
+  className: string;
+  studentId?: string;
+  studentName?: string;
+  preTest: {
+    id: string;
+    title: string;
+    submittedCount: number;
+    avgScore: number;
+    maxScore: number;
+    scaleScore: number;
+    benchmarkName: string;
+  };
+  postTest: {
+    id: string;
+    title: string;
+    submittedCount: number;
+    avgScore: number;
+    maxScore: number;
+    scaleScore: number;
+    benchmarkName: string;
+  };
+  scaleScoreDelta: number;
+  levels: {
+    level1: LevelComparisonItem;
+    level2: LevelComparisonItem;
+    level3: LevelComparisonItem;
+    level4: LevelComparisonItem;
+  };
+  mostImprovedLevel: 'level1' | 'level2' | 'level3' | 'level4';
+  needsFocusLevel: 'level1' | 'level2' | 'level3' | 'level4';
+  pairedStudentsCount: number;
+  studentComparisons: StudentComparativeItem[];
+}

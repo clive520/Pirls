@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw } from 'lucide-react';
+import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw, TrendingUp } from 'lucide-react';
 
 export default function TeacherDashboardPage() {
   const router = useRouter();
@@ -362,6 +362,13 @@ export default function TeacherDashboardPage() {
             >
               <BookOpen className="w-4 h-4 text-sky-600" />
               <span>題庫與派卷</span>
+            </Link>
+            <Link
+              href={`/dashboard/teacher/analytics/comparative${selectedClassId ? `?classId=${selectedClassId}` : ''}`}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition border border-indigo-200/60"
+            >
+              <TrendingUp className="w-4 h-4 text-indigo-600" />
+              <span>前後測雷達對照</span>
             </Link>
             <button
               onClick={handleLogout}

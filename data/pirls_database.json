@@ -120,6 +120,36 @@
       "school": "鹿陽國小",
       "id": "usr_1793239746980_7s7k1",
       "createdAt": "2026-10-29T02:09:06.980Z"
+    },
+    "stu_1793920975847_tavkl": {
+      "id": "stu_1793920975847_tavkl",
+      "username": "stu_eva_1",
+      "passwordHash": "$2a$10$5T0vBdIIHAzF0IOoUSDj2.ot0778l3MA5RusKFiyvFVBzbGS7b2A6",
+      "displayName": "林小華",
+      "role": "student",
+      "status": "active",
+      "teacherId": "teacher_comparative_eval",
+      "classId": "cls_1793920975547_w1oo",
+      "className": "四年六班 (實驗班)",
+      "seatNumber": 1,
+      "gradeLevel": 4,
+      "initialPassword": "130835",
+      "createdAt": "2026-11-05T23:22:55.847Z"
+    },
+    "stu_1793920975903_107qh": {
+      "id": "stu_1793920975903_107qh",
+      "username": "stu_eva_2",
+      "passwordHash": "$2a$10$ZqUQ2TVVHpUnfNu00UYceeeziXP2OYpevUUtcLhbwUm38OQ4bt1HG",
+      "displayName": "張小美",
+      "role": "student",
+      "status": "active",
+      "teacherId": "teacher_comparative_eval",
+      "classId": "cls_1793920975547_w1oo",
+      "className": "四年六班 (實驗班)",
+      "seatNumber": 2,
+      "gradeLevel": 4,
+      "initialPassword": "125212",
+      "createdAt": "2026-11-05T23:22:55.903Z"
     }
   },
   "classes": {
@@ -146,6 +176,14 @@
       "teacherId": "usr_1793239746980_7s7k1",
       "studentCount": 5,
       "createdAt": "2026-10-29T02:30:00.000Z"
+    },
+    "cls_1793920975547_w1oo": {
+      "id": "cls_1793920975547_w1oo",
+      "name": "四年六班 (實驗班)",
+      "gradeLevel": 4,
+      "teacherId": "teacher_comparative_eval",
+      "studentCount": 2,
+      "createdAt": "2026-11-05T23:22:55.547Z"
     }
   },
   "testPapers": {
@@ -5157,6 +5195,96 @@
       ],
       "isPublic": true,
       "updatedAt": "2026-11-04T09:59:37.224Z"
+    },
+    "test_1793920976065_7hxtm": {
+      "title": "期初閱讀診斷測驗-尋找小石子",
+      "targetGrade": 4,
+      "textType": "literary",
+      "themeSummary": "大自然冒險",
+      "articleContent": "小石子在溪流中翻滾...",
+      "wordCount": 700,
+      "paragraphs": [
+        {
+          "paragraphNumber": 1,
+          "text": "小石子在溪流中翻滾..."
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "questionNumber": 1,
+          "process": "focus_and_retrieve",
+          "processLevelNumber": 1,
+          "type": "multiple_choice",
+          "prompt": "小石子在哪裡？",
+          "options": [
+            "溪流",
+            "山上",
+            "海邊",
+            "森林"
+          ],
+          "correctAnswer": "溪流",
+          "scoringGuide": {
+            "points": 1,
+            "fullCreditDescription": "答對得1分"
+          }
+        }
+      ],
+      "totalPoints": 10,
+      "creatorId": "teacher_comparative_eval",
+      "creatorName": "評估教師",
+      "isPublic": true,
+      "timeLimitMinutes": 40,
+      "allowRetake": true,
+      "id": "test_1793920976065_7hxtm",
+      "assignedClassIds": [],
+      "createdAt": "2026-11-05T23:22:56.065Z",
+      "updatedAt": "2026-11-05T23:22:56.065Z"
+    },
+    "test_1793920976308_9e04k": {
+      "title": "期末深度閱讀評量-極地探險記",
+      "targetGrade": 4,
+      "textType": "informational",
+      "themeSummary": "極地生態探險",
+      "articleContent": "北極熊與企鵝生活在不同的極圈...",
+      "wordCount": 800,
+      "paragraphs": [
+        {
+          "paragraphNumber": 1,
+          "text": "北極熊與企鵝生活在不同的極圈..."
+        }
+      ],
+      "questions": [
+        {
+          "id": "post_q1",
+          "questionNumber": 1,
+          "process": "focus_and_retrieve",
+          "processLevelNumber": 1,
+          "type": "multiple_choice",
+          "prompt": "北極熊生活在哪裡？",
+          "options": [
+            "北極",
+            "南極",
+            "熱帶",
+            "溫帶"
+          ],
+          "correctAnswer": "北極",
+          "scoringGuide": {
+            "points": 1,
+            "fullCreditDescription": "答對得1分"
+          }
+        }
+      ],
+      "totalPoints": 10,
+      "creatorId": "teacher_comparative_eval",
+      "creatorName": "評估教師",
+      "isPublic": true,
+      "timeLimitMinutes": 40,
+      "allowRetake": true,
+      "id": "test_1793920976308_9e04k",
+      "assignedClassIds": [],
+      "createdAt": "2026-11-05T23:22:56.308Z",
+      "updatedAt": "2026-11-05T23:22:56.308Z"
     }
   },
   "submissions": {
@@ -7181,6 +7309,174 @@
       "reviewedAt": "2026-11-05T06:37:03.828Z",
       "reviewedBy": "高志賢",
       "teacherGeneralNote": ""
+    },
+    "sub_1793920976488_xjg8v": {
+      "testPaperId": "test_1793920976065_7hxtm",
+      "testPaperTitle": "期初閱讀診斷測驗-尋找小石子",
+      "targetGrade": 4,
+      "textType": "literary",
+      "studentId": "stu_1793920975847_tavkl",
+      "studentName": "林小華",
+      "classId": "cls_1793920975547_w1oo",
+      "className": "四年六班 (實驗班)",
+      "seatNumber": 1,
+      "totalScore": 5,
+      "maxScore": 10,
+      "percentage": 50,
+      "scaleScore": 460,
+      "benchmarkKey": "low",
+      "benchmarkName": "低國際基準",
+      "answers": [],
+      "processScores": {
+        "level1": {
+          "earned": 6,
+          "total": 10,
+          "percentage": 60
+        },
+        "level2": {
+          "earned": 5,
+          "total": 10,
+          "percentage": 50
+        },
+        "level3": {
+          "earned": 4,
+          "total": 10,
+          "percentage": 40
+        },
+        "level4": {
+          "earned": 3,
+          "total": 10,
+          "percentage": 30
+        }
+      },
+      "id": "sub_1793920976488_xjg8v",
+      "submittedAt": "2026-11-05T23:22:56.488Z"
+    },
+    "sub_1793920976661_heg3v": {
+      "testPaperId": "test_1793920976308_9e04k",
+      "testPaperTitle": "期末深度閱讀評量-極地探險記",
+      "targetGrade": 4,
+      "textType": "informational",
+      "studentId": "stu_1793920975847_tavkl",
+      "studentName": "林小華",
+      "classId": "cls_1793920975547_w1oo",
+      "className": "四年六班 (實驗班)",
+      "seatNumber": 1,
+      "totalScore": 7,
+      "maxScore": 10,
+      "percentage": 70,
+      "scaleScore": 545,
+      "benchmarkKey": "intermediate",
+      "benchmarkName": "中等國際基準",
+      "answers": [],
+      "processScores": {
+        "level1": {
+          "earned": 8,
+          "total": 10,
+          "percentage": 80
+        },
+        "level2": {
+          "earned": 7.5,
+          "total": 10,
+          "percentage": 75
+        },
+        "level3": {
+          "earned": 7,
+          "total": 10,
+          "percentage": 70
+        },
+        "level4": {
+          "earned": 5.5,
+          "total": 10,
+          "percentage": 55
+        }
+      },
+      "id": "sub_1793920976661_heg3v",
+      "submittedAt": "2026-11-05T23:22:56.661Z"
+    },
+    "sub_1793920976843_5e1rd": {
+      "testPaperId": "test_1793920976065_7hxtm",
+      "testPaperTitle": "期初閱讀診斷測驗-尋找小石子",
+      "targetGrade": 4,
+      "textType": "literary",
+      "studentId": "stu_1793920975903_107qh",
+      "studentName": "張小美",
+      "classId": "cls_1793920975547_w1oo",
+      "className": "四年六班 (實驗班)",
+      "seatNumber": 2,
+      "totalScore": 6,
+      "maxScore": 10,
+      "percentage": 60,
+      "scaleScore": 510,
+      "benchmarkKey": "intermediate",
+      "benchmarkName": "中等國際基準",
+      "answers": [],
+      "processScores": {
+        "level1": {
+          "earned": 7,
+          "total": 10,
+          "percentage": 70
+        },
+        "level2": {
+          "earned": 6.5,
+          "total": 10,
+          "percentage": 65
+        },
+        "level3": {
+          "earned": 6,
+          "total": 10,
+          "percentage": 60
+        },
+        "level4": {
+          "earned": 5,
+          "total": 10,
+          "percentage": 50
+        }
+      },
+      "id": "sub_1793920976843_5e1rd",
+      "submittedAt": "2026-11-05T23:22:56.843Z"
+    },
+    "sub_1793920976999_4vko5": {
+      "testPaperId": "test_1793920976308_9e04k",
+      "testPaperTitle": "期末深度閱讀評量-極地探險記",
+      "targetGrade": 4,
+      "textType": "informational",
+      "studentId": "stu_1793920975903_107qh",
+      "studentName": "張小美",
+      "classId": "cls_1793920975547_w1oo",
+      "className": "四年六班 (實驗班)",
+      "seatNumber": 2,
+      "totalScore": 8,
+      "maxScore": 10,
+      "percentage": 80,
+      "scaleScore": 590,
+      "benchmarkKey": "high",
+      "benchmarkName": "高國際基準",
+      "answers": [],
+      "processScores": {
+        "level1": {
+          "earned": 9,
+          "total": 10,
+          "percentage": 90
+        },
+        "level2": {
+          "earned": 8.5,
+          "total": 10,
+          "percentage": 85
+        },
+        "level3": {
+          "earned": 8,
+          "total": 10,
+          "percentage": 80
+        },
+        "level4": {
+          "earned": 7,
+          "total": 10,
+          "percentage": 70
+        }
+      },
+      "id": "sub_1793920976999_4vko5",
+      "submittedAt": "2026-11-05T23:22:56.999Z"
     }
   }
 }

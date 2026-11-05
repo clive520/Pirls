@@ -5,6 +5,7 @@ import {
   User,
   AiPedagogicalAdvice,
   BenchmarkKey,
+  ComparativeAnalysisData,
 } from './types';
 
 export class ApiClientError extends Error {
@@ -246,6 +247,54 @@ export const api = {
     /** 取得班級學生名冊 */
     getStudents: (classId: string) =>
       request<{ students: User[] }>(`/api/teacher/students?classId=${classId}`),
+
+    /** 取得班級前後測歷程對照分析與可選試卷清單 */
+    getComparativeAnalytics: (params?: {
+      classId?: string;
+      preTestId?: string;
+      postTestId?: string;
+      studentId?: string;
+    }) => {
+      const q = new URLSearchParams();
+      if (params?.classId) q.set('classId', params.classId);
+      if (params?.preTestId) q.set('preTestId', params.preTestId);
+      if (params?.postTestId) q.set('postTestId', params.postTestId);
+      if (params?.studentId) q.set('studentId', params.studentId);
+      const queryStr = q.toString() ? `?${q.toString()}` : '';
+      return request<{
+        success: boolean;
+        classes: ClassRoom[];
+        selectedClassId: string;
+        students: Array<{ id: string; name: string; seatNumber?: number }>;
+        availableTestPapers: Array<{
+          id: string;
+          title: string;
+          textType: string;
+          targetGrade: number;
+          submittedCount: number;
+          createdAt: string;
+        }>;
+        selectedPreTestId: string | null;
+        selectedPostTestId: string | null;
+        comparativeData: ComparativeAnalysisData | null;
+      }>(`/api/teacher/analytics/comparative${queryStr}`);
+    },
+
+    /** 呼叫 AI 生成歷程成長診斷與教學處方 */
+    getComparativeAiInsight: (data: ComparativeAnalysisData) =>
+      request<{
+        success: boolean;
+        insight: {
+          growthHighlight: string;
+          bottleneckAnalysis: string;
+          actionPlans: Array<{ title: string; strategy: string }>;
+          benchmarkTarget: string;
+          generatedAt: string;
+        };
+      }>('/api/teacher/analytics/comparative/ai-insight', {
+        method: 'POST',
+        body: JSON.stringify({ data }),
+      }),
 
     /** 批次建立學生帳號 */
     createStudents: (classId: string, studentNames: string[]) =>

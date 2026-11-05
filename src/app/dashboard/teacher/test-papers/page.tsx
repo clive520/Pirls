@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  BookOpen, PlusCircle, ArrowLeft, FileSpreadsheet
+  BookOpen, PlusCircle, ArrowLeft, FileSpreadsheet, TrendingUp
 } from 'lucide-react';
 import { TestPaper, ClassRoom } from '@/lib/types';
 import { api, ApiClientError } from '@/lib/api-client';
@@ -191,6 +191,13 @@ export default function TeacherTestPapersPage() {
           </div>
 
           <div className="flex items-center space-x-2">
+            <Link
+              href="/dashboard/teacher/analytics/comparative"
+              className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold inline-flex items-center space-x-1.5 border border-indigo-200/60 transition"
+            >
+              <TrendingUp className="w-4 h-4 text-indigo-600" />
+              <span>前後測雷達對照</span>
+            </Link>
             <Link
               href="/dashboard/teacher/create"
               className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs font-bold inline-flex items-center space-x-1.5 shadow-sm transition"
