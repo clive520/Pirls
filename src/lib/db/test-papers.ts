@@ -62,25 +62,16 @@ export async function getTeacherTestPapers(teacherId: string, isAdmin: boolean =
   await syncCloudOnBoot();
   const state = ensureLocalDB();
   return Object.values(state.testPapers)
-    .filter((t) => isAdmin || t.creatorId === teacherId || t.isPublic)
+    .filter((t) => isAdmin || t.creatorId === teacherId || t.isPublic === true)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getPublicTestPapers(): Promise<TestPaper[]> {
   await syncCloudOnBoot();
   const state = ensureLocalDB();
-  const publics = Object.values(state.testPapers).filter((t) => t.isPublic);
-  if (publics.length > 0) {
-    return publics.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }
-  const all = Object.values(state.testPapers);
-  if (all.length > 0) {
-    all[0].isPublic = true;
-    saveLocalDB(state);
-    await syncToBlob(state);
-    return [all[0]];
-  }
-  return [];
+  return Object.values(state.testPapers)
+    .filter((t) => t.isPublic === true)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function deleteTestPaper(id: string): Promise<boolean> {

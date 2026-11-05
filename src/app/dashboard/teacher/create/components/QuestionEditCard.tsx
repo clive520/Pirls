@@ -11,6 +11,7 @@ export interface QuestionEditCardProps {
   onUpdatePrompt: (index: number, prompt: string) => void;
   onUpdateOptionText: (questionIndex: number, optionIndex: number, text: string) => void;
   onDeleteQuestion: (index: number) => void;
+  onSetCorrectOption?: (questionIndex: number, optionIndex: number) => void;
 }
 
 export const QuestionEditCard: React.FC<QuestionEditCardProps> = ({
@@ -20,6 +21,7 @@ export const QuestionEditCard: React.FC<QuestionEditCardProps> = ({
   onUpdatePrompt,
   onUpdateOptionText,
   onDeleteQuestion,
+  onSetCorrectOption,
 }) => {
   const getLevelBadge = (level: number) => {
     switch (level) {
@@ -90,25 +92,43 @@ export const QuestionEditCard: React.FC<QuestionEditCardProps> = ({
       {/* 選擇題選項 */}
       {q.type === 'multiple_choice' && q.options && (
         <div className="space-y-2 bg-slate-50/70 p-3 rounded-xl border border-slate-100">
-          <label className="block text-[11px] font-bold text-slate-500 mb-1">四選一選項與正確答案</label>
+          <div className="flex items-center justify-between">
+            <label className="block text-[11px] font-bold text-slate-500">四選一選項與正確答案</label>
+            <span className="text-[10px] text-slate-400">💡 點擊選項字母可切換正確答案</span>
+          </div>
           <div className="grid grid-cols-1 gap-2">
             {q.options.map((opt, optIdx) => (
               <div key={opt.label} className="flex items-center space-x-2">
-                <span
-                  className={`w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center flex-shrink-0 ${
-                    opt.isCorrect ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'
+                <button
+                  type="button"
+                  onClick={() => onSetCorrectOption && onSetCorrectOption(qIdx, optIdx)}
+                  title="點擊設為正確解答"
+                  className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center flex-shrink-0 transition ${
+                    opt.isCorrect
+                      ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300'
+                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                   }`}
                 >
                   {opt.label}
-                </span>
+                </button>
                 <input
                   type="text"
                   value={opt.text}
                   onChange={(e) => onUpdateOptionText(qIdx, optIdx, e.target.value)}
-                  className="flex-1 text-xs rounded-lg border border-slate-200 px-2.5 py-1.5 bg-white"
+                  className="flex-1 text-xs rounded-lg border border-slate-200 px-2.5 py-1.5 bg-white focus:ring-1 focus:ring-sky-500 focus:outline-none"
                 />
-                {opt.isCorrect && (
-                  <span className="text-[11px] text-emerald-600 font-bold whitespace-nowrap">✓ 正確解答</span>
+                {opt.isCorrect ? (
+                  <span className="text-[11px] text-emerald-600 font-bold whitespace-nowrap bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    ✓ 正確解答
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onSetCorrectOption && onSetCorrectOption(qIdx, optIdx)}
+                    className="text-[10px] text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 px-1.5 py-0.5 rounded transition whitespace-nowrap"
+                  >
+                    設為正解
+                  </button>
                 )}
               </div>
             ))}

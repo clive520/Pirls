@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
-import { getTeacherTestPapers, createTestPaper } from '@/lib/db';
+import { getTeacherTestPapers, createTestPaper, getAssignmentStatsSummary } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +20,15 @@ export async function GET(req: NextRequest) {
 
   const isAdmin = teacher.role === 'admin';
   const testPapers = await getTeacherTestPapers(teacher.userId, isAdmin);
-  return NextResponse.json({ testPapers });
+  const assignmentStats = await getAssignmentStatsSummary();
+
+  return NextResponse.json({
+    testPapers,
+    assignmentStats,
+    currentUserId: teacher.userId,
+    currentUserName: teacher.displayName,
+    isAdmin,
+  });
 }
 
 export async function POST(req: NextRequest) {

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   BookOpen, Sparkles, FileText, ArrowLeft, CheckCircle2,
@@ -12,14 +12,52 @@ import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration } from '
 import { generateSmartImagePrompts, formatCombinedImagePrompt } from '@/lib/llm-adapter';
 import { QuestionEditCard, IllustrationStoryboard, AiConfigCard } from './components';
 
-export default function TeacherCreateTestPage() {
+function TeacherCreateTestContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('edit');
 
   // 步驟控制：'input' | 'editor'
   const [step, setStep] = useState<'input' | 'editor'>('input');
   const [mode, setMode] = useState<'theme' | 'paste'>('theme');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // 再度編輯模式狀態
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [loadingEdit, setLoadingEdit] = useState(false);
+  const [editingParaIdx, setEditingParaIdx] = useState<number | null>(null);
+
+  // 若帶有 edit 參數，自動從後端載入既有試卷以供再度編輯
+  React.useEffect(() => {
+    if (!editId) return;
+
+    const loadExistingPaper = async () => {
+      setLoadingEdit(true);
+      try {
+        const res = await fetch(`/api/teacher/test-papers/${editId}`, { cache: 'no-store' });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || '無法載入該試卷進行編輯');
+          router.push('/dashboard/teacher/test-papers');
+          return;
+        }
+        setTestPaper(data.testPaper);
+        setIsEditing(true);
+        setEditingId(editId);
+        setStep('editor');
+      } catch (err: any) {
+        console.error(err);
+        alert('載入試卷失敗：' + (err.message || '請確認網路狀態'));
+        router.push('/dashboard/teacher/test-papers');
+      } finally {
+        setLoadingEdit(false);
+      }
+    };
+
+    loadExistingPaper();
+  }, [editId, router]);
 
   // 模式 A: 主題生成欄位
   const [theme, setTheme] = useState('動物保護與勇氣');
@@ -441,19 +479,22 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
 
   const [saving, setSaving] = useState(false);
 
-  // 儲存試卷至題庫
+  // 儲存試卷至題庫（支援全新出題 POST 與再度編輯更新 PUT）
   const handleSaveTestPaper = async () => {
     if (!testPaper || saving) return;
     try {
       setSaving(true);
-      const res = await fetch('/api/teacher/test-papers', {
-        method: 'POST',
+      const url = isEditing && editingId ? `/api/teacher/test-papers/${editingId}` : '/api/teacher/test-papers';
+      const method = isEditing && editingId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(testPaper),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        alert('🎉 試卷已成功寫入資料庫並同步至個人題庫！');
+      if (res.ok && (data.success || data.testPaper)) {
+        alert(isEditing ? '🎉 試卷已成功更新並同步至個人題庫！' : '🎉 試卷已成功寫入資料庫並同步至個人題庫！');
         router.push('/dashboard/teacher/test-papers');
       } else {
         alert(data.error || '儲存失敗，請檢查資料完整度');
@@ -464,6 +505,70 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
     } finally {
       setSaving(false);
     }
+  };
+
+  // 更新文章標題
+  const updateTitle = (newTitle: string) => {
+    if (!testPaper) return;
+    setTestPaper({ ...testPaper, title: newTitle });
+  };
+
+  // 更新段落文字
+  const updateParagraphText = (pIndex: number, newText: string) => {
+    if (!testPaper) return;
+    const updatedParas = [...testPaper.paragraphs];
+    if (updatedParas[pIndex]) {
+      updatedParas[pIndex] = {
+        ...updatedParas[pIndex],
+        text: newText,
+      };
+      const newContent = updatedParas.map((p) => p.text).join('\n\n');
+      setTestPaper({
+        ...testPaper,
+        paragraphs: updatedParas,
+        articleContent: newContent,
+        wordCount: newContent.replace(/\s+/g, '').length,
+      });
+    }
+  };
+
+  // 新增段落
+  const handleAddParagraph = () => {
+    if (!testPaper) return;
+    const nextNum = testPaper.paragraphs.length + 1;
+    const newPara = {
+      paragraphNumber: nextNum,
+      text: `【請輸入第 ${nextNum} 段內文...】`,
+    };
+    const updatedParas = [...testPaper.paragraphs, newPara];
+    const newContent = updatedParas.map((p) => p.text).join('\n\n');
+    setTestPaper({
+      ...testPaper,
+      paragraphs: updatedParas,
+      articleContent: newContent,
+      wordCount: newContent.replace(/\s+/g, '').length,
+    });
+    setEditingParaIdx(updatedParas.length - 1);
+  };
+
+  // 刪除段落
+  const handleDeleteParagraph = (pIndex: number) => {
+    if (!testPaper || testPaper.paragraphs.length <= 1) {
+      alert('文章至少需保留一個段落');
+      return;
+    }
+    if (!confirm(`確定要刪除第 ${pIndex + 1} 個段落嗎？`)) return;
+    const updatedParas = testPaper.paragraphs
+      .filter((_, idx) => idx !== pIndex)
+      .map((p, idx) => ({ ...p, paragraphNumber: idx + 1 }));
+    const newContent = updatedParas.map((p) => p.text).join('\n\n');
+    setTestPaper({
+      ...testPaper,
+      paragraphs: updatedParas,
+      articleContent: newContent,
+      wordCount: newContent.replace(/\s+/g, '').length,
+    });
+    if (editingParaIdx === pIndex) setEditingParaIdx(null);
   };
 
   // 更新題目文字
@@ -480,6 +585,19 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
     const updated = { ...testPaper };
     if (updated.questions[qIndex].options) {
       updated.questions[qIndex].options![optIndex].text = newText;
+      setTestPaper(updated);
+    }
+  };
+
+  // 切換選擇題正確答案
+  const setCorrectOption = (qIndex: number, optIndex: number) => {
+    if (!testPaper) return;
+    const updated = { ...testPaper };
+    if (updated.questions[qIndex].options) {
+      updated.questions[qIndex].options = updated.questions[qIndex].options!.map((opt, i) => ({
+        ...opt,
+        isCorrect: i === optIndex,
+      }));
       setTestPaper(updated);
     }
   };
@@ -507,6 +625,15 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
   };
 
 
+  if (loadingEdit) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center space-y-4">
+        <RefreshCw className="w-8 h-8 text-sky-600 animate-spin" />
+        <p className="text-sm font-bold text-slate-600">正在從題庫讀取試卷資料、文章與插圖分鏡...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
       {/* 導覽列 */}
@@ -514,8 +641,9 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Link
-              href="/dashboard/teacher"
+              href="/dashboard/teacher/test-papers"
               className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+              title="返回題庫管理"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
@@ -523,8 +651,12 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-slate-900">PIRLS 智慧出題與人機協同編輯器</h1>
-              <p className="text-xs text-slate-500">國小 3-6 年級四層次官方標準試卷提煉</p>
+              <h1 className="text-base font-bold text-slate-900">
+                {isEditing ? `✏️ 編輯試卷：《${testPaper?.title || ''}》` : 'PIRLS 智慧出題與人機協同編輯器'}
+              </h1>
+              <p className="text-xs text-slate-500">
+                {isEditing ? '重新編修文章、調整段落、更新繪本分鏡與四層次題本規準' : '國小 3-6 年級四層次官方標準試卷提煉'}
+              </p>
             </div>
           </div>
 
@@ -541,12 +673,12 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
                 {saving ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>寫入題庫中...</span>
+                    <span>{isEditing ? '更新儲存中...' : '寫入題庫中...'}</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span>儲存至題庫</span>
+                    <span>{isEditing ? '儲存試卷更新' : '儲存至題庫'}</span>
                   </>
                 )}
               </button>
@@ -784,17 +916,34 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
               {/* 頂部操作列 */}
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => setStep('input')}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 inline-flex items-center space-x-1"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>重新設定</span>
-                  </button>
+                  {isEditing ? (
+                    <Link
+                      href="/dashboard/teacher/test-papers"
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 inline-flex items-center space-x-1"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>返回題庫清單</span>
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => setStep('input')}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 inline-flex items-center space-x-1"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>重新設定</span>
+                    </button>
+                  )}
                   <div>
-                    <h2 className="text-base font-bold text-slate-900">{testPaper.title}</h2>
+                    <h2 className="text-base font-bold text-slate-900 flex items-center space-x-2">
+                      <span>{testPaper.title}</span>
+                      {isEditing && (
+                        <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">
+                          再度編輯中
+                        </span>
+                      )}
+                    </h2>
                     <p className="text-xs text-slate-500">
-                      國小 {testPaper.targetGrade} 年級 • {testPaper.textType === 'literary' ? '文學性文本' : '訊息性文本'} • {testPaper.wordCount} 字
+                      國小 {testPaper.targetGrade} 年級 • {testPaper.textType === 'literary' ? '文學性文本' : '訊息性文本'} • {testPaper.wordCount} 字 • 共 {testPaper.questions.length} 題
                     </p>
                   </div>
                 </div>
@@ -826,9 +975,31 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
                   <div className="flex items-center justify-between border-b pb-3">
                     <span className="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
                       <BookOpen className="w-4 h-4 text-sky-600" />
-                      <span>閱讀文本正文</span>
+                      <span>閱讀文本正文與分段編輯</span>
                     </span>
-                    <span className="text-xs text-slate-400 font-mono">{testPaper.wordCount} 字</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-slate-400 font-mono">{testPaper.wordCount} 字</span>
+                      <button
+                        type="button"
+                        onClick={handleAddParagraph}
+                        className="text-xs text-sky-600 hover:text-sky-800 font-bold px-2.5 py-1 rounded-lg bg-sky-50 border border-sky-100 hover:bg-sky-100 transition flex items-center space-x-1"
+                        title="在文末增加一個新段落"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        <span>新增段落</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 文章標題編輯欄位 */}
+                  <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200 space-y-1">
+                    <label className="text-[11px] font-bold text-slate-500 block">文章標題 (可直接修改)</label>
+                    <input
+                      type="text"
+                      value={testPaper.title}
+                      onChange={(e) => updateTitle(e.target.value)}
+                      className="w-full text-sm font-bold text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                    />
                   </div>
 
                   {/* PIRLS 多模態課文繪本配圖與 3 幅關鍵場景生圖助手 */}
@@ -867,9 +1038,56 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
 
                       return (
                         <div key={p.paragraphNumber} className="space-y-3">
-                          <p className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-100">
-                            {p.text}
-                          </p>
+                          <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-slate-500 bg-slate-200/70 px-2 py-0.5 rounded">
+                                第 {p.paragraphNumber} 段
+                              </span>
+                              <div className="flex items-center space-x-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingParaIdx(editingParaIdx === pIdx ? null : pIdx)}
+                                  className="text-[11px] text-sky-600 hover:text-sky-800 font-bold px-2 py-0.5 rounded bg-white border border-slate-200 hover:bg-sky-50 transition"
+                                >
+                                  {editingParaIdx === pIdx ? '收合編輯' : '✏️ 編輯文字'}
+                                </button>
+                                {testPaper.paragraphs.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteParagraph(pIdx)}
+                                    className="p-1 text-slate-400 hover:text-rose-600 transition"
+                                    title="刪除此段落"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {editingParaIdx === pIdx ? (
+                              <div className="space-y-2 pt-1">
+                                <textarea
+                                  rows={5}
+                                  value={p.text}
+                                  onChange={(e) => updateParagraphText(pIdx, e.target.value)}
+                                  className="w-full text-sm font-normal text-slate-800 bg-white border border-sky-300 rounded-lg p-2.5 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                                />
+                                <div className="flex justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingParaIdx(null)}
+                                    className="text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 px-3 py-1 rounded-lg"
+                                  >
+                                    完成段落修訂
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-slate-800 leading-relaxed whitespace-pre-line text-sm">
+                                {p.text}
+                              </p>
+                            )}
+                          </div>
 
                           {/* 穿插於本段落後的情境圖預覽卡片 */}
                           {allIllsForThisPara.map(({ ill, illIdx }) => (
@@ -941,6 +1159,7 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
                       onUpdatePrompt={updateQuestionPrompt}
                       onUpdateOptionText={updateOptionText}
                       onDeleteQuestion={handleDeleteQuestion}
+                      onSetCorrectOption={setCorrectOption}
                     />
                   ))}
 
@@ -954,12 +1173,12 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
                       {saving ? (
                         <>
                           <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>寫入題庫與雲端同調中...</span>
+                          <span>{isEditing ? '更新儲存中...' : '寫入題庫與雲端同調中...'}</span>
                         </>
                       ) : (
                         <>
                           <Save className="w-4 h-4" />
-                          <span>確認完成微調，儲存至題庫</span>
+                          <span>{isEditing ? '確認完成微調，儲存更新至題庫' : '確認完成微調，儲存至題庫'}</span>
                         </>
                       )}
                     </button>
@@ -975,5 +1194,19 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
         PIRLS 智慧閱讀素養評量平臺 • 人機協同出題編輯器
       </footer>
     </div>
+  );
+}
+
+export default function TeacherCreateTestPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-bold">
+          載入 PIRLS 智慧編輯器中...
+        </div>
+      }
+    >
+      <TeacherCreateTestContent />
+    </Suspense>
   );
 }

@@ -24,6 +24,11 @@ export async function GET(
     return NextResponse.json({ error: '找不到該試卷' }, { status: 404 });
   }
 
+  // 僅建立者本人、管理者，或已設為公開之試卷可存取
+  if (testPaper.creatorId !== teacher.userId && !testPaper.isPublic && teacher.role !== 'admin') {
+    return NextResponse.json({ error: '您無權存取其他教師之未公開試卷' }, { status: 403 });
+  }
+
   return NextResponse.json({ testPaper });
 }
 
@@ -34,6 +39,19 @@ export async function PUT(
   const teacher = await checkTeacher(req);
   if (!teacher) {
     return NextResponse.json({ error: '無存取權限' }, { status: 403 });
+  }
+
+  const existing = await getTestPaperById(params.id);
+  if (!existing) {
+    return NextResponse.json({ error: '找不到該試卷' }, { status: 404 });
+  }
+
+  // 僅試卷建立者本人或最高管理員可以再度編輯
+  if (existing.creatorId !== teacher.userId && teacher.role !== 'admin') {
+    return NextResponse.json(
+      { error: '您只能編輯自己建立的試卷，無法修改其他教師之試卷' },
+      { status: 403 }
+    );
   }
 
   const body = await req.json();
@@ -63,10 +81,10 @@ export async function DELETE(
     return NextResponse.json({ error: '找不到該試卷' }, { status: 404 });
   }
 
-  // 僅建立者本人或最高管理員可刪除試卷；校本公共題庫不可隨意刪除
+  // 僅建立者本人或最高管理員可刪除試卷；別人的文章不能刪除
   if (testPaper.creatorId !== teacher.userId && teacher.role !== 'admin') {
     return NextResponse.json(
-      { error: '您無法刪除其他教師或已歸檔為校本公共題庫之試卷' },
+      { error: '您只能刪除自己建立的試卷，無法刪除其他教師或校本公共題庫之試卷' },
       { status: 403 }
     );
   }

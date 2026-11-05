@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "test:stage1": "node tests/eval_pirls_prompts.mjs",
-    "test:stage2": "node tests/eval_stage2_auth.mjs"
+    "test:stage2": "node tests/eval_stage2_auth.mjs",
+    "test:teacher-features": "node --import tsx tests/eval_teacher_features.mjs"
   },
   "dependencies": {
     "@types/qrcode": "^1.5.6",

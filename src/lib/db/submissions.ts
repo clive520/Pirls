@@ -179,3 +179,56 @@ export async function updateSubmissionReview(
   await syncToBlob(state);
   return sub;
 }
+
+export interface TestPaperClassStats {
+  submittedCount: number;
+  avgScore: number;
+  maxScore: number;
+}
+
+export interface TestPaperAssignmentStats {
+  totalSubmitted: number;
+  classes: Record<string, TestPaperClassStats>; // className -> stats
+}
+
+/**
+ * 統計全站各試卷在各班級中的實際作答與繳卷概況（指派明細表專用）
+ */
+export async function getAssignmentStatsSummary(): Promise<Record<string, TestPaperAssignmentStats>> {
+  await syncCloudOnBoot();
+  const state = ensureLocalDB();
+  const summary: Record<string, TestPaperAssignmentStats> = {};
+
+  const allSubs = Object.values(state.submissions || {});
+
+  for (const sub of allSubs) {
+    const paperId = sub.testPaperId;
+    if (!summary[paperId]) {
+      summary[paperId] = { totalSubmitted: 0, classes: {} };
+    }
+    summary[paperId].totalSubmitted++;
+
+    const cName = sub.className || '自主練習/無班級';
+    if (!summary[paperId].classes[cName]) {
+      summary[paperId].classes[cName] = { submittedCount: 0, avgScore: 0, maxScore: 0 };
+    }
+    const clsStats = summary[paperId].classes[cName];
+    clsStats.submittedCount++;
+    clsStats.maxScore = Math.max(clsStats.maxScore, sub.totalScore);
+  }
+
+  // 計算各班平均分
+  for (const [paperId, stats] of Object.entries(summary)) {
+    for (const [cName, cStats] of Object.entries(stats.classes)) {
+      const matchingSubs = allSubs.filter(
+        (s) => s.testPaperId === paperId && (s.className || '自主練習/無班級') === cName
+      );
+      if (matchingSubs.length > 0) {
+        const sum = matchingSubs.reduce((acc, s) => acc + s.totalScore, 0);
+        cStats.avgScore = Math.round((sum / matchingSubs.length) * 10) / 10;
+      }
+    }
+  }
+
+  return summary;
+}
