@@ -90,7 +90,7 @@ export async function deleteTestPaper(id: string): Promise<boolean> {
 export async function assignTestPaperToClasses(
   testId: string,
   classIds: string[],
-  options?: { isPublic?: boolean; examCode?: string }
+  options?: { isPublic?: boolean; examCode?: string; allowRetake?: boolean }
 ): Promise<boolean> {
   await syncCloudOnBoot();
   const state = ensureLocalDB();
@@ -102,8 +102,12 @@ export async function assignTestPaperToClasses(
   if (options && typeof options.examCode === 'string') {
     state.testPapers[testId].examCode = options.examCode;
   }
+  if (options && typeof options.allowRetake === 'boolean') {
+    state.testPapers[testId].allowRetake = options.allowRetake;
+  }
   state.testPapers[testId].updatedAt = new Date().toISOString();
   saveLocalDB(state);
+  await syncTestPaperToFirestore(state.testPapers[testId]).catch((e) => console.warn('[DB] Direct Firestore testPaper update note:', e));
   await syncToBlob(state);
   return true;
 }

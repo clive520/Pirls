@@ -86,7 +86,13 @@ export async function updateSubmissionReview(
     newScore: number;
     teacherComment?: string;
   }>,
-  teacherGeneralNote?: string
+  teacherGeneralNote?: string,
+  aiPedagogicalAdvice?: {
+    levelAnalysis: string;
+    improvementSuggestions: string[];
+    actionPlan?: string;
+    generatedAt?: string;
+  }
 ): Promise<ExamSubmission | null> {
   await syncCloudOnBoot();
   const state = ensureLocalDB();
@@ -165,6 +171,9 @@ export async function updateSubmissionReview(
   sub.reviewedBy = reviewerName;
   if (teacherGeneralNote !== undefined) {
     sub.teacherGeneralNote = teacherGeneralNote;
+  }
+  if (aiPedagogicalAdvice !== undefined) {
+    sub.aiPedagogicalAdvice = aiPedagogicalAdvice;
   }
 
   // 重新計算同試卷所有學生的班級同儕 PR

@@ -118,6 +118,7 @@ export interface TestPaper {
   dueDate?: string; // 測驗截止時間 (可選)
   assignedClassIds?: string[];
   timeLimitMinutes: number; // 0 為不限時
+  allowRetake?: boolean; // 是否允許多次作答（false: 僅限一次作答，true: 允許多次作答；預設為 true）
   createdAt: string;
   updatedAt: string;
 }
@@ -213,4 +214,10 @@ export interface ExamSubmission {
   reviewedAt?: string;
   reviewedBy?: string;
   teacherGeneralNote?: string;
+  aiPedagogicalAdvice?: {
+    levelAnalysis: string; // 各層次思維能力落點分析
+    improvementSuggestions: string[]; // 給學生的閱讀具體改進建議事項
+    actionPlan?: string; // 具體行動計畫
+    generatedAt?: string;
+  };
 }

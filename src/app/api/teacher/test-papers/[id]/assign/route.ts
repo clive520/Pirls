@@ -20,7 +20,7 @@ export async function POST(
   }
 
   const body = await req.json();
-  const { classIds, isPublic, examCode } = body;
+  const { classIds, isPublic, examCode, allowRetake } = body;
 
   if (!Array.isArray(classIds)) {
     return NextResponse.json({ error: '請提供班級 ID 陣列' }, { status: 400 });
@@ -29,6 +29,7 @@ export async function POST(
   const success = await assignTestPaperToClasses(params.id, classIds, {
     isPublic,
     examCode,
+    allowRetake: typeof allowRetake === 'boolean' ? allowRetake : true,
   });
   if (!success) {
     return NextResponse.json({ error: '找不到試卷' }, { status: 404 });

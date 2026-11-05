@@ -42,8 +42,19 @@ export default function StudentExamPage() {
         if (!res.ok) throw new Error(data.error || '載入試卷失敗');
 
         if (data.alreadySubmitted) {
-          router.push(`/dashboard/student/result/${data.submissionId}`);
-          return;
+          if (!data.allowRetake) {
+            alert('本測驗教師已設定為「僅限一次作答」，您已完成測驗，系統將帶您前往查看素養診斷報告。');
+            router.push(`/dashboard/student/result/${data.submissionId}`);
+            return;
+          } else {
+            const wantRetake = confirm(
+              '您先前已完成繳交過本測驗。\n\n本測驗教師開放「允許多次作答練習」！\n點擊「確定」重新作答加強練習；點擊「取消」前往查看先前的素養診斷報告。'
+            );
+            if (!wantRetake) {
+              router.push(`/dashboard/student/result/${data.submissionId}`);
+              return;
+            }
+          }
         }
 
         setTestPaper(data.testPaper);

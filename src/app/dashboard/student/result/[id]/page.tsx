@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   Award, ArrowLeft, CheckCircle2, AlertCircle, Sparkles,
   BookOpen, Lightbulb, Compass, Share2, Printer, Trophy,
-  TrendingUp, Users, Globe2, ShieldCheck, Check, X, HelpCircle, FileText, MessageSquare
+  TrendingUp, Users, Globe2, ShieldCheck, Check, X, HelpCircle, FileText, MessageSquare, BarChart3
 } from 'lucide-react';
 import { ExamSubmission, TestPaper } from '@/lib/types';
 import {
@@ -396,6 +396,78 @@ export default function StudentResultPage() {
             </div>
           </div>
         </div>
+
+        {/* 🎓 老師複閱指導：四層次思維能力落點分析與閱讀具體改進建議 */}
+        {submission.aiPedagogicalAdvice && (
+          <div className="bg-white rounded-3xl border border-purple-200 shadow-sm p-6 sm:p-8 space-y-5 bg-gradient-to-br from-white via-purple-50/20 to-indigo-50/30">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-100 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-md flex-shrink-0">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <span>老師複閱指導：各層次思維落點分析與閱讀改進建議</span>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                      AI 深度診斷
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    針對本次《{submission.testPaperTitle}》四層次落點為你量身打造的精進指南
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 落點深度分析 */}
+            {submission.aiPedagogicalAdvice.levelAnalysis && (
+              <div className="p-4 rounded-2xl bg-purple-50/60 border border-purple-100 text-xs text-slate-800 leading-relaxed space-y-1.5">
+                <div className="font-bold text-purple-950 flex items-center gap-1.5">
+                  <BarChart3 className="w-4 h-4 text-purple-700" />
+                  <span>各層次思維能力落點綜合解析：</span>
+                </div>
+                <p className="indent-4 font-medium text-slate-800 text-[13px] leading-relaxed">
+                  {submission.aiPedagogicalAdvice.levelAnalysis}
+                </p>
+              </div>
+            )}
+
+            {/* 具體閱讀改進建議清單 */}
+            {submission.aiPedagogicalAdvice.improvementSuggestions &&
+              submission.aiPedagogicalAdvice.improvementSuggestions.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-indigo-700" />
+                    <span>給你的具體閱讀策略與改進建議事項：</span>
+                  </h4>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {submission.aiPedagogicalAdvice.improvementSuggestions.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3.5 rounded-xl bg-white border border-indigo-100/90 shadow-2xs flex items-start space-x-3 text-xs leading-relaxed"
+                      >
+                        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5">
+                          {idx + 1}
+                        </span>
+                        <span className="text-slate-800 font-medium">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            {/* 自主練習行動計畫 */}
+            {submission.aiPedagogicalAdvice.actionPlan && (
+              <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs text-amber-950 flex items-start space-x-2.5">
+                <Compass className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="block font-bold text-amber-900">每週自主閱讀精進計畫：</strong>
+                  <span className="leading-relaxed">{submission.aiPedagogicalAdvice.actionPlan}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 逐題深入批改與三明治正向回饋 */}
         <section className="space-y-4">

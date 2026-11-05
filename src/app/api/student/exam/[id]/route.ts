@@ -52,6 +52,7 @@ export async function GET(
       questions: studentSafeQuestions,
     },
     alreadySubmitted: Boolean(existingSub),
+    allowRetake: testPaper.allowRetake !== false,
     submissionId: existingSub ? existingSub.id : null,
   });
 }

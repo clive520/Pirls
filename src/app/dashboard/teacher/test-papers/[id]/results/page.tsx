@@ -91,6 +91,8 @@ export default function TeacherTestResultsPage() {
   const [aiRegradeLoading, setAiRegradeLoading] = useState<Record<string, boolean>>({});
   const [aiRegradeResults, setAiRegradeResults] = useState<Record<string, any>>({});
   const [savingReview, setSavingReview] = useState(false);
+  const [aiAdvice, setAiAdvice] = useState<any>(null);
+  const [loadingAiAdvice, setLoadingAiAdvice] = useState(false);
 
   const fetchResults = async () => {
     try {
@@ -149,6 +151,7 @@ export default function TeacherTestResultsPage() {
       setModifiedScores(scoreMap);
       setModifiedComments(commentMap);
       setTeacherGeneralNote(json.submission.teacherGeneralNote || '');
+      setAiAdvice(json.submission.aiPedagogicalAdvice || null);
     } catch (err: any) {
       alert('連線失敗: ' + err.message);
       setShowGradingModal(false);
@@ -213,6 +216,27 @@ export default function TeacherTestResultsPage() {
     }
   };
 
+  // 啟動 AI 四層次思維能力落點分析與閱讀具體改進建議生成
+  const handleGenerateAiAdvice = async () => {
+    if (!selectedSub) return;
+    setLoadingAiAdvice(true);
+    try {
+      const res = await fetch(`/api/teacher/submissions/${selectedSub.id}/ai-pedagogical-advice`, {
+        method: 'POST',
+      });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || '生成改進建議失敗');
+      setAiAdvice(resData.advice);
+      if (!teacherGeneralNote && resData.advice.teacherFeedbackDraft) {
+        setTeacherGeneralNote(resData.advice.teacherFeedbackDraft);
+      }
+    } catch (err: any) {
+      alert('AI 分析失敗：' + (err.message || '請確認網路狀態'));
+    } finally {
+      setLoadingAiAdvice(false);
+    }
+  };
+
   // 儲存教師閱卷並連動重算
   const handleSaveReview = async () => {
     if (!selectedSub || !fullSubmission) return;
@@ -227,7 +251,11 @@ export default function TeacherTestResultsPage() {
       const res = await fetch(`/api/teacher/submissions/${selectedSub.id}/review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answersUpdates, teacherGeneralNote }),
+        body: JSON.stringify({
+          answersUpdates,
+          teacherGeneralNote,
+          aiPedagogicalAdvice: aiAdvice || fullSubmission.aiPedagogicalAdvice,
+        }),
       });
 
       const resData = await res.json();
@@ -1024,6 +1052,103 @@ export default function TeacherTestResultsPage() {
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* 🤖 AI 閱讀四層次思維能力落點深入診斷與學生改進建議助手 */}
+                  <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-sky-50 p-5 rounded-2xl border border-purple-200/80 space-y-4 shadow-xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-purple-950">
+                            AI 四層次思維能力落點分析與學生具體改進建議
+                          </h4>
+                          <p className="text-[11px] text-purple-700">
+                            依據學生在 L1~L4 四個思考歷程得分與作答表現，由 AI 提煉客觀落點分析與給學生的具體閱讀精進策略
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleGenerateAiAdvice}
+                        disabled={loadingAiAdvice}
+                        className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-sm transition inline-flex items-center space-x-1.5 disabled:opacity-50 flex-shrink-0"
+                      >
+                        {loadingAiAdvice ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>AI 專家大腦分析中...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>{aiAdvice ? '重新分析與更新建議' : '啟動 AI 智能分析與改進建議'}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {aiAdvice && (
+                      <div className="bg-white p-4 rounded-xl border border-purple-200 space-y-3.5 animate-fadeIn">
+                        {/* 落點分析 */}
+                        <div className="space-y-1">
+                          <span className="text-[11px] font-bold text-purple-900 flex items-center gap-1">
+                            <span>📊 各層次思維能力落點分析：</span>
+                          </span>
+                          <p className="text-xs text-slate-800 leading-relaxed bg-purple-50/50 p-3 rounded-lg border border-purple-100 font-medium">
+                            {aiAdvice.levelAnalysis}
+                          </p>
+                        </div>
+
+                        {/* 改進建議清單 */}
+                        <div className="space-y-1.5">
+                          <span className="text-[11px] font-bold text-indigo-900 flex items-center gap-1">
+                            <span>💡 給學生的閱讀具體改進建議事項：</span>
+                          </span>
+                          <div className="space-y-1.5">
+                            {aiAdvice.improvementSuggestions?.map((item: string, idx: number) => (
+                              <div
+                                key={idx}
+                                className="p-2.5 rounded-lg bg-indigo-50/40 border border-indigo-100 text-xs text-slate-800 leading-relaxed flex items-start space-x-2"
+                              >
+                                <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  {idx + 1}
+                                </span>
+                                <span className="flex-1 font-medium">{item}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 具體行動計畫 */}
+                        {aiAdvice.actionPlan && (
+                          <div className="p-2.5 rounded-lg bg-amber-50/60 border border-amber-200/80 text-xs text-amber-900 flex items-start space-x-2">
+                            <span className="font-bold flex-shrink-0">🚀 自主練習行動計畫：</span>
+                            <span className="leading-relaxed">{aiAdvice.actionPlan}</span>
+                          </div>
+                        )}
+
+                        {/* 導師講評草稿套用 */}
+                        {aiAdvice.teacherFeedbackDraft && (
+                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                            <span className="text-[11px] text-slate-500 italic">
+                              AI 已依據落點分析自動起草綜合評語
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setTeacherGeneralNote(aiAdvice.teacherFeedbackDraft)}
+                              className="text-xs text-purple-700 hover:text-purple-900 font-bold hover:underline inline-flex items-center space-x-1"
+                            >
+                              <span>套用草稿至下方【導師總評】</span>
+                              <span>↓</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* 全卷導師總評語 */}

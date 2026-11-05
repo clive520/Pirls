@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
       questionCount: t.questions.length,
       totalPoints: t.totalPoints,
       timeLimitMinutes: t.timeLimitMinutes,
+      allowRetake: t.allowRetake !== false, // 預設允許多次作答，若設為 false 則僅限一次作答
       isSubmitted: Boolean(sub),
       submissionId: sub ? sub.id : null,
       score: sub ? sub.totalScore : null,

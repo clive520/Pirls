@@ -30,7 +30,7 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { answersUpdates, teacherGeneralNote } = body;
+    const { answersUpdates, teacherGeneralNote, aiPedagogicalAdvice } = body;
 
     if (!Array.isArray(answersUpdates) || answersUpdates.length === 0) {
       return NextResponse.json({ error: '缺少評分更新資料' }, { status: 400 });
@@ -40,7 +40,8 @@ export async function POST(
       submissionId,
       session.displayName || '授課教師',
       answersUpdates,
-      teacherGeneralNote
+      teacherGeneralNote,
+      aiPedagogicalAdvice
     );
 
     if (!updated) {

@@ -44,6 +44,7 @@ export default function TeacherTestPapersPage() {
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [modalIsPublic, setModalIsPublic] = useState(false);
   const [modalExamCode, setModalExamCode] = useState('');
+  const [modalAllowRetake, setModalAllowRetake] = useState<boolean>(true);
   const [assigning, setAssigning] = useState(false);
 
   const fetchData = async () => {
@@ -103,6 +104,7 @@ export default function TeacherTestPapersPage() {
     setSelectedClassIds(test.assignedClassIds || []);
     setModalIsPublic(test.isPublic || false);
     setModalExamCode(test.examCode || '');
+    setModalAllowRetake(test.allowRetake !== false);
   };
 
   // 儲存派卷
@@ -117,6 +119,7 @@ export default function TeacherTestPapersPage() {
           classIds: selectedClassIds,
           isPublic: modalIsPublic,
           examCode: modalExamCode,
+          allowRetake: modalAllowRetake,
         }),
       });
       const data = await res.json();
@@ -142,8 +145,19 @@ export default function TeacherTestPapersPage() {
     }
   };
 
+  // 真正指派至我任教班級的任務清單（完全過濾掉尚未指派或非我班級之任務）
+  const myAssignedTasks = testPapers
+    .map((t) => {
+      const assigned = classes.filter((c) => t.assignedClassIds?.includes(c.id));
+      return {
+        ...t,
+        myAssignedClasses: assigned,
+      };
+    })
+    .filter((t) => t.myAssignedClasses.length > 0);
+
   // 計算統計指標
-  const assignedPaperCount = testPapers.filter((t) => t.assignedClassIds && t.assignedClassIds.length > 0).length;
+  const assignedPaperCount = myAssignedTasks.length;
   const publicPaperCount = testPapers.filter((t) => t.isPublic).length;
   const myPaperCount = testPapers.filter((t) => t.creatorId === currentUserId).length;
   const totalSubmissions = Object.values(assignmentStats).reduce((sum, item) => sum + (item.totalSubmitted || 0), 0);
@@ -220,8 +234,8 @@ export default function TeacherTestPapersPage() {
               <Send className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">已指派試卷</p>
-              <p className="text-xl font-black text-indigo-700">{assignedPaperCount} <span className="text-xs font-normal text-slate-400">份</span></p>
+              <p className="text-xs text-slate-500 font-medium">已指派班級任務</p>
+              <p className="text-xl font-black text-indigo-700">{myAssignedTasks.length} <span className="text-xs font-normal text-slate-400">項</span></p>
             </div>
           </div>
 
@@ -262,7 +276,7 @@ export default function TeacherTestPapersPage() {
               <span className={`ml-1 text-[11px] px-2 py-0.5 rounded-full font-mono ${
                 activeTab === 'assignments' ? 'bg-sky-700 text-sky-100' : 'bg-slate-100 text-slate-600'
               }`}>
-                {assignedPaperCount} 已派
+                {myAssignedTasks.length} 項指派
               </span>
             </button>
 
@@ -350,22 +364,23 @@ export default function TeacherTestPapersPage() {
               </div>
             </div>
 
-            {testPapers.length === 0 ? (
+            {myAssignedTasks.length === 0 ? (
               <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm max-w-lg mx-auto space-y-4">
                 <div className="w-16 h-16 rounded-2xl bg-sky-50 text-sky-600 mx-auto flex items-center justify-center">
-                  <BookOpen className="w-8 h-8" />
+                  <FileSpreadsheet className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800">目前題庫尚無任何試卷</h3>
+                <h3 className="text-lg font-bold text-slate-800">目前尚無由您指派給班級的測驗任務</h3>
                 <p className="text-xs text-slate-500">
-                  請點擊下方按鈕，運用 AI 智慧命題提煉 PIRLS 素養考卷！
+                  此明細表僅列出已指派至您任教班級的任務。請切換至「📚 題庫試卷總覽」挑選試卷並點選「指派」，即可指派班級學生進行測驗！
                 </p>
-                <Link
-                  href="/dashboard/teacher/create"
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('library')}
                   className="px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm inline-flex items-center space-x-1.5 shadow-sm transition"
                 >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>立即建立新試卷</span>
-                </Link>
+                  <BookOpen className="w-4 h-4" />
+                  <span>前往題庫挑選試卷指派</span>
+                </button>
               </div>
             ) : (
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -374,7 +389,7 @@ export default function TeacherTestPapersPage() {
                     <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
                       <tr>
                         <th scope="col" className="px-4 py-3.5">試卷名稱與規格</th>
-                        <th scope="col" className="px-4 py-3.5">受測與公開狀態</th>
+                        <th scope="col" className="px-4 py-3.5">受測與作答設定</th>
                         <th scope="col" className="px-4 py-3.5">已指派受測班級</th>
                         <th scope="col" className="px-4 py-3.5">作答繳卷進度</th>
                         <th scope="col" className="px-4 py-3.5">班級表現</th>
@@ -382,10 +397,10 @@ export default function TeacherTestPapersPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
-                      {testPapers.map((t) => {
+                      {myAssignedTasks.map((t) => {
                         const isMine = t.creatorId === currentUserId;
                         const canModify = isMine || isAdmin;
-                        const assignedClasses = classes.filter((c) => t.assignedClassIds?.includes(c.id));
+                        const assignedClasses = t.myAssignedClasses;
                         const paperStats = assignmentStats[t.id];
                         const totalSubmittedForPaper = paperStats?.totalSubmitted || 0;
 
@@ -415,20 +430,32 @@ export default function TeacherTestPapersPage() {
                               </div>
                             </td>
 
-                            {/* 受測與公開狀態 */}
-                            <td className="px-4 py-4 min-w-[130px]">
+                            {/* 受測與作答設定 */}
+                            <td className="px-4 py-4 min-w-[140px]">
                               <div className="space-y-1.5">
-                                {t.isPublic ? (
-                                  <span className="inline-flex items-center space-x-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                                    <Globe className="w-3 h-3 text-emerald-600" />
-                                    <span>全校公開自學</span>
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center space-x-1 text-[11px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
-                                    <Lock className="w-3 h-3 text-slate-400" />
-                                    <span>班級私人限定</span>
-                                  </span>
-                                )}
+                                <div className="flex flex-wrap gap-1">
+                                  {t.isPublic ? (
+                                    <span className="inline-flex items-center space-x-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                                      <Globe className="w-3 h-3 text-emerald-600" />
+                                      <span>公開自學</span>
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center space-x-1 text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                                      <Lock className="w-3 h-3 text-slate-400" />
+                                      <span>班級限定</span>
+                                    </span>
+                                  )}
+
+                                  {t.allowRetake === false ? (
+                                    <span className="inline-flex items-center space-x-1 text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded" title="正式評量：僅限作答一次">
+                                      🔒 限一次
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center space-x-1 text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded" title="平時練習：允許多次作答">
+                                      🔄 允許多次
+                                    </span>
+                                  )}
+                                </div>
 
                                 <div className="text-[11px] text-slate-500 flex items-center space-x-1">
                                   <span className="text-slate-400">安全碼:</span>
@@ -688,15 +715,26 @@ export default function TeacherTestPapersPage() {
                               <span className="text-slate-400 ml-1">尚未指派</span>
                             )}
                           </div>
-                          {t.isPublic ? (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              開放自學中
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                              未公開
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1">
+                            {t.allowRetake === false ? (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
+                                🔒 限一次
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">
+                                🔄 允許多次
+                              </span>
+                            )}
+                            {t.isPublic ? (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                開放自學
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                未公開
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -816,6 +854,46 @@ export default function TeacherTestPapersPage() {
                 })}
               </div>
             )}
+
+            {/* 作答次數限制模式 */}
+            <div className="pt-3 border-t border-slate-100 space-y-2">
+              <label className="text-xs font-bold text-slate-700 block">學生作答次數限制（評量模式）：</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModalAllowRetake(false)}
+                  className={`p-2.5 rounded-xl border text-left transition ${
+                    !modalAllowRetake
+                      ? 'bg-rose-50 border-rose-300 text-rose-900 ring-1 ring-rose-400'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center space-x-1.5 font-bold text-xs">
+                    <span>🔒 僅限作答一次</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                    正式評量 / 段考。繳卷後鎖定，禁止重複作答。
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setModalAllowRetake(true)}
+                  className={`p-2.5 rounded-xl border text-left transition ${
+                    modalAllowRetake
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-900 ring-1 ring-emerald-400'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center space-x-1.5 font-bold text-xs">
+                    <span>🔄 允許多次作答</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                    平時精熟練習。學生可重新挑戰，加強閱讀理解。
+                  </p>
+                </button>
+              </div>
+            </div>
 
             {/* 雙場景營運設定 (開放自學與測驗代碼) */}
             <div className="pt-3 border-t border-slate-100 space-y-3">

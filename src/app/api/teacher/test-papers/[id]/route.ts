@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
-import { getTestPaperById, updateTestPaper, deleteTestPaper } from '@/lib/db';
+import { getTestPaperById, updateTestPaper, deleteTestPaper, getTeacherClasses } from '@/lib/db';
 
 async function checkTeacher(req: NextRequest) {
   const token = req.cookies.get('pirls_token')?.value;
@@ -24,8 +24,12 @@ export async function GET(
     return NextResponse.json({ error: '找不到該試卷' }, { status: 404 });
   }
 
-  // 僅建立者本人、管理者，或已設為公開之試卷可存取
-  if (testPaper.creatorId !== teacher.userId && !testPaper.isPublic && teacher.role !== 'admin') {
+  // 僅建立者本人、管理者、已設為公開，或指派給該教師任教班級之試卷可存取
+  const teacherClasses = await getTeacherClasses(teacher.userId, teacher.role);
+  const teacherClassIds = new Set(teacherClasses.map((c) => c.id));
+  const hasAssignedToMyClass = testPaper.assignedClassIds?.some((cid) => teacherClassIds.has(cid));
+
+  if (testPaper.creatorId !== teacher.userId && !testPaper.isPublic && !hasAssignedToMyClass && teacher.role !== 'admin') {
     return NextResponse.json({ error: '您無權存取其他教師之未公開試卷' }, { status: 403 });
   }
 

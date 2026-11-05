@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
-import { getTestPaperById, createSubmission, getUserById, getTestPaperSubmissions } from '@/lib/db';
+import { getTestPaperById, createSubmission, getUserById, getTestPaperSubmissions, getStudentTestSubmission } from '@/lib/db';
 import { gradeStudentSubmission } from '@/lib/ai-grader';
 import {
   calculatePIRLSScaleScore,
@@ -31,6 +31,17 @@ export async function POST(req: NextRequest) {
     const testPaper = await getTestPaperById(testPaperId);
     if (!testPaper) {
       return NextResponse.json({ error: '找不到該測驗試卷' }, { status: 404 });
+    }
+
+    // 檢查作答次數限制：若教師指派設定僅限一次作答，則拒絕重複繳卷
+    if (testPaper.allowRetake === false) {
+      const existing = await getStudentTestSubmission(session.userId, testPaper.id);
+      if (existing) {
+        return NextResponse.json(
+          { error: '本測驗由出題教師設定為「僅限一次作答」，您已於先前完成繳交，無法重複送出。' },
+          { status: 403 }
+        );
+      }
     }
 
     const user = await getUserById(session.userId);

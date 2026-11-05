@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Printer, ArrowLeft, CheckCircle2, BookOpen, FileText } from 'lucide-react';
 import { TestPaper } from '@/lib/types';
 
-export default function PrintTestPaperPage() {
+function PrintTestPaperContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -20,10 +20,28 @@ export default function PrintTestPaperPage() {
     const fetchPaper = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/student/exam/${testId}`);
-        if (!res.ok) throw new Error('載入失敗');
-        const data = await res.json();
-        setTestPaper(data.testPaper);
+        // 優先從教師試卷 API 讀取完整題目、選項正解與評分規準 (Rubrics)
+        let paper: TestPaper | null = null;
+        try {
+          const tRes = await fetch(`/api/teacher/test-papers/${testId}`, { cache: 'no-store' });
+          if (tRes.ok) {
+            const tData = await tRes.json();
+            paper = tData.testPaper;
+          }
+        } catch (e) {
+          console.warn('Teacher endpoint fetch note, falling back:', e);
+        }
+
+        if (!paper) {
+          const sRes = await fetch(`/api/student/exam/${testId}`, { cache: 'no-store' });
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            paper = sData.testPaper;
+          }
+        }
+
+        if (!paper) throw new Error('載入試卷失敗');
+        setTestPaper(paper);
       } catch (err) {
         console.error(err);
       } finally {
@@ -35,15 +53,15 @@ export default function PrintTestPaperPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400">
-        正在準備 A4 試卷排版...
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400 font-sans">
+        正在準備 A4 試卷排版與題本規準...
       </div>
     );
   }
 
   if (!testPaper) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans">
         <div className="text-center space-y-3">
           <p className="text-sm font-bold text-slate-800">找不到該試卷</p>
           <Link href="/dashboard/teacher/test-papers" className="text-xs text-sky-600 underline">
@@ -57,18 +75,19 @@ export default function PrintTestPaperPage() {
   return (
     <div className="min-h-screen bg-slate-200 print:bg-white text-slate-900 font-serif antialiased pb-12 print:pb-0">
       {/* 頂部列印控制工具列 (列印時隱藏) */}
-      <div className="bg-slate-900 text-white p-4 sticky top-0 z-50 shadow-md print:hidden flex items-center justify-between">
+      <div className="bg-slate-900 text-white p-4 sticky top-0 z-50 shadow-md print:hidden flex items-center justify-between font-sans">
         <div className="flex items-center space-x-3">
           <button
             onClick={() => router.back()}
             className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+            title="返回前頁"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
             <h1 className="text-sm font-bold">A4 實體試卷列印預覽</h1>
             <p className="text-xs text-slate-400">
-              當前模式：{isAnswerKey ? '【教師批改與評分規準解答卷】' : '【學生測驗卷】'}
+              當前模式：{isAnswerKey ? '【教師批改與評分規準解答卷 (含答案與 Rubrics)】' : '【學生測驗卷】'}
             </p>
           </div>
         </div>
@@ -76,10 +95,14 @@ export default function PrintTestPaperPage() {
         <div className="flex items-center space-x-3">
           <Link
             href={`/print/${testId}${isAnswerKey ? '' : '?showAnswers=true'}`}
-            className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-sky-400 border border-slate-700 inline-flex items-center space-x-1"
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border inline-flex items-center space-x-1.5 transition ${
+              isAnswerKey
+                ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                : 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-sm'
+            }`}
           >
             <FileText className="w-3.5 h-3.5" />
-            <span>切換為{isAnswerKey ? '學生卷' : '教師解答卷'}</span>
+            <span>{isAnswerKey ? '切換為【學生測驗卷】' : '切換為【教師解答卷 (含答案與評分規準)】'}</span>
           </Link>
 
           <button
@@ -96,50 +119,52 @@ export default function PrintTestPaperPage() {
       <div className="max-w-[794px] mx-auto bg-white my-6 print:my-0 p-10 print:p-0 shadow-lg print:shadow-none min-h-[1123px] space-y-8">
         {/* 試卷表頭 */}
         <header className="border-b-2 border-slate-900 pb-4 text-center space-y-2">
-          <div className="text-xs tracking-widest font-bold text-slate-600">
+          <div className="text-xs tracking-widest font-bold text-slate-600 font-sans">
             國際閱讀素養進展研究 (PIRLS) 模擬檢定測驗卷
           </div>
-          <h1 className="text-2xl font-black tracking-wider text-slate-950">
+          <h1 className="text-2xl font-black tracking-wide text-slate-900">
             《{testPaper.title}》
           </h1>
-          <div className="text-xs text-slate-600 flex justify-center items-center space-x-4 pt-1 font-sans">
-            <span>適用年級：國小 {testPaper.targetGrade} 年級</span>
-            <span>•</span>
-            <span>文體：{testPaper.textType === 'literary' ? '文學性文本' : '訊息性文本'}</span>
-            <span>•</span>
-            <span>全卷滿分：{testPaper.totalPoints} 分</span>
+          <div className="flex items-center justify-center space-x-6 text-xs text-slate-500 font-sans pt-1">
+            <span>文體：{testPaper.textType === 'literary' ? '文學性體驗 (童話故事/散文)' : '訊息性文本 (科普/說明文)'}</span>
+            <span>目標年級：國小 {testPaper.targetGrade} 年級</span>
+            <span>試卷總分：{testPaper.totalPoints} 分</span>
+            {testPaper.timeLimitMinutes > 0 && <span>建議作答時間：{testPaper.timeLimitMinutes} 分鐘</span>}
           </div>
 
-          {/* 學生作答資訊簽名欄 */}
-          <div className="pt-4 grid grid-cols-4 gap-2 text-xs font-sans text-left border-t border-dashed border-slate-300 mt-2">
-            <div>
-              班級：<span className="border-b border-slate-800 inline-block w-20">&nbsp;</span>
+          {/* 學生手寫欄位 (教師解答卷模式標註) */}
+          <div className="pt-3 flex items-center justify-between border-t border-dashed border-slate-300 text-xs font-sans px-4">
+            <div className="flex space-x-4">
+              <span>____ 年 ____ 班</span>
+              <span>座號：_______</span>
+              <span>姓名：_______________</span>
             </div>
             <div>
-              座號：<span className="border-b border-slate-800 inline-block w-16">&nbsp;</span>
-            </div>
-            <div>
-              姓名：<span className="border-b border-slate-800 inline-block w-24">&nbsp;</span>
-            </div>
-            <div className="text-right">
-              實得分數：<span className="border-b-2 border-slate-900 font-bold inline-block w-16 text-center text-sm">&nbsp;</span>
+              {isAnswerKey ? (
+                <span className="font-bold text-rose-700 bg-rose-50 border border-rose-300 px-2.5 py-0.5 rounded text-[11px]">
+                  ★ 教師批改標準解答卷（含正解、滿分示範與評卷規準）
+                </span>
+              ) : (
+                <span>評量得分：__________ 分</span>
+              )}
             </div>
           </div>
         </header>
 
-        {/* 文本閱讀區 */}
+        {/* 閱讀文章正文與穿插的情境插圖 */}
         <section className="space-y-4">
-          <div className="flex items-center space-x-2 border-b border-slate-800 pb-1">
-            <span className="bg-slate-900 text-white text-[11px] font-sans font-bold px-2 py-0.5 rounded">
-              閱讀文本
-            </span>
-            <span className="text-xs text-slate-600 font-sans">
-              請先仔細閱讀下列文章（約 {testPaper.wordCount} 字），再回答後續題目：
-            </span>
+          <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+            <div className="flex items-center space-x-2">
+              <span className="bg-slate-900 text-white text-[11px] font-sans font-bold px-2 py-0.5 rounded">
+                閱讀材料
+              </span>
+              <span className="text-xs text-slate-600 font-sans">
+                請用心閱讀下方文章後，再回答後續試題 (本文約 {testPaper.wordCount} 字)
+              </span>
+            </div>
           </div>
 
-          {/* 文章段落與穿插於合適位置的情境插圖 */}
-          <article className="space-y-4 text-[15px] leading-relaxed text-justify text-slate-900">
+          <article className="text-[14.5px] leading-relaxed text-slate-900 space-y-4 pt-2 text-justify">
             {testPaper.paragraphs.map((p, pIdx) => {
               const matchingIlls = (testPaper.illustrations || []).filter(
                 (ill) => (ill.paragraphNumber || 1) === p.paragraphNumber
@@ -154,7 +179,7 @@ export default function PrintTestPaperPage() {
 
               return (
                 <div key={p.paragraphNumber} className="space-y-3">
-                  <p className="indent-8">
+                  <p className="indent-8 leading-relaxed">
                     {p.text}
                   </p>
 
@@ -217,6 +242,9 @@ export default function PrintTestPaperPage() {
 
           <div className="space-y-6">
             {testPaper.questions.map((q) => {
+              const correctOpt = q.options?.find((o) => o.isCorrect) || q.options?.find((o) => o.label === q.correctAnswerLabel);
+              const correctLabel = correctOpt ? correctOpt.label : (q.correctAnswerLabel || '未標註');
+
               return (
                 <div key={q.id} className="space-y-3 break-inside-avoid border-b border-slate-200 pb-5">
                   {/* 題號與配分資訊 */}
@@ -242,26 +270,56 @@ export default function PrintTestPaperPage() {
 
                   {/* 選擇題選項 */}
                   {q.type === 'multiple_choice' && q.options && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-sans text-xs">
-                      {q.options.map((opt) => {
-                        const isCorrect = isAnswerKey && opt.label === q.correctAnswerLabel;
-                        return (
-                          <div
-                            key={opt.label}
-                            className={`p-2 rounded border flex items-center space-x-2 ${
-                              isCorrect
-                                ? 'bg-emerald-50 border-emerald-500 font-bold text-emerald-900'
-                                : 'border-slate-300'
-                            }`}
-                          >
-                            <span className="w-4 h-4 rounded-full border border-slate-700 flex items-center justify-center text-[10px] font-bold">
-                              {opt.label}
+                    <div className="space-y-2 pt-1 font-sans text-xs">
+                      {isAnswerKey && (
+                        <div className="p-2 rounded-lg bg-emerald-100/70 border border-emerald-300 text-emerald-950 font-bold flex items-center justify-between">
+                          <span>
+                            ★【正確解答】：選項 {correctLabel}
+                          </span>
+                          {correctOpt?.text && (
+                            <span className="text-[11px] font-medium text-emerald-900">
+                              （{correctOpt.text}）
                             </span>
-                            <span>{opt.text}</span>
-                            {isCorrect && <span className="ml-auto text-emerald-600 font-bold">（正解）</span>}
-                          </div>
-                        );
-                      })}
+                          )}
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {q.options.map((opt) => {
+                          const isCorrectOption = Boolean(opt.isCorrect || (q.correctAnswerLabel && opt.label === q.correctAnswerLabel));
+                          return (
+                            <div
+                              key={opt.label}
+                              className={`p-2 rounded border flex items-center space-x-2 ${
+                                isAnswerKey && isCorrectOption
+                                  ? 'bg-emerald-50 border-emerald-500 font-bold text-emerald-900 ring-1 ring-emerald-400'
+                                  : 'border-slate-300'
+                              }`}
+                            >
+                              <span
+                                className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                                  isAnswerKey && isCorrectOption
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'border border-slate-700'
+                                }`}
+                              >
+                                {opt.label}
+                              </span>
+                              <span className="flex-1">{opt.text}</span>
+                              {isAnswerKey && isCorrectOption && (
+                                <span className="ml-auto text-emerald-600 font-bold whitespace-nowrap">✓ 正解</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {isAnswerKey && correctOpt?.explanation && (
+                        <div className="text-[11px] text-slate-600 bg-slate-50 p-2 rounded border border-slate-200">
+                          <strong className="text-slate-800">【試題選項解析】：</strong>
+                          {correctOpt.explanation}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -277,38 +335,74 @@ export default function PrintTestPaperPage() {
                         </div>
                       )}
 
-                      {/* 教師評分解答卷模式下的 Rubrics 規準表格 */}
-                      {isAnswerKey && q.rubric && (
-                        <div className="mt-2 bg-slate-50 border border-slate-300 rounded p-3 text-xs space-y-2">
-                          <div className="font-bold text-slate-800 flex items-center justify-between">
-                            <span>【IEA 官方雙位數評卷規準 (Rubric)】</span>
-                            <span className="text-[11px] text-slate-500">最高得分：{q.rubric.maxScore || q.points} 分</span>
+                      {/* 教師評分解答卷模式：滿分示範答案與 Rubrics 給分標準 */}
+                      {isAnswerKey && (
+                        <div className="mt-2 bg-slate-50 border border-slate-300 rounded-xl p-3.5 text-xs space-y-3">
+                          {/* 滿分示範解答 */}
+                          <div className="p-3 rounded-lg bg-emerald-50/80 border border-emerald-300/80 text-emerald-950 space-y-1">
+                            <span className="font-bold text-emerald-900 block text-xs flex items-center gap-1">
+                              <span>⭐【滿分參考解答與示範答法】：</span>
+                            </span>
+                            <p className="text-[12px] font-medium text-emerald-950 leading-relaxed indent-2">
+                              {q.rubric?.sampleFullCreditAnswer || '請依據題幹問答內容，提出正確觀點並引用課文實際詞句佐證。'}
+                            </p>
                           </div>
-                          <table className="w-full text-left border-collapse text-[11px]">
-                            <thead>
-                              <tr className="border-b border-slate-300 text-slate-600 font-bold">
-                                <th className="py-1 w-12">代碼</th>
-                                <th className="py-1 w-12">得分</th>
-                                <th className="py-1">給分標準與關鍵文本證據要求</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200">
-                              {q.rubric.criteria?.map((c: any) => (
-                                <tr key={c.code} className="hover:bg-slate-100">
-                                  <td className="py-1 font-mono font-bold text-sky-700">Code {c.code}</td>
-                                  <td className="py-1 font-bold text-slate-900">{c.score} 分</td>
-                                  <td className="py-1 leading-relaxed">
-                                    <div>{c.description}</div>
-                                    {c.keyEvidenceNeeded && c.keyEvidenceNeeded.length > 0 && (
-                                      <div className="text-[10px] text-slate-500 mt-0.5">
-                                        關鍵線索：{c.keyEvidenceNeeded.join(' / ')}
-                                      </div>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+
+                          {/* 部分得分示範解答（若有） */}
+                          {q.rubric?.samplePartialCreditAnswer && (
+                            <div className="p-2.5 rounded-lg bg-amber-50/80 border border-amber-300/70 text-amber-950 space-y-0.5">
+                              <span className="font-bold text-amber-900 block text-[11px]">
+                                【部分得分示範（可獲得部分分數）】：
+                              </span>
+                              <p className="text-[11.5px] text-amber-950 leading-relaxed indent-2">
+                                {q.rubric.samplePartialCreditAnswer}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* 官方 Rubrics 給分標準表格 */}
+                          {q.rubric?.criteria && q.rubric.criteria.length > 0 ? (
+                            <div className="space-y-1.5 pt-1">
+                              <div className="font-bold text-slate-800 flex items-center justify-between">
+                                <span>【IEA 官方雙位數評卷規準 (Rubrics 指引與給分標準)】</span>
+                                <span className="text-[11px] text-slate-500 font-normal">
+                                  最高給分：{q.rubric.maxScore || q.points} 分
+                                </span>
+                              </div>
+                              <table className="w-full text-left border-collapse text-[11px]">
+                                <thead>
+                                  <tr className="border-b border-slate-300 text-slate-700 font-bold bg-slate-100/60">
+                                    <th className="py-1.5 px-2 w-20">IEA 代碼</th>
+                                    <th className="py-1.5 px-2 w-14">得分</th>
+                                    <th className="py-1.5 px-2">評分規準說明與論述要求</th>
+                                    <th className="py-1.5 px-2 w-48">必要關鍵文本證據</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 bg-white">
+                                  {q.rubric.criteria.map((c: any) => (
+                                    <tr key={c.code} className="hover:bg-slate-50">
+                                      <td className="py-1.5 px-2 font-mono font-bold text-sky-700">Code {c.code}</td>
+                                      <td className="py-1.5 px-2 font-black text-slate-900">{c.score} 分</td>
+                                      <td className="py-1.5 px-2 leading-relaxed text-slate-800">{c.description}</td>
+                                      <td className="py-1.5 px-2 text-[10px] text-slate-600">
+                                        {c.keyEvidenceNeeded && c.keyEvidenceNeeded.length > 0 ? (
+                                          <span className="bg-slate-100 px-1 py-0.5 rounded text-indigo-900 font-medium">
+                                            {c.keyEvidenceNeeded.join('、')}
+                                          </span>
+                                        ) : (
+                                          <span className="text-slate-400">無特殊限制</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="text-[11px] text-slate-600 italic">
+                              【給分提示】：本題滿分為 {q.points} 分，請依學生作答是否切合題意並提出文本佐證酌予給分。
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -325,5 +419,19 @@ export default function PrintTestPaperPage() {
         </footer>
       </div>
     </div>
+  );
+}
+
+export default function PrintTestPaperPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400 font-sans">
+          正在準備 A4 試卷排版...
+        </div>
+      }
+    >
+      <PrintTestPaperContent />
+    </Suspense>
   );
 }
