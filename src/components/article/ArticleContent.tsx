@@ -4,14 +4,16 @@ import React from 'react';
 import { ArticleIllustration } from '@/lib/types';
 
 export interface ArticleContentProps {
-  paragraphs: Array<{ paragraphNumber: number; text: string }>;
+  paragraphs?: Array<{ paragraphNumber: number; text?: string; content?: string }>;
+  rawContent?: string;
   illustrations?: ArticleIllustration[];
   fontSizeClass?: string;
   badgeTheme?: 'indigo' | 'sky';
 }
 
 export const ArticleContent: React.FC<ArticleContentProps> = ({
-  paragraphs,
+  paragraphs = [],
+  rawContent,
   illustrations = [],
   fontSizeClass = 'text-sm sm:text-base leading-relaxed',
   badgeTheme = 'indigo',
@@ -20,6 +22,17 @@ export const ArticleContent: React.FC<ArticleContentProps> = ({
     badgeTheme === 'sky'
       ? 'text-sky-700 bg-sky-50 border-sky-200/60'
       : 'text-indigo-700 bg-indigo-50 border-indigo-200/60';
+
+  if (!paragraphs || paragraphs.length === 0) {
+    if (!rawContent) return null;
+    return (
+      <div className={`space-y-4 text-slate-800 font-serif ${fontSizeClass}`}>
+        <p className="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-100 text-justify leading-relaxed whitespace-pre-line">
+          {rawContent}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-4 text-slate-800 font-serif ${fontSizeClass}`}>
@@ -32,6 +45,7 @@ export const ArticleContent: React.FC<ArticleContentProps> = ({
           ? illustrations.filter((ill) => (ill.paragraphNumber || 1) > paragraphs.length)
           : [];
         const allIllsForThisPara = [...matchingIlls, ...trailingIlls];
+        const paraText = p.text || (p as any).content || '';
 
         return (
           <div key={p.paragraphNumber} className="space-y-4">
@@ -41,7 +55,7 @@ export const ArticleContent: React.FC<ArticleContentProps> = ({
               >
                 P{p.paragraphNumber}
               </span>
-              <span className="leading-relaxed">{p.text}</span>
+              <span className="leading-relaxed">{paraText}</span>
             </div>
 
             {/* 穿插於本段落後的情境插圖 */}

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { BenchmarkKey, ExamSubmission, TestPaper } from '@/lib/types';
 import { getBenchmarkInfo } from '@/lib/pirls-norm';
+import { ArticleContent } from '@/components/article';
 
 interface SiblingItem {
   id: string;
@@ -464,23 +465,13 @@ export default function TeacherReviewSubmissionPage() {
                       </div>
                     )}
 
-                    <div className="space-y-3 pt-1">
-                      {testPaper.paragraphs && testPaper.paragraphs.length > 0 ? (
-                        testPaper.paragraphs.map((p) => (
-                          <div key={p.paragraphNumber} className="space-y-1">
-                            <span className="inline-block text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">
-                              第 {p.paragraphNumber} 段
-                            </span>
-                            <p className="text-slate-700 leading-relaxed font-serif text-[13px] bg-slate-50/60 p-3 rounded-xl border border-slate-100">
-                              {p.text || (p as any).content}
-                            </p>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-slate-700 leading-relaxed font-serif text-[13px] bg-slate-50/60 p-3 rounded-xl border border-slate-100 whitespace-pre-line">
-                          {testPaper.articleContent}
-                        </p>
-                      )}
+                    <div className="pt-1">
+                      <ArticleContent
+                        paragraphs={testPaper.paragraphs}
+                        rawContent={testPaper.articleContent}
+                        illustrations={testPaper.illustrations}
+                        fontSizeClass="text-[13px]"
+                      />
                     </div>
                   </div>
                 )}

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "typecheck": "tsc --noEmit",
     "start": "next start",
     "test:stage1": "node tests/eval_pirls_prompts.mjs",
     "test:stage2": "node tests/eval_stage2_auth.mjs",
