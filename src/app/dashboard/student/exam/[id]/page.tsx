@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   BookOpen, ArrowLeft, ArrowRight, Send, CheckCircle2, AlertCircle,
@@ -14,7 +14,9 @@ import { api, ApiClientError } from '@/lib/api-client';
 export default function StudentExamPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const testId = params.id as string;
+  const assignmentId = searchParams.get('assignmentId') || undefined;
 
   const [testPaper, setTestPaper] = useState<TestPaper | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ export default function StudentExamPage() {
     const fetchExam = async () => {
       try {
         setLoading(true);
-        const data = await api.student.getExam(testId);
+        const data = await api.student.getExam(testId, assignmentId);
 
         if (data.alreadySubmitted) {
           if (!data.allowRetake) {
@@ -70,7 +72,7 @@ export default function StudentExamPage() {
       }
     };
     if (testId) fetchExam();
-  }, [testId, router]);
+  }, [testId, assignmentId, router]);
 
   const handleSelectChoice = (questionId: string, label: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: label }));
@@ -100,6 +102,7 @@ export default function StudentExamPage() {
     try {
       const data = await api.student.submitExam({
         testPaperId: testPaper.id,
+        assignmentId,
         rawAnswers: answers,
       });
 

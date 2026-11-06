@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
-import { getTestPaperById, createSubmission, getUserById, getTestPaperSubmissions, getStudentTestSubmission } from '@/lib/db';
+import {
+  getTestPaperById,
+  createSubmission,
+  getUserById,
+  getTestPaperSubmissions,
+  getStudentTestSubmission,
+  getAssignmentById,
+  getStudentSubmissions,
+} from '@/lib/db';
 import { gradeStudentSubmission } from '@/lib/ai-grader';
 import {
   calculatePIRLSScaleScore,
@@ -22,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { testPaperId, rawAnswers } = body;
+    const { testPaperId, assignmentId, rawAnswers } = body;
 
     if (!testPaperId || !rawAnswers) {
       return NextResponse.json({ error: '作答資料不完整' }, { status: 400 });
@@ -33,12 +41,42 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '找不到該測驗試卷' }, { status: 404 });
     }
 
+    let assignment = null;
+    if (assignmentId) {
+      assignment = await getAssignmentById(assignmentId);
+    }
+
     // 檢查作答次數限制：若教師指派設定僅限一次作答，則拒絕重複繳卷
-    if (testPaper.allowRetake === false) {
-      const existing = await getStudentTestSubmission(session.userId, testPaper.id);
-      if (existing) {
+    const allowRetake = assignment ? assignment.allowRetake : testPaper.allowRetake !== false;
+    if (!allowRetake) {
+      if (assignment) {
+        const studentSubs = await getStudentSubmissions(session.userId);
+        const existing = studentSubs.find((s) => s.assignmentId === assignment!.id);
+        if (existing) {
+          return NextResponse.json(
+            { error: '本測驗由出題教師設定為「僅限一次作答」，您已於先前完成繳交，無法重複送出。' },
+            { status: 403 }
+          );
+        }
+      } else {
+        const existing = await getStudentTestSubmission(session.userId, testPaper.id);
+        if (existing) {
+          return NextResponse.json(
+            { error: '本測驗由出題教師設定為「僅限一次作答」，您已於先前完成繳交，無法重複送出。' },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
+    // 寬容截止時間緩衝檢查：允許在截止時間前進入作答的學生完成繳交（提供最高 3 小時交卷寬容緩衝）
+    if (assignment && assignment.deadlineType === 'scheduled' && assignment.dueDate) {
+      const dueTime = new Date(assignment.dueDate).getTime();
+      const nowTime = new Date().getTime();
+      const maxGraceBufferMs = 3 * 60 * 60 * 1000; // 3 小時寬容時間
+      if (nowTime > dueTime + maxGraceBufferMs) {
         return NextResponse.json(
-          { error: '本測驗由出題教師設定為「僅限一次作答」，您已於先前完成繳交，無法重複送出。' },
+          { error: '本測驗截止已逾時過久，系統已完全關閉接收繳卷。' },
           { status: 403 }
         );
       }
@@ -66,6 +104,7 @@ export async function POST(req: NextRequest) {
 
     // 存入資料庫
     const submission = await createSubmission({
+      assignmentId: assignment?.id,
       testPaperId: testPaper.id,
       testPaperTitle: testPaper.title,
       targetGrade: testPaper.targetGrade,

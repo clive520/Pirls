@@ -150,6 +150,40 @@ export interface TestPaper {
 }
 
 /* ==========================================================
+   PIRLS 獨立指派事件 (TestAssignment) 型別規格
+   ========================================================== */
+
+export interface TestAssignment {
+  id: string;               // 唯一指派事件 ID (如 asgn_1794...)
+  testPaperId: string;      // 關聯的文章試卷 ID
+  testPaperTitle: string;   // 試卷原始標題
+  teacherId: string;        // 發起指派的教師 ID
+  teacherName: string;      // 發起指派的教師姓名
+  classId: string;          // 指派目標班級 ID
+  className: string;        // 班級名稱 (如 四年甲班)
+  gradeLevel: number;       // 年級 (3-6)
+  
+  // 任務標題 (自動格式化: 《標題》(張老師 11/07 派卷)，亦支援自訂)
+  assignmentTitle: string;
+
+  // 評量模式與安全代碼 (獨立於試卷本身)
+  allowRetake: boolean;     // false: 僅限作答一次, true: 允許多次練習
+  examCode?: string;        // 專屬安全代碼 (選填)
+
+  // 測驗有效期限機制 (核心新增)
+  deadlineType: 'unlimited' | 'scheduled'; // 'unlimited' (無限期) | 'scheduled' (指定截止時間)
+  dueDate: string | null;   // ISO 日期時間字串 (如 2026-11-15T17:00:00.000Z)，無限期時為 null
+
+  status: 'active' | 'closed'; // active (進行中) | closed (已截止/教師手動提早關閉)
+  
+  // 期限延長時之重測設定
+  allowRetakeOnExtend?: boolean;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+/* ==========================================================
    學生作答、AI 批改與診斷紀錄型別規格
    ========================================================== */
 
@@ -209,6 +243,7 @@ export interface PIRLSBenchmarkInfo {
 
 export interface ExamSubmission {
   id: string;
+  assignmentId?: string; // 關聯的獨立指派事件 ID
   testPaperId: string;
   testPaperTitle: string;
   targetGrade: number;

@@ -1,37 +1,28 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   BookOpen, PlusCircle, ArrowLeft, FileSpreadsheet, TrendingUp
 } from 'lucide-react';
-import { TestPaper, ClassRoom } from '@/lib/types';
+import { TestPaper, ClassRoom, TestAssignment } from '@/lib/types';
 import { api, ApiClientError } from '@/lib/api-client';
+import { AssignmentProgressStats } from '@/lib/db/assignments';
 import {
   TestPaperKpiHeader,
   AssignModal,
+  EditAssignmentModal,
   AssignmentTrackingTable,
   TestPaperLibraryGrid,
-  AssignedTaskItem,
 } from '@/components/teacher/test-papers';
-
-interface TestPaperClassStats {
-  submittedCount: number;
-  avgScore: number;
-  maxScore: number;
-}
-
-interface TestPaperAssignmentStats {
-  totalSubmitted: number;
-  classes: Record<string, TestPaperClassStats>;
-}
 
 export default function TeacherTestPapersPage() {
   const router = useRouter();
   const [testPapers, setTestPapers] = useState<TestPaper[]>([]);
   const [classes, setClasses] = useState<ClassRoom[]>([]);
-  const [assignmentStats, setAssignmentStats] = useState<Record<string, TestPaperAssignmentStats>>({});
+  const [assignments, setAssignments] = useState<TestAssignment[]>([]);
+  const [assignmentStats, setAssignmentStats] = useState<Record<string, AssignmentProgressStats>>({});
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [currentUserName, setCurrentUserName] = useState<string>('');
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -44,30 +35,41 @@ export default function TeacherTestPapersPage() {
   const [filterScope, setFilterScope] = useState<'all' | 'mine' | 'public'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // 派卷 Modal 狀態
+  // 派卷 Modal 狀態（建立新指派）
   const [assignModalTest, setAssignModalTest] = useState<TestPaper | null>(null);
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
-  const [modalIsPublic, setModalIsPublic] = useState(false);
   const [modalExamCode, setModalExamCode] = useState('');
   const [modalAllowRetake, setModalAllowRetake] = useState<boolean>(true);
+  const [modalDeadlineType, setModalDeadlineType] = useState<'unlimited' | 'scheduled'>('unlimited');
+  const [modalDueDate, setModalDueDate] = useState<string>('');
   const [assigning, setAssigning] = useState(false);
+
+  // 編輯指派 Modal 狀態（調整既有獨立指派）
+  const [editingAssignment, setEditingAssignment] = useState<TestAssignment | null>(null);
+  const [updatingAssignment, setUpdatingAssignment] = useState(false);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [testData, clsData] = await Promise.all([
+      const [testData, clsData, asgnData] = await Promise.all([
         api.teacher.getTestPapers(),
         api.teacher.getClasses(),
+        api.teacher.getAssignments().catch((err) => {
+          console.warn('載入獨立指派列表警告:', err);
+          return { success: false, assignments: [], stats: {} as Record<string, AssignmentProgressStats>, currentUserId: '', isAdmin: false };
+        }),
       ]);
 
       setTestPapers(testData.testPapers || []);
-      setAssignmentStats(testData.assignmentStats || {});
-      setCurrentUserId(testData.currentUserId || '');
+      setCurrentUserId(testData.currentUserId || asgnData.currentUserId || '');
       setCurrentUserName(testData.currentUserName || '');
       setIsAdmin(!!testData.isAdmin);
       setClasses(clsData.classes || []);
+
+      setAssignments(asgnData.assignments || []);
+      setAssignmentStats((asgnData.stats as Record<string, AssignmentProgressStats>) || {});
     } catch (err: any) {
-      console.error(err);
+      console.error('資料載入失敗:', err);
       if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
         router.push('/login');
       }
@@ -80,8 +82,17 @@ export default function TeacherTestPapersPage() {
     fetchData();
   }, []);
 
+  // 試卷對照 Map（供指派明細表快速取用題目規格）
+  const testPapersMap = useMemo(() => {
+    const map: Record<string, TestPaper> = {};
+    for (const p of testPapers) {
+      map[p.id] = p;
+    }
+    return map;
+  }, [testPapers]);
+
   // 刪除試卷（嚴格限建立者本人或管理員）
-  const handleDelete = async (id: string, title: string) => {
+  const handleDeleteTestPaper = async (id: string, title: string) => {
     if (!confirm(`確定要刪除試卷《${title}》嗎？此操作將永久自題庫中移除該試卷。`)) return;
     try {
       await api.teacher.deleteTestPaper(id);
@@ -93,34 +104,96 @@ export default function TeacherTestPapersPage() {
     }
   };
 
-  // 打開派卷彈窗
-  const openAssignModal = (test: TestPaper) => {
-    setAssignModalTest(test);
-    setSelectedClassIds(test.assignedClassIds || []);
-    setModalIsPublic(test.isPublic || false);
-    setModalExamCode(test.examCode || '');
-    setModalAllowRetake(test.allowRetake !== false);
+  // 一鍵切換開放自學區屬性
+  const handleTogglePaperPublic = async (testPaperId: string, currentPublic: boolean) => {
+    try {
+      await api.teacher.updateTestPaper(testPaperId, { isPublic: currentPublic });
+      setTestPapers((prev) =>
+        prev.map((p) => (p.id === testPaperId ? { ...p, isPublic: currentPublic } : p))
+      );
+    } catch (err: any) {
+      console.error(err);
+      alert('切換公開自學狀態失敗：' + (err.message || '請稍後再試'));
+    }
   };
 
-  // 儲存派卷
+  // 打開派卷彈窗（為班級建立新指派）
+  const openAssignModal = (test: TestPaper) => {
+    setAssignModalTest(test);
+    setSelectedClassIds([]); // 每次建立獨立任務，不預先綁定既有班級
+    setModalExamCode(test.examCode || '');
+    setModalAllowRetake(test.allowRetake !== false);
+    setModalDeadlineType('unlimited');
+    setModalDueDate('');
+  };
+
+  // 儲存建立新指派
   const handleSaveAssign = async () => {
     if (!assignModalTest) return;
+    if (selectedClassIds.length === 0) {
+      alert('請至少勾選一個要指派受測的班級');
+      return;
+    }
+    if (modalDeadlineType === 'scheduled' && !modalDueDate) {
+      alert('請指定測驗截止日期與時間');
+      return;
+    }
+
     try {
       setAssigning(true);
-      const data = await api.teacher.assignTestPaper(assignModalTest.id, {
+      const res = await api.teacher.createAssignments({
+        testPaperId: assignModalTest.id,
         classIds: selectedClassIds,
-        isPublic: modalIsPublic,
-        examCode: modalExamCode,
         allowRetake: modalAllowRetake,
+        examCode: modalExamCode,
+        deadlineType: modalDeadlineType,
+        dueDate: modalDeadlineType === 'scheduled' && modalDueDate ? new Date(modalDueDate).toISOString() : null,
       });
-      alert(data.message || '派卷設定已更新！');
+
+      alert(res.message || '🎉 測驗指派已成功建立！各班級為獨立測驗事件。');
       setAssignModalTest(null);
+      // 重新整理指派與題庫
+      fetchData();
+      // 自動切換到指派明細總覽表
+      setActiveTab('assignments');
+    } catch (err: any) {
+      console.error(err);
+      alert('派卷失敗：' + (err.message || '請稍後再試'));
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  // 儲存編輯指派（修改期限、重測、安全碼、提前關閉）
+  const handleSaveEditAssignment = async (
+    updates: Partial<TestAssignment> & { allowRetakeOnExtend?: boolean }
+  ) => {
+    if (!editingAssignment) return;
+    try {
+      setUpdatingAssignment(true);
+      const res = await api.teacher.updateAssignment(editingAssignment.id, updates);
+      alert(res.message || '🎉 指派設定已更新！');
+      setEditingAssignment(null);
       fetchData();
     } catch (err: any) {
       console.error(err);
-      alert(err.message || '派卷失敗');
+      alert('更新失敗：' + (err.message || '請稍後再試'));
     } finally {
-      setAssigning(false);
+      setUpdatingAssignment(false);
+    }
+  };
+
+  // 撤回 / 刪除獨立指派事件
+  const handleDeleteAssignment = async (id: string, title: string) => {
+    if (!confirm(`確定要撤回指派任務【${title}】嗎？\n\n此操作僅會移除該班級的測驗指派，不會影響原始試卷與其他班級的指派記錄。`)) return;
+    try {
+      await api.teacher.deleteAssignment(id);
+      setAssignments((prev) => prev.filter((a) => a.id !== id));
+      alert('🎉 指派任務已成功撤回！');
+      fetchData();
+    } catch (err: any) {
+      console.error(err);
+      alert('撤回失敗：' + (err.message || '請稍後再試'));
     }
   };
 
@@ -132,22 +205,14 @@ export default function TeacherTestPapersPage() {
     }
   };
 
-  // 真正指派至我任教班級的任務清單（完全過濾掉尚未指派或非我班級之任務）
-  const myAssignedTasks: AssignedTaskItem[] = testPapers
-    .map((t) => {
-      const assigned = classes.filter((c) => t.assignedClassIds?.includes(c.id));
-      return {
-        ...t,
-        myAssignedClasses: assigned,
-      };
-    })
-    .filter((t) => t.myAssignedClasses.length > 0);
-
-  // 計算統計指標
-  const assignedPaperCount = myAssignedTasks.length;
+  // 計算 KPI 指標
+  const activeAssignmentCount = assignments.filter((a) => a.status === 'active').length;
   const publicPaperCount = testPapers.filter((t) => t.isPublic).length;
   const myPaperCount = testPapers.filter((t) => t.creatorId === currentUserId).length;
-  const totalSubmissions = Object.values(assignmentStats).reduce((sum, item) => sum + (item.totalSubmitted || 0), 0);
+  const totalSubmissions = Object.values(assignmentStats).reduce(
+    (sum, item) => sum + (item.submittedCount || 0),
+    0
+  );
 
   // 篩選後題庫清單
   const filteredPapers = testPapers.filter((t) => {
@@ -182,7 +247,7 @@ export default function TeacherTestPapersPage() {
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-slate-900">PIRLS 題庫管理與班級指派中心</h1>
+              <h1 className="text-base font-bold text-slate-900">PIRLS 題庫管理與獨立指派中心</h1>
               <p className="text-xs text-slate-500">
                 目前登入：<span className="font-semibold text-slate-700">{currentUserName || '教師'}</span>
                 {isAdmin && <span className="ml-1 text-[10px] bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded font-bold">全站管理員</span>}
@@ -214,7 +279,7 @@ export default function TeacherTestPapersPage() {
         {/* KPI 頂部摘要卡片 */}
         <TestPaperKpiHeader
           totalPapers={testPapers.length}
-          assignedCount={assignedPaperCount}
+          assignedCount={activeAssignmentCount}
           totalSubmissions={totalSubmissions}
           publicCount={publicPaperCount}
         />
@@ -231,11 +296,11 @@ export default function TeacherTestPapersPage() {
               }`}
             >
               <FileSpreadsheet className="w-4 h-4" />
-              <span>📊 班級測驗指派明細總覽表</span>
+              <span>📊 班級獨立指派任務總覽</span>
               <span className={`ml-1 text-[11px] px-2 py-0.5 rounded-full font-mono ${
                 activeTab === 'assignments' ? 'bg-sky-700 text-sky-100' : 'bg-slate-100 text-slate-600'
               }`}>
-                {myAssignedTasks.length} 項指派
+                {assignments.length} 項指派
               </span>
             </button>
 
@@ -260,16 +325,17 @@ export default function TeacherTestPapersPage() {
 
         {/* 載入中骨架 */}
         {loading ? (
-          <div className="py-20 text-center text-slate-400 font-medium">載入題庫與指派統計中...</div>
+          <div className="py-20 text-center text-slate-400 font-medium">載入題庫與獨立指派任務中...</div>
         ) : activeTab === 'assignments' ? (
           /* 分頁一：📊 班級測驗指派明細總覽表 */
           <AssignmentTrackingTable
-            tasks={myAssignedTasks}
+            assignments={assignments}
             assignmentStats={assignmentStats}
+            testPapersMap={testPapersMap}
             currentUserId={currentUserId}
             isAdmin={isAdmin}
-            onOpenAssign={openAssignModal}
-            onDelete={handleDelete}
+            onEditAssignment={(asgn) => setEditingAssignment(asgn)}
+            onDeleteAssignment={handleDeleteAssignment}
             onSwitchToLibrary={() => setActiveTab('library')}
           />
         ) : (
@@ -290,30 +356,41 @@ export default function TeacherTestPapersPage() {
               setSearchQuery('');
             }}
             onOpenAssign={openAssignModal}
-            onDelete={handleDelete}
+            onDelete={handleDeleteTestPaper}
+            onTogglePublic={handleTogglePaperPublic}
           />
         )}
       </main>
 
-      {/* 派卷 Modal */}
+      {/* 派卷 Modal（為班級建立新指派） */}
       <AssignModal
         testPaper={assignModalTest}
         classes={classes}
         selectedClassIds={selectedClassIds}
-        isPublic={modalIsPublic}
         examCode={modalExamCode}
         allowRetake={modalAllowRetake}
+        deadlineType={modalDeadlineType}
+        dueDate={modalDueDate}
         assigning={assigning}
         onClose={() => setAssignModalTest(null)}
         onToggleClass={toggleClassSelect}
-        onTogglePublic={setModalIsPublic}
         onChangeExamCode={setModalExamCode}
         onChangeAllowRetake={setModalAllowRetake}
+        onChangeDeadlineType={setModalDeadlineType}
+        onChangeDueDate={setModalDueDate}
         onSave={handleSaveAssign}
       />
 
+      {/* 編輯指派 Modal（修改期限、重測設定、安全碼） */}
+      <EditAssignmentModal
+        assignment={editingAssignment}
+        updating={updatingAssignment}
+        onClose={() => setEditingAssignment(null)}
+        onSave={handleSaveEditAssignment}
+      />
+
       <footer className="py-4 text-center text-xs text-slate-400 border-t bg-white">
-        PIRLS 智慧閱讀素養評量平臺 • 題庫與指派管理中心
+        PIRLS 智慧閱讀素養評量平臺 • 獨立指派與題庫中心
       </footer>
     </div>
   );

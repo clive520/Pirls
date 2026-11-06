@@ -7,6 +7,7 @@ import {
   BenchmarkKey,
   ComparativeAnalysisData,
   ClassCoTeachersData,
+  TestAssignment,
 } from './types';
 
 export class ApiClientError extends Error {
@@ -159,7 +160,7 @@ export const api = {
         method: 'DELETE',
       }),
 
-    /** 指派試卷至班級、調整公開與作答設定 */
+    /** 指派試卷至班級、調整公開與作答設定 (相容舊呼叫) */
     assignTestPaper: (
       id: string,
       options: {
@@ -167,9 +168,11 @@ export const api = {
         isPublic: boolean;
         examCode?: string;
         allowRetake?: boolean;
+        deadlineType?: 'unlimited' | 'scheduled';
+        dueDate?: string | null;
       }
     ) =>
-      request<{ success: boolean; message?: string; testPaper: TestPaper }>(
+      request<{ success: boolean; message?: string; assignments?: TestAssignment[]; testPaper?: TestPaper }>(
         `/api/teacher/test-papers/${id}/assign`,
         {
           method: 'POST',
@@ -177,9 +180,59 @@ export const api = {
         }
       ),
 
-    /** 取得試卷的全班受測紀錄與 PIRLS 基準分佈 */
-    getTestSubmissions: (testId: string) =>
-      request<TeacherTestResultsResponse>(`/api/teacher/test-papers/${testId}/submissions`),
+    /** 取得當前教師負責與協同班級的所有獨立指派任務事件與進度 */
+    getAssignments: () =>
+      request<{
+        success: boolean;
+        assignments: TestAssignment[];
+        stats: Record<string, { totalStudents: number; submittedCount: number; avgScore: number; maxScore: number }>;
+        currentUserId: string;
+        isAdmin: boolean;
+      }>('/api/teacher/assignments'),
+
+    /** 建立獨立指派任務事件（為各勾選班級分別建立獨立實例） */
+    createAssignments: (payload: {
+      testPaperId: string;
+      classIds: string[];
+      allowRetake?: boolean;
+      examCode?: string;
+      deadlineType?: 'unlimited' | 'scheduled';
+      dueDate?: string | null;
+    }) =>
+      request<{ success: boolean; assignments: TestAssignment[]; message?: string }>(
+        '/api/teacher/assignments',
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        }
+      ),
+
+    /** 修改單一獨立指派任務事件（期限、安全碼、重測許可、關閉狀態） */
+    updateAssignment: (
+      id: string,
+      updates: Partial<TestAssignment> & { allowRetakeOnExtend?: boolean }
+    ) =>
+      request<{ success: boolean; assignment: TestAssignment; message?: string }>(
+        `/api/teacher/assignments/${id}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(updates),
+        }
+      ),
+
+    /** 撤回/刪除單一獨立指派任務事件 */
+    deleteAssignment: (id: string) =>
+      request<{ success: boolean; message?: string }>(`/api/teacher/assignments/${id}`, {
+        method: 'DELETE',
+      }),
+
+    /** 取得試卷的全班受測紀錄與 PIRLS 基準分佈（可指定獨立指派事件 assignmentId） */
+    getTestSubmissions: (testId: string, assignmentId?: string) =>
+      request<TeacherTestResultsResponse>(
+        `/api/teacher/test-papers/${testId}/submissions${
+          assignmentId ? `?assignmentId=${encodeURIComponent(assignmentId)}` : ''
+        }`
+      ),
 
     /** 取得單一學生作答卷、文章原文與同儕名冊（網頁複閱模式） */
     getSubmissionDetail: (submissionId: string) =>
@@ -345,17 +398,22 @@ export const api = {
       request<{ assignedTests: any[] }>('/api/student/assigned-tests'),
 
     /** 取得學生測驗試卷與作答狀態 */
-    getExam: (testPaperId: string) =>
-      request<{
+    getExam: (testPaperId: string, assignmentId?: string) => {
+      const q = assignmentId ? `?assignmentId=${encodeURIComponent(assignmentId)}` : '';
+      return request<{
         testPaper: TestPaper;
+        assignment?: TestAssignment | null;
         alreadySubmitted: boolean;
         allowRetake: boolean;
+        isExpired?: boolean;
         submissionId?: string | null;
-      }>(`/api/student/exam/${testPaperId}`),
+      }>(`/api/student/exam/${testPaperId}${q}`);
+    },
 
     /** 學生送出線上評量答案卷 */
     submitExam: (payload: {
       testPaperId: string;
+      assignmentId?: string;
       rawAnswers: Record<string, any>;
       timeSpentSeconds?: number;
     }) =>

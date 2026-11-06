@@ -6,4 +6,5 @@ export * from './core';
 export * from './users';
 export * from './classes';
 export * from './test-papers';
+export * from './assignments';
 export * from './submissions';

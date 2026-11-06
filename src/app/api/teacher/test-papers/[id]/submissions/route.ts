@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
-import { getTestPaperById, getTestPaperSubmissions } from '@/lib/db';
+import { getTestPaperById, getTestPaperSubmissions, getAssignmentById } from '@/lib/db';
 import { calculateBenchmarkDistribution, calculatePIRLSScaleScore } from '@/lib/pirls-norm';
 
 export async function GET(
@@ -22,7 +22,24 @@ export async function GET(
     return NextResponse.json({ error: '找不到該試卷' }, { status: 404 });
   }
 
-  const submissions = await getTestPaperSubmissions(params.id);
+  const { searchParams } = new URL(req.url);
+  const assignmentId = searchParams.get('assignmentId');
+
+  let assignment = null;
+  if (assignmentId) {
+    assignment = await getAssignmentById(assignmentId);
+  }
+
+  let submissions = await getTestPaperSubmissions(params.id);
+
+  if (assignment) {
+    // 優先篩選出此指派事件的繳卷；兼顧遷移前的舊資料
+    submissions = submissions.filter(
+      (s) =>
+        s.assignmentId === assignment!.id ||
+        (!s.assignmentId && s.classId === assignment!.classId)
+    );
+  }
 
   const totalSubmitted = submissions.length;
   const avgScore =
@@ -42,6 +59,16 @@ export async function GET(
       targetGrade: testPaper.targetGrade,
       textType: testPaper.textType,
     },
+    assignment: assignment
+      ? {
+          id: assignment.id,
+          assignmentTitle: assignment.assignmentTitle,
+          className: assignment.className,
+          teacherName: assignment.teacherName,
+          dueDate: assignment.dueDate,
+          deadlineType: assignment.deadlineType,
+        }
+      : null,
     stats: {
       totalSubmitted,
       avgScore,

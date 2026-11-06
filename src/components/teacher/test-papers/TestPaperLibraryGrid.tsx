@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  Search, BookOpen, Send, BarChart3, Edit3, Printer, Trash2, Lock
+  Search, BookOpen, Send, BarChart3, Edit3, Printer, Trash2, Lock, Globe
 } from 'lucide-react';
 import { TestPaper } from '@/lib/types';
 
@@ -19,6 +19,7 @@ interface TestPaperLibraryGridProps {
   onClearFilters: () => void;
   onOpenAssign: (test: TestPaper) => void;
   onDelete: (id: string, title: string) => void;
+  onTogglePublic?: (testPaperId: string, currentPublic: boolean) => void;
 }
 
 export const TestPaperLibraryGrid: React.FC<TestPaperLibraryGridProps> = ({
@@ -35,6 +36,7 @@ export const TestPaperLibraryGrid: React.FC<TestPaperLibraryGridProps> = ({
   onClearFilters,
   onOpenAssign,
   onDelete,
+  onTogglePublic,
 }) => {
   return (
     <div className="space-y-4">
@@ -172,9 +174,24 @@ export const TestPaperLibraryGrid: React.FC<TestPaperLibraryGridProps> = ({
                           🔄 允許多次
                         </span>
                       )}
-                      {t.isPublic ? (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          開放自學
+                      {canModify && onTogglePublic ? (
+                        <button
+                          type="button"
+                          onClick={() => onTogglePublic(t.id, !t.isPublic)}
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition inline-flex items-center space-x-1 ${
+                            t.isPublic
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                              : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
+                          }`}
+                          title="點擊切換是否開放至學生自主學習區"
+                        >
+                          <Globe className="w-2.5 h-2.5" />
+                          <span>{t.isPublic ? '開放自學中' : '未公開自學'}</span>
+                        </button>
+                      ) : t.isPublic ? (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center space-x-1">
+                          <Globe className="w-2.5 h-2.5" />
+                          <span>開放自學</span>
                         </span>
                       ) : (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">

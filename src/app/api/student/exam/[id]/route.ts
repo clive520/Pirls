@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
-import { getTestPaperById, getStudentTestSubmission } from '@/lib/db';
+import {
+  getTestPaperById,
+  getStudentTestSubmission,
+  getAssignmentById,
+  getStudentSubmissions,
+} from '@/lib/db';
 
 export async function GET(
   req: NextRequest,
@@ -17,6 +22,14 @@ export async function GET(
     session = await verifySessionToken(token);
   }
 
+  // 檢查特定指派事件 (若有提供 assignmentId)
+  const { searchParams } = new URL(req.url);
+  const assignmentId = searchParams.get('assignmentId');
+  let assignment = null;
+  if (assignmentId) {
+    assignment = await getAssignmentById(assignmentId);
+  }
+
   // 若非公開試卷 (isPublic !== true)，必須是已登入的學生或教師
   if (!testPaper.isPublic) {
     if (!token) {
@@ -30,7 +43,42 @@ export async function GET(
   // 檢查是否已作答過 (若有登入 session)
   let existingSub = null;
   if (session) {
-    existingSub = await getStudentTestSubmission(session.userId, testPaper.id);
+    if (assignment) {
+      const mySubs = await getStudentSubmissions(session.userId);
+      existingSub =
+        mySubs.find((s) => s.assignmentId === assignment!.id) ||
+        mySubs.find(
+          (s) =>
+            !s.assignmentId &&
+            s.testPaperId === testPaper.id &&
+            s.classId === assignment!.classId
+        ) ||
+        null;
+    } else {
+      existingSub = await getStudentTestSubmission(session.userId, testPaper.id);
+    }
+  }
+
+  // ⏰ 截止時間寬容防禦檢驗：
+  // 寬容機制（截止前進入可完成）：截止時間過後，尚未進入測驗/尚未開始的學生完全鎖定無法進入
+  if (assignment && assignment.deadlineType === 'scheduled' && assignment.dueDate) {
+    const isExpired = new Date().getTime() > new Date(assignment.dueDate).getTime();
+    if (isExpired && !existingSub) {
+      const formattedDate = new Date(assignment.dueDate).toLocaleString('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      return NextResponse.json(
+        {
+          error: `⚠️ 本測驗任務已於 ${formattedDate} 截止，目前已關閉作答。如需補考請洽任課老師！`,
+          isExpired: true,
+        },
+        { status: 403 }
+      );
+    }
   }
 
   // 防作弊脫敏過濾：去除正確答案標記與評卷規準
@@ -46,13 +94,18 @@ export async function GET(
     };
   });
 
+  const allowRetake = assignment
+    ? assignment.allowRetake
+    : testPaper.allowRetake !== false;
+
   return NextResponse.json({
     testPaper: {
       ...testPaper,
       questions: studentSafeQuestions,
     },
+    assignment: assignment || null,
     alreadySubmitted: Boolean(existingSub),
-    allowRetake: testPaper.allowRetake !== false,
+    allowRetake,
     submissionId: existingSub ? existingSub.id : null,
   });
 }

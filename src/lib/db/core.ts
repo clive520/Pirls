@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import * as admin from 'firebase-admin';
 import { put, list, getDownloadUrl } from '@vercel/blob';
-import { User, ClassRoom, TestPaper, ExamSubmission } from '../types';
+import { User, ClassRoom, TestPaper, ExamSubmission, TestAssignment } from '../types';
 
 /**
  * PIRLS 核心資料庫狀態介面
@@ -12,6 +12,7 @@ export interface DBState {
   classes: Record<string, ClassRoom>;
   testPapers: Record<string, TestPaper>;
   submissions: Record<string, ExamSubmission>;
+  assignments?: Record<string, TestAssignment>; // 獨立指派事件
   lastSyncedAt?: string;
 }
 
@@ -106,11 +107,12 @@ export async function fetchFromFirestore(): Promise<{ data: DBState | null; exis
   if (!db) return { data: null, exists: false };
 
   try {
-    const [usersSnap, classesSnap, testPapersSnap, submissionsSnap] = await Promise.all([
+    const [usersSnap, classesSnap, testPapersSnap, submissionsSnap, assignmentsSnap] = await Promise.all([
       db.collection('users').get(),
       db.collection('classes').get(),
       db.collection('testPapers').get(),
       db.collection('submissions').get(),
+      db.collection('assignments').get().catch(() => ({ empty: true, forEach: () => {} })),
     ]);
 
     if (!testPapersSnap.empty || !usersSnap.empty) {
@@ -119,6 +121,7 @@ export async function fetchFromFirestore(): Promise<{ data: DBState | null; exis
         classes: {},
         testPapers: {},
         submissions: {},
+        assignments: {},
       };
       usersSnap.forEach((doc) => {
         data.users[doc.id] = doc.data() as User;
@@ -131,6 +134,11 @@ export async function fetchFromFirestore(): Promise<{ data: DBState | null; exis
       });
       submissionsSnap.forEach((doc) => {
         data.submissions[doc.id] = doc.data() as ExamSubmission;
+      });
+      assignmentsSnap.forEach((doc: any) => {
+        if (data.assignments && doc.data) {
+          data.assignments[doc.id] = doc.data() as TestAssignment;
+        }
       });
       return { data, exists: true };
     }
@@ -185,6 +193,17 @@ export async function syncToFirestore(state: DBState): Promise<void> {
         await batch.commit();
         batch = db.batch();
         opCount = 0;
+      }
+    }
+    if (state.assignments) {
+      for (const [id, asgn] of Object.entries(state.assignments)) {
+        batch.set(db.collection('assignments').doc(id), asgn, { merge: true });
+        opCount++;
+        if (opCount >= 450) {
+          await batch.commit();
+          batch = db.batch();
+          opCount = 0;
+        }
       }
     }
 
@@ -294,6 +313,30 @@ export async function deleteSubmissionFromFirestore(id: string): Promise<void> {
   }
 }
 
+export async function syncAssignmentToFirestore(asgn: TestAssignment): Promise<void> {
+  if (isBuildPhase()) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    await db.collection('assignments').doc(asgn.id).set(asgn);
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err: any) {
+    console.error('[DB] Failed to sync assignment to Firestore:', err);
+  }
+}
+
+export async function deleteAssignmentFromFirestore(id: string): Promise<void> {
+  if (isBuildPhase()) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    await db.collection('assignments').doc(id).delete();
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err: any) {
+    console.error('[DB] Failed to delete assignment from Firestore:', err);
+  }
+}
+
 export async function batchDeleteFromFirestore(
   items: { collection: string; id: string }[]
 ): Promise<void> {
@@ -339,6 +382,7 @@ export async function fetchFromBlob(): Promise<{ data: DBState | null; exists: b
         if (!data.classes) data.classes = {};
         if (!data.testPapers) data.testPapers = {};
         if (!data.submissions) data.submissions = {};
+        if (!data.assignments) data.assignments = {};
         return { data, exists: true };
       }
       return { data: null, exists: true };
@@ -449,6 +493,7 @@ export function ensureLocalDB(): DBState {
       if (!parsed.classes) parsed.classes = {};
       if (!parsed.testPapers) parsed.testPapers = {};
       if (!parsed.submissions) parsed.submissions = {};
+      if (!parsed.assignments) parsed.assignments = {};
       globalThis.__pirls_db_cache = parsed;
       return parsed;
     } catch (e) {
@@ -464,6 +509,7 @@ export function ensureLocalDB(): DBState {
       if (!seedParsed.classes) seedParsed.classes = {};
       if (!seedParsed.testPapers) seedParsed.testPapers = {};
       if (!seedParsed.submissions) seedParsed.submissions = {};
+      if (!seedParsed.assignments) seedParsed.assignments = {};
       globalThis.__pirls_db_cache = seedParsed;
       try {
         fs.writeFileSync(activePath, JSON.stringify(seedParsed, null, 2), 'utf-8');
@@ -479,6 +525,7 @@ export function ensureLocalDB(): DBState {
     classes: {},
     testPapers: {},
     submissions: {},
+    assignments: {},
   };
   globalThis.__pirls_db_cache = emptyDB;
   return emptyDB;

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Users, Award, BookOpen, BarChart3,
@@ -52,6 +52,14 @@ interface ResultsData {
     targetGrade: number;
     textType: string;
   };
+  assignment?: {
+    id: string;
+    assignmentTitle: string;
+    className: string;
+    teacherName: string;
+    dueDate?: string | null;
+    deadlineType?: string;
+  } | null;
   stats: {
     totalSubmitted: number;
     avgScore: number;
@@ -73,19 +81,19 @@ interface ResultsData {
 export default function TeacherTestResultsPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const testId = params.id as string;
+  const assignmentId = searchParams.get('assignmentId') || undefined;
 
   const [data, setData] = useState<ResultsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toastMsg, setToastMsg] = useState('');
 
-
-
   const fetchResults = async () => {
     try {
       setLoading(true);
-      const json = await api.teacher.getTestSubmissions(testId);
+      const json = await api.teacher.getTestSubmissions(testId, assignmentId);
       setData(json as any);
     } catch (err: any) {
       if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
@@ -102,7 +110,7 @@ export default function TeacherTestResultsPage() {
     if (testId) {
       fetchResults();
     }
-  }, [testId, router]);
+  }, [testId, assignmentId, router]);
 
   if (loading) {
     return (
@@ -178,6 +186,15 @@ export default function TeacherTestResultsPage() {
               <h1 className="text-base font-bold text-slate-900 line-clamp-1">
                 《{testPaper.title}》PIRLS 國際量尺與班級常模報告
               </h1>
+              {data.assignment && (
+                <div className="flex items-center space-x-1.5 mt-0.5 text-[11px] text-sky-800 font-bold bg-sky-50 border border-sky-100 px-2 py-0.5 rounded-md inline-flex">
+                  <span>📌 獨立指派：{data.assignment.assignmentTitle}</span>
+                  <span>•</span>
+                  <span>受測班級：{data.assignment.className}</span>
+                  <span>•</span>
+                  <span>發起教師：{data.assignment.teacherName}</span>
+                </div>
+              )}
             </div>
           </div>
 
