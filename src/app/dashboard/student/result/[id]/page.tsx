@@ -213,7 +213,16 @@ export default function StudentResultPage() {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href="/guide/score-metrics"
+                target="_blank"
+                className="px-3 py-1.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-[11px] font-bold text-slate-700 hover:text-blue-600 transition shadow-sm inline-flex items-center gap-1.5"
+                title="查看 PIRLS 國際量尺、PR 值與常模各項指標是如何產生的"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                <span>各項指標如何產生？</span>
+              </Link>
               <span className={`px-3 py-1.5 rounded-xl font-bold text-xs shadow-sm ${benchmark.badgeColor}`}>
                 {benchmark.name} ({benchmark.enName})
               </span>

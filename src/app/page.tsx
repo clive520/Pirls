@@ -22,7 +22,13 @@ export default function HomePage() {
               </span>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Link
+              href="/guide/score-metrics"
+              className="px-3 py-1.5 text-xs sm:text-sm font-semibold text-slate-600 hover:text-blue-600 transition"
+            >
+              指標計算說明
+            </Link>
             <Link
               href="/practice"
               className="px-3.5 py-2 text-sm font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition"
@@ -124,8 +130,21 @@ export default function HomePage() {
       </main>
 
       {/* 頁尾 */}
-      <footer className="border-t bg-white py-6 text-center text-sm text-slate-500">
+      <footer className="border-t bg-white py-6 text-center text-xs sm:text-sm text-slate-500 space-y-2">
         <p>PIRLS 智慧閱讀素養評量平臺 © 2026 • 專為國小語文教學量身打造</p>
+        <div className="flex items-center justify-center gap-4 text-xs">
+          <Link href="/guide/score-metrics" className="text-blue-600 hover:underline">
+            📊 PIRLS 成績指標與常模計算說明
+          </Link>
+          <span>•</span>
+          <Link href="/practice" className="text-slate-600 hover:text-slate-900">
+            開放自學區
+          </Link>
+          <span>•</span>
+          <Link href="/login" className="text-slate-600 hover:text-slate-900">
+            教師/學生登入
+          </Link>
+        </div>
       </footer>
     </div>
   );

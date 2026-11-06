@@ -7,7 +7,7 @@ import {
   ArrowLeft, Users, Award, BookOpen, BarChart3,
   CheckCircle2, Clock, Eye, AlertCircle, Trophy,
   Globe2, TrendingUp, ShieldCheck, Printer, FileSpreadsheet,
-  Edit3
+  Edit3, HelpCircle
 } from 'lucide-react';
 import { BenchmarkKey, ExamSubmission, TestPaper } from '@/lib/types';
 import { getBenchmarkInfo } from '@/lib/pirls-norm';
@@ -207,6 +207,16 @@ export default function TeacherTestResultsPage() {
               <Printer className="w-3.5 h-3.5" />
               <span>A4 解答卷</span>
             </a>
+
+            <Link
+              href="/guide/score-metrics"
+              target="_blank"
+              className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 font-bold inline-flex items-center space-x-1 transition border border-slate-200 shadow-sm text-xs"
+              title="查看各項指標與常模計算說明"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+              <span>指標計算說明</span>
+            </Link>
 
             <Link
               href={`/dashboard/teacher/analytics/comparative?preTestId=${testPaper.id}`}

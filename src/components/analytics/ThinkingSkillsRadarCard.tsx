@@ -1,4 +1,6 @@
 import React from 'react';
+import Link from 'next/link';
+import { HelpCircle } from 'lucide-react';
 
 export interface ProcessLevelItem {
   earned?: number;
@@ -91,9 +93,20 @@ export const ThinkingSkillsRadarCard: React.FC<ThinkingSkillsRadarCardProps> = (
 
       {/* 右側：四大層次指標卡片與優勢分析 (佔 7 欄) */}
       <div className="md:col-span-7 space-y-3">
-        <div>
-          <h3 className="text-sm font-bold text-slate-800">{title}</h3>
-          {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-slate-800">{title}</h3>
+            {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+          </div>
+          <Link
+            href="/guide/score-metrics#section-thinking-radar"
+            target="_blank"
+            className="text-[11px] text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 font-semibold"
+            title="查看四層次思維能力如何計算"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span>計算說明</span>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
