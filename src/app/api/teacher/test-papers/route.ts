@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+    const payload = body.testPaper || body;
     const {
       title,
       targetGrade,
@@ -51,9 +52,9 @@ export async function POST(req: NextRequest) {
       totalPoints,
       isPublic,
       timeLimitMinutes,
-    } = body;
+    } = payload;
 
-    let articleContent = body.articleContent;
+    let articleContent = payload.articleContent;
     if (!articleContent && Array.isArray(paragraphs) && paragraphs.length > 0) {
       articleContent = paragraphs.map((p: any) => p.text).join('\n\n');
     }

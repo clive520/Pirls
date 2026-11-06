@@ -3,7 +3,7 @@
 import React from 'react';
 import {
   Palette, CheckCircle2, Copy, PlusCircle, Trash2,
-  Upload, Sparkles
+  Upload, Sparkles, Link as LinkIcon
 } from 'lucide-react';
 import { ArticleIllustration } from '@/lib/types';
 
@@ -23,6 +23,7 @@ export interface IllustrationStoryboardProps {
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>, sceneIdx: number) => void;
   onPasteImage: (e: React.ClipboardEvent, sceneIdx: number) => void;
   onRemoveImage: (sceneIdx: number) => void;
+  onSetImageUrl?: (url: string, sceneIdx: number) => void;
   onGenerateScenesForPasted: () => void;
 }
 
@@ -42,6 +43,7 @@ export const IllustrationStoryboard: React.FC<IllustrationStoryboardProps> = ({
   onImageUpload,
   onPasteImage,
   onRemoveImage,
+  onSetImageUrl,
   onGenerateScenesForPasted,
 }) => {
   const safeSceneIdx = illustrationsList.length > 0
@@ -225,10 +227,29 @@ export const IllustrationStoryboard: React.FC<IllustrationStoryboardProps> = ({
                         <input
                           type="file"
                           accept="image/*"
+                          onClick={(e) => {
+                            (e.target as HTMLInputElement).value = '';
+                          }}
                           onChange={(e) => onImageUpload(e, safeSceneIdx)}
                           className="hidden"
                         />
                       </label>
+                      {onSetImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = window.prompt('請輸入外部圖片網址 (URL)：', currentIll.imageUrl || '');
+                            if (url && url.trim()) {
+                              onSetImageUrl(url.trim(), safeSceneIdx);
+                            }
+                          }}
+                          className="text-[11px] font-semibold text-slate-600 hover:text-slate-800 inline-flex items-center space-x-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg transition border border-slate-200"
+                          title="手動指定圖片網址"
+                        >
+                          <LinkIcon className="w-3 h-3" />
+                          <span>輸入網址</span>
+                        </button>
+                      )}
                       {currentIll.imagePrompt && (
                         <button
                           type="button"
@@ -305,10 +326,31 @@ export const IllustrationStoryboard: React.FC<IllustrationStoryboardProps> = ({
                       <input
                         type="file"
                         accept="image/*"
+                        onClick={(e) => {
+                          (e.target as HTMLInputElement).value = '';
+                        }}
                         onChange={(e) => onImageUpload(e, safeSceneIdx)}
                         className="hidden"
                       />
                     </label>
+
+                    {onSetImageUrl && (
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = window.prompt('請輸入外部圖片網址 (URL)：');
+                            if (url && url.trim()) {
+                              onSetImageUrl(url.trim(), safeSceneIdx);
+                            }
+                          }}
+                          className="text-[11px] font-semibold text-sky-600 hover:text-sky-800 inline-flex items-center space-x-1 hover:underline"
+                        >
+                          <LinkIcon className="w-3 h-3" />
+                          <span>或以圖片網址 (URL) 設定</span>
+                        </button>
+                      </div>
+                    )}
 
                     {/* 圖說輸入框 */}
                     <div className="flex items-center space-x-1.5 pt-1">

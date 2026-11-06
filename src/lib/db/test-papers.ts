@@ -33,17 +33,26 @@ export async function createTestPaper(
 
 export async function updateTestPaper(
   id: string,
-  updates: Partial<TestPaper>
+  updates: Partial<TestPaper> & { testPaper?: Partial<TestPaper> }
 ): Promise<TestPaper | null> {
   await syncCloudOnBoot();
   const state = ensureLocalDB();
   if (!state.testPapers[id]) return null;
 
+  // 防禦解包：若傳入資料外層有包裹 { testPaper: ... }，自動解開並移除巢狀鍵
+  const actualUpdates =
+    updates && typeof updates === 'object' && updates.testPaper
+      ? { ...updates.testPaper }
+      : { ...updates };
+  delete (actualUpdates as any).testPaper;
+
   state.testPapers[id] = {
     ...state.testPapers[id],
-    ...updates,
+    ...actualUpdates,
     updatedAt: new Date().toISOString(),
   };
+  delete (state.testPapers[id] as any).testPaper;
+
   const updated = state.testPapers[id];
   saveLocalDB(state);
 

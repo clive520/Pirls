@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, PlusCircle, Trash2 } from 'lucide-react';
+import { BookOpen, PlusCircle, Trash2, Upload } from 'lucide-react';
 import { TestPaper, ArticleIllustration } from '@/lib/types';
 import { IllustrationStoryboard } from './IllustrationStoryboard';
 
@@ -26,6 +26,7 @@ interface ArticleEditorProps {
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>, illIdx: number) => void;
   onPasteImage: (e: React.ClipboardEvent, illIdx: number) => void;
   onRemoveImage: (illIdx: number) => void;
+  onSetImageUrl?: (url: string, illIdx: number) => void;
   onGenerateScenesForPasted: () => void;
 }
 
@@ -51,6 +52,7 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
   onImageUpload,
   onPasteImage,
   onRemoveImage,
+  onSetImageUrl,
   onGenerateScenesForPasted,
 }) => {
   return (
@@ -90,24 +92,27 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
       </div>
 
       {/* PIRLS 多模態課文繪本配圖與 3 幅關鍵場景生圖助手 */}
-      <IllustrationStoryboard
-        illustrations={testPaper.illustrations || []}
-        paragraphs={testPaper.paragraphs}
-        activeSceneIdx={activeSceneIdx}
-        setActiveSceneIdx={setActiveSceneIdx}
-        copiedCombined={copiedCombined}
-        copiedSingle={copiedSingle}
-        onCopyCombinedPrompt={onCopyCombinedPrompt}
-        onCopySinglePrompt={onCopySinglePrompt}
-        onAddScene={onAddScene}
-        onRemoveScene={onRemoveScene}
-        onParagraphChange={onParagraphChange}
-        onCaptionChange={onCaptionChange}
-        onImageUpload={onImageUpload}
-        onPasteImage={onPasteImage}
-        onRemoveImage={onRemoveImage}
-        onGenerateScenesForPasted={onGenerateScenesForPasted}
-      />
+      <div id="storyboard-container">
+        <IllustrationStoryboard
+          illustrations={testPaper.illustrations || []}
+          paragraphs={testPaper.paragraphs}
+          activeSceneIdx={activeSceneIdx}
+          setActiveSceneIdx={setActiveSceneIdx}
+          copiedCombined={copiedCombined}
+          copiedSingle={copiedSingle}
+          onCopyCombinedPrompt={onCopyCombinedPrompt}
+          onCopySinglePrompt={onCopySinglePrompt}
+          onAddScene={onAddScene}
+          onRemoveScene={onRemoveScene}
+          onParagraphChange={onParagraphChange}
+          onCaptionChange={onCaptionChange}
+          onImageUpload={onImageUpload}
+          onPasteImage={onPasteImage}
+          onRemoveImage={onRemoveImage}
+          onSetImageUrl={onSetImageUrl}
+          onGenerateScenesForPasted={onGenerateScenesForPasted}
+        />
+      </div>
 
       {/* 內文各段落與穿插的情境插圖預覽 */}
       <div className="space-y-4 text-sm text-slate-700 leading-relaxed font-sans max-h-[650px] overflow-y-auto pr-2">
@@ -187,16 +192,37 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
                       <span>🖼️ 場景 {illIdx + 1} 穿插於此</span>
                       <span className="text-slate-500 font-normal">（第 {p.paragraphNumber} 段後）</span>
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveSceneIdx(illIdx);
-                        window.scrollTo({ top: 350, behavior: 'smooth' });
-                      }}
-                      className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline"
-                    >
-                      {ill.imageUrl ? '管理/更換圖片' : '前往複製提示詞/上傳圖片 →'}
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <label className="cursor-pointer text-[11px] text-sky-700 hover:text-sky-800 font-bold px-2.5 py-1 rounded-lg bg-sky-50 border border-sky-200 hover:bg-sky-100 transition inline-flex items-center space-x-1 shadow-xs">
+                        <Upload className="w-3 h-3 text-sky-600" />
+                        <span>{ill.imageUrl ? '直接更換圖片' : '上傳此場景圖片'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onClick={(e) => {
+                            (e.target as HTMLInputElement).value = '';
+                          }}
+                          onChange={(e) => onImageUpload(e, illIdx)}
+                          className="hidden"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveSceneIdx(illIdx);
+                          const el = document.getElementById('storyboard-container');
+                          if (el) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          } else {
+                            window.scrollTo({ top: 350, behavior: 'smooth' });
+                          }
+                        }}
+                        className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline"
+                        title="查看/編輯此幅場景生圖提示詞"
+                      >
+                        提示詞設定 ↑
+                      </button>
+                    </div>
                   </div>
 
                   {ill.imageUrl ? (

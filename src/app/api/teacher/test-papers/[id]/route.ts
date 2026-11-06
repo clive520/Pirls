@@ -59,7 +59,8 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const updated = await updateTestPaper(params.id, body);
+  const payload = body.testPaper || body;
+  const updated = await updateTestPaper(params.id, payload);
 
   if (!updated) {
     return NextResponse.json({ error: '更新失敗' }, { status: 404 });
