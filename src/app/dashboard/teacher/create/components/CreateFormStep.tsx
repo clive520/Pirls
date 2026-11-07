@@ -86,7 +86,7 @@ export const CreateFormStep: React.FC<CreateFormStepProps> = ({
             <p className="font-bold text-red-900">AI 命題生成未成功</p>
             <p className="text-xs text-red-700 leading-relaxed break-all">{errorMsg}</p>
             <p className="text-[11px] text-red-600">
-              💡 建議：請確認所填寫的 API Key 是否有效，或點擊下方「測試金鑰有效性」確認權限與額度。若暫無可用金鑰，可將金鑰欄位清空體驗內建的高品質示範題本。
+              💡 提醒：請在下方「AI 模型與 API Key 設定」中貼上您的金鑰，並可點擊「測試金鑰有效性」確認額度與連線狀態。
             </p>
           </div>
         </div>

@@ -145,6 +145,36 @@
       "status": "active",
       "username": "stu_eva_2"
     },
+    "stu_1794007354750_tylc5": {
+      "role": "student",
+      "displayName": "林小華",
+      "className": "四年六班 (實驗班)",
+      "passwordHash": "$2a$10$ogcA.VUJGqHCcIw.BhN/zu0UjzG76kH.KpNMdZ8sDH2t0Yk1UDR1u",
+      "seatNumber": 1,
+      "createdAt": "2026-11-06T23:22:34.750Z",
+      "classId": "cls_1794007354288_501x",
+      "gradeLevel": 4,
+      "teacherId": "teacher_comparative_eval",
+      "initialPassword": "273811",
+      "id": "stu_1794007354750_tylc5",
+      "status": "active",
+      "username": "stu_eva_1"
+    },
+    "stu_1794007354805_27bjk": {
+      "role": "student",
+      "displayName": "張小美",
+      "className": "四年六班 (實驗班)",
+      "passwordHash": "$2a$10$gkPsTaHHB7vJ.osioIHADukvxJU19YaiMRifqbNsVQ9dJJ8/xK5qq",
+      "seatNumber": 2,
+      "createdAt": "2026-11-06T23:22:34.805Z",
+      "classId": "cls_1794007354288_501x",
+      "gradeLevel": 4,
+      "teacherId": "teacher_comparative_eval",
+      "initialPassword": "792811",
+      "id": "stu_1794007354805_27bjk",
+      "status": "active",
+      "username": "stu_eva_2"
+    },
     "usr_1793188060743_7v3zb": {
       "username": "teacher",
       "passwordHash": "$2a$10$jgubSHwUDgeZ2Y/MmTkVPuUt1EvruIGK7Sn6SCsNffeBsRPRUQg6O",
@@ -351,35 +381,25 @@
       "id": "usr_1794007345980_y6cs5",
       "createdAt": "2026-11-06T23:22:25.980Z"
     },
-    "stu_1794007354750_tylc5": {
-      "id": "stu_1794007354750_tylc5",
-      "username": "stu_eva_1",
-      "passwordHash": "$2a$10$ogcA.VUJGqHCcIw.BhN/zu0UjzG76kH.KpNMdZ8sDH2t0Yk1UDR1u",
-      "displayName": "林小華",
-      "role": "student",
+    "usr_1794013631611_zshqy": {
+      "displayName": "王導師 (四年甲班導師)",
+      "username": "teacher_a_1794013617642",
+      "passwordHash": "hashA",
+      "role": "teacher",
       "status": "active",
-      "teacherId": "teacher_comparative_eval",
-      "classId": "cls_1794007354288_501x",
-      "className": "四年六班 (實驗班)",
-      "seatNumber": 1,
-      "gradeLevel": 4,
-      "initialPassword": "273811",
-      "createdAt": "2026-11-06T23:22:34.750Z"
+      "school": "博愛國小",
+      "id": "usr_1794013631611_zshqy",
+      "createdAt": "2026-11-07T01:07:11.611Z"
     },
-    "stu_1794007354805_27bjk": {
-      "id": "stu_1794007354805_27bjk",
-      "username": "stu_eva_2",
-      "passwordHash": "$2a$10$gkPsTaHHB7vJ.osioIHADukvxJU19YaiMRifqbNsVQ9dJJ8/xK5qq",
-      "displayName": "張小美",
-      "role": "student",
+    "usr_1794013631913_vkju3": {
+      "displayName": "李導師 (四年乙班導師)",
+      "username": "teacher_b_1794013617642",
+      "passwordHash": "hashB",
+      "role": "teacher",
       "status": "active",
-      "teacherId": "teacher_comparative_eval",
-      "classId": "cls_1794007354288_501x",
-      "className": "四年六班 (實驗班)",
-      "seatNumber": 2,
-      "gradeLevel": 4,
-      "initialPassword": "792811",
-      "createdAt": "2026-11-06T23:22:34.805Z"
+      "school": "博愛國小",
+      "id": "usr_1794013631913_vkju3",
+      "createdAt": "2026-11-07T01:07:11.913Z"
     }
   },
   "classes": {
@@ -495,8 +515,27 @@
       "name": "四年六班 (實驗班)",
       "gradeLevel": 4,
       "teacherId": "teacher_comparative_eval",
-      "studentCount": 2,
-      "createdAt": "2026-11-06T23:22:34.288Z"
+      "createdAt": "2026-11-06T23:22:34.288Z",
+      "studentCount": 2
+    },
+    "cls_1794013632132_vaqh": {
+      "id": "cls_1794013632132_vaqh",
+      "name": "四年甲班",
+      "gradeLevel": 4,
+      "teacherId": "usr_1794013631611_zshqy",
+      "studentCount": 0,
+      "createdAt": "2026-11-07T01:07:12.132Z",
+      "coTeacherIds": [
+        "usr_1794013631913_vkju3"
+      ]
+    },
+    "cls_1794013632319_wk26": {
+      "id": "cls_1794013632319_wk26",
+      "name": "四年乙班",
+      "gradeLevel": 4,
+      "teacherId": "usr_1794013631913_vkju3",
+      "studentCount": 0,
+      "createdAt": "2026-11-07T01:07:12.319Z"
     }
   },
   "testPapers": {
@@ -3899,6 +3938,66 @@
       "assignedClassIds": [],
       "createdAt": "2026-11-06T23:22:35.532Z",
       "updatedAt": "2026-11-06T23:22:35.532Z"
+    },
+    "test_1794013632538_2lrc3": {
+      "title": "神祕的深海發光生物",
+      "targetGrade": 4,
+      "textType": "informational",
+      "themeSummary": "探討深海生物的發光機制與生態價值",
+      "wordCount": 350,
+      "articleContent": "在陽光無法穿透的深海千米之下，許多生物會發出幽藍色的冷光...",
+      "creatorId": "usr_1794013631611_zshqy",
+      "creatorName": "王導師 (四年甲班導師)",
+      "isPublic": true,
+      "questions": [
+        {
+          "id": "q1",
+          "questionNumber": 1,
+          "processDimension": "focus_retrieve",
+          "questionText": "深海生物通常發出什麼顏色的光？",
+          "questionType": "multiple_choice",
+          "options": [
+            {
+              "label": "A",
+              "text": "藍綠色冷光"
+            },
+            {
+              "label": "B",
+              "text": "亮紅色強光"
+            }
+          ],
+          "correctAnswer": "A",
+          "points": 10
+        }
+      ],
+      "totalPoints": 10,
+      "id": "test_1794013632538_2lrc3",
+      "assignedClassIds": [],
+      "createdAt": "2026-11-07T01:07:12.538Z",
+      "updatedAt": "2026-11-07T01:07:12.538Z"
+    },
+    "paper_legacy_1794013617642": {
+      "id": "paper_legacy_1794013617642",
+      "title": "歷史古蹟探尋",
+      "targetGrade": 5,
+      "textType": "informational",
+      "themeSummary": "歷史建築結構探訪",
+      "wordCount": 200,
+      "articleContent": "這座古老的紅磚城牆已有上百年歷史...",
+      "creatorId": "usr_1794013631611_zshqy",
+      "creatorName": "王導師 (四年甲班導師)",
+      "isPublic": false,
+      "questions": [],
+      "totalPoints": 10,
+      "allowRetake": false,
+      "examCode": "OLD_SEC",
+      "assignedClassIds": [
+        "cls_1794013632132_vaqh",
+        "cls_1794013632319_wk26"
+      ],
+      "timeLimitMinutes": 0,
+      "createdAt": "2026-11-07T01:07:14.059Z",
+      "updatedAt": "2026-11-07T01:07:14.059Z"
     }
   },
   "submissions": {
@@ -6810,6 +6909,42 @@
       "allowRetake": true,
       "status": "active",
       "updatedAt": "2026-11-06T23:20:51.789Z"
+    },
+    "asgn_migrated_paper_legacy_1794013617642_cls_1794013632132_vaqh": {
+      "id": "asgn_migrated_paper_legacy_1794013617642_cls_1794013632132_vaqh",
+      "testPaperId": "paper_legacy_1794013617642",
+      "testPaperTitle": "歷史古蹟探尋",
+      "teacherId": "usr_1794013631611_zshqy",
+      "teacherName": "王導師 (四年甲班導師)",
+      "classId": "cls_1794013632132_vaqh",
+      "className": "四年甲班",
+      "gradeLevel": 4,
+      "assignmentTitle": "《歷史古蹟探尋》(王導師 (四年甲班導師) 歷程派卷)",
+      "allowRetake": false,
+      "examCode": "OLD_SEC",
+      "deadlineType": "unlimited",
+      "dueDate": null,
+      "status": "active",
+      "createdAt": "2026-11-07T01:07:14.059Z",
+      "updatedAt": "2026-11-07T01:07:14.059Z"
+    },
+    "asgn_migrated_paper_legacy_1794013617642_cls_1794013632319_wk26": {
+      "id": "asgn_migrated_paper_legacy_1794013617642_cls_1794013632319_wk26",
+      "testPaperId": "paper_legacy_1794013617642",
+      "testPaperTitle": "歷史古蹟探尋",
+      "teacherId": "usr_1794013631611_zshqy",
+      "teacherName": "王導師 (四年甲班導師)",
+      "classId": "cls_1794013632319_wk26",
+      "className": "四年乙班",
+      "gradeLevel": 4,
+      "assignmentTitle": "《歷史古蹟探尋》(王導師 (四年甲班導師) 歷程派卷)",
+      "allowRetake": false,
+      "examCode": "OLD_SEC",
+      "deadlineType": "unlimited",
+      "dueDate": null,
+      "status": "active",
+      "createdAt": "2026-11-07T01:07:14.059Z",
+      "updatedAt": "2026-11-07T01:07:14.059Z"
     }
   }
 }

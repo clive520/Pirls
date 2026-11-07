@@ -41,6 +41,15 @@ export async function POST(req: NextRequest) {
       finalProvider = 'openrouter';
     }
 
+    // 嚴格檢驗：教師未輸入金鑰時，直接提示教師填寫，杜絕偷跑範例文章造成誤導
+    const hasServerGeminiKey = finalProvider === 'gemini' && !!process.env.GEMINI_API_KEY?.trim();
+    if (!trimmedKey && !hasServerGeminiKey) {
+      return NextResponse.json({
+        success: false,
+        error: `您尚未填寫 ${finalProvider.toUpperCase()} API Key！請先在上方「AI 模型與 API Key 設定」中貼上有效的金鑰，方可開始調用 AI 生成專屬試卷。`,
+      }, { status: 200 });
+    }
+
     const testPaper = await generatePIRLSTestPaper({
       mode: mode || 'theme',
       theme,

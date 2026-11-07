@@ -36,6 +36,7 @@ async function runTests() {
       includeDiagram: true,
       creatorId: 'teacher_mock_001',
       creatorName: '林志賢 老師',
+      allowMockFallback: true,
     });
 
     console.log(`  - 試卷標題: 《${literaryTest.title}》`);
@@ -62,6 +63,7 @@ async function runTests() {
       includeDiagram: true,
       creatorId: 'teacher_mock_001',
       creatorName: '林志賢 老師',
+      allowMockFallback: true,
     });
 
     console.log(`  - 試卷標題: 《${infoTest.title}》`);

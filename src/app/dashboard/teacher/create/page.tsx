@@ -481,11 +481,31 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
   // 送出生成
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setErrorMsg('');
 
+    const currentKey = (apiKeys[provider] || '').trim();
+    if (!currentKey) {
+      const provName =
+        provider === 'gemini'
+          ? 'Google Gemini'
+          : provider === 'openrouter'
+          ? 'OpenRouter'
+          : provider === 'deepseek'
+          ? 'DeepSeek'
+          : 'OpenCode';
+      setErrorMsg(`您尚未填寫 ${provName} API Key！請先在下方「AI 模型與 API Key 設定」中貼上有效的金鑰，系統需要真實金鑰方能為您生成閱讀題本，不會直接產出範例文章。`);
+
+      const keyInput = document.getElementById('ai-api-key-input');
+      if (keyInput) {
+        keyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        keyInput.focus();
+      }
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const currentKey = (apiKeys[provider] || '').trim();
       const data = await api.ai.generateTest({
         mode,
         theme,
@@ -496,7 +516,7 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
         questionCountMode,
         includeDiagram,
         provider,
-        apiKey: currentKey || undefined,
+        apiKey: currentKey,
         customBaseUrl: customBaseUrl.trim() || undefined,
         preferredModel: preferredModels[provider] || 'auto',
       });
@@ -504,7 +524,7 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
       setTestPaper(data.testPaper);
       setStep('editor');
     } catch (err: any) {
-      setErrorMsg(err.message || '生成試卷失敗');
+      setErrorMsg(err.message || '生成試卷失敗，請確認 API Key 是否有效');
     } finally {
       setLoading(false);
     }

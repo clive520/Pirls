@@ -94,14 +94,17 @@ export const AiConfigCard: React.FC<AiConfigCardProps> = ({
           {/* API Key 輸入列 */}
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-slate-700">
-                {provider === 'gemini' && 'Google Gemini API Key'}
-                {provider === 'deepseek' && 'DeepSeek API Key (sk-...)'}
-                {provider === 'openrouter' && 'OpenRouter API Key (sk-or-v1-...)'}
-                {provider === 'opencode' && 'OpenCode GO API Key'}
+              <label className="text-xs font-bold text-slate-700 flex items-center space-x-1">
+                <span>
+                  {provider === 'gemini' && 'Google Gemini API Key'}
+                  {provider === 'deepseek' && 'DeepSeek API Key (sk-...)'}
+                  {provider === 'openrouter' && 'OpenRouter API Key (sk-or-v1-...)'}
+                  {provider === 'opencode' && 'OpenCode GO API Key'}
+                </span>
+                <span className="text-rose-500 font-bold">*必填</span>
               </label>
               <span className="text-[11px] text-slate-400">
-                {provider === 'gemini' && '若未填寫，將調用內建離線示範題庫'}
+                {provider === 'gemini' && '前往 aistudio.google.com 免費獲取'}
                 {provider === 'deepseek' && '前往 platform.deepseek.com 獲取'}
                 {provider === 'openrouter' && '前往 openrouter.ai/keys 獲取'}
                 {provider === 'opencode' && '前往 opencode.ai 控制台獲取'}
@@ -110,12 +113,13 @@ export const AiConfigCard: React.FC<AiConfigCardProps> = ({
 
             <div className="flex items-center space-x-2">
               <input
+                id="ai-api-key-input"
                 type="password"
                 value={apiKeys[provider] || ''}
                 onChange={(e) => onKeyChange(provider, e.target.value)}
                 placeholder={
                   provider === 'gemini'
-                    ? 'AIzaSy... (貼上 Google AI Studio Key)'
+                    ? 'AIzaSy... (請貼上 Google AI Studio Key)'
                     : provider === 'openrouter'
                     ? 'sk-or-v1-...'
                     : 'sk-...'

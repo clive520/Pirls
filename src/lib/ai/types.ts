@@ -19,4 +19,5 @@ export interface GenerateParams {
   preferredModel?: string; // 偏好模型
   creatorId: string;
   creatorName: string;
+  allowMockFallback?: boolean; // 僅限離線自動化測試顯式開啟
 }

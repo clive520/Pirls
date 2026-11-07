@@ -20,7 +20,7 @@ export * from './providers/openai-compatible';
  */
 export async function generatePIRLSTestPaper(params: GenerateParams): Promise<TestPaper> {
   const provider = params.provider || 'gemini';
-  const apiKey = params.apiKey || process.env.GEMINI_API_KEY;
+  const apiKey = (params.apiKey || '').trim() || (provider === 'gemini' ? process.env.GEMINI_API_KEY?.trim() : undefined);
 
   if (apiKey) {
     if (provider === 'gemini') {
@@ -30,6 +30,11 @@ export async function generatePIRLSTestPaper(params: GenerateParams): Promise<Te
     }
   }
 
-  // 僅在完全未填寫 API Key 時，提供高品質離線示範題本
-  return generateMockAuthenticPIRLSTest(params);
+  // 若顯式宣告允許模擬備援（僅供離線自動化測試腳本使用）
+  if (params.allowMockFallback) {
+    return generateMockAuthenticPIRLSTest(params);
+  }
+
+  // 未填寫金鑰時嚴格拋出提示異常，絕不悄悄生成範例文章誤導教師
+  throw new Error('未檢測到 AI API Key！請先在上方「AI 模型與 API Key 設定」中貼上有效的金鑰，方可開始調用 AI 進行試卷生成。');
 }
