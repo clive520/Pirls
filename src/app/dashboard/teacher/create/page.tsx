@@ -79,7 +79,7 @@ function TeacherCreateTestContent() {
   const [customBaseUrl, setCustomBaseUrl] = useState('https://api.opencode.ai/v1');
   const [preferredModels, setPreferredModels] = useState<{ [key: string]: string }>({
     gemini: 'auto',
-    claude: 'claude-3-5-sonnet-20241022',
+    claude: 'claude-sonnet-5-5',
     openai: 'gpt-4o',
     groq: 'llama-3.1-8b-instant',
     deepseek: 'deepseek-flash',
@@ -105,6 +105,9 @@ function TeacherCreateTestContent() {
           }
           if (models.groq && models.groq === 'llama-3.3-70b-versatile') {
             models.groq = 'llama-3.1-8b-instant';
+          }
+          if (models.claude && (models.claude.includes('3-5') || models.claude.includes('4-5') || models.claude.includes('3-opus'))) {
+            models.claude = 'claude-sonnet-5-5';
           }
           setPreferredModels(models);
         }

@@ -117,13 +117,14 @@ export const AiModelSelector: React.FC<AiModelSelectorProps> = ({
 
           {provider === 'claude' && (
             <select
-              value={preferredModels.claude || 'claude-3-5-sonnet-20241022'}
+              value={preferredModels.claude || 'claude-sonnet-5-5'}
               onChange={(e) => onModelChange('claude', e.target.value)}
               className="flex-1 rounded-lg border border-slate-200 py-1 px-2.5 text-xs text-slate-800 bg-slate-50/50 font-medium focus:ring-1 focus:ring-sky-500 focus:outline-none"
             >
-              <option value="claude-3-5-sonnet-20241022">🌟 Claude 3.5 Sonnet (強烈推薦・文學故事首選)</option>
-              <option value="claude-3-5-haiku-20241022">⚡ Claude 3.5 Haiku (極速回應)</option>
-              <option value="claude-3-opus-20240229">🏛️ Claude 3 Opus (頂級深層推理)</option>
+              <option value="claude-sonnet-5-5">🌟 Claude Sonnet 5.5 (強烈推薦・文學故事首選)</option>
+              <option value="claude-opus-5-5">🏛️ Claude Opus 5.5 (頂規深層推理・嚴謹評分規準)</option>
+              <option value="claude-haiku-5-5">⚡ Claude Haiku 5.5 (極速回應・隨堂小測驗)</option>
+              <option value="claude-fable-5-1">🔬 Claude Fable 5.1 (高難度推理・專題任務)</option>
             </select>
           )}
 

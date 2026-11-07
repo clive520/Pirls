@@ -323,18 +323,21 @@ export const AiConfigCard: React.FC<AiConfigCardProps> = ({
             {/* Anthropic Claude */}
             {provider === 'claude' && (
               <select
-                value={preferredModels.claude || 'claude-3-5-sonnet-20241022'}
+                value={preferredModels.claude || 'claude-sonnet-5-5'}
                 onChange={(e) => onModelChange('claude', e.target.value)}
                 className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
               >
-                <option value="claude-3-5-sonnet-20241022">
-                  👑 Claude 3.5 Sonnet (強烈推薦：文學故事第一、文筆最自然細膩、少機器腔)
+                <option value="claude-sonnet-5-5">
+                  🌟 Claude Sonnet 5.5（強烈推薦：智慧速度平衡、文學故事首選、筆觸細膩）
                 </option>
-                <option value="claude-3-5-haiku-20241022">
-                  ⚡ Claude 3.5 Haiku (極速出題、輕量小品文章首選)
+                <option value="claude-opus-5-5">
+                  🏛️ Claude Opus 5.5（頂規深層推理：第四層批判評斷、嚴密評分規準）
                 </option>
-                <option value="claude-3-opus-20240229">
-                  🏛️ Claude 3 Opus (頂規哲理思辨大模型)
+                <option value="claude-haiku-5-5">
+                  ⚡ Claude Haiku 5.5（極速出題：快速問答、大量文字、隨堂測驗首選）
+                </option>
+                <option value="claude-fable-5-1">
+                  🔬 Claude Fable 5.1（高難度推理：長時間專題任務）
                 </option>
               </select>
             )}

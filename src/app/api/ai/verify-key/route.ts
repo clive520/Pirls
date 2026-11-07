@@ -108,10 +108,20 @@ export async function POST(req: NextRequest) {
           }, { status: 200 });
         }
 
+        const data = await modelsRes.json().catch(() => ({ data: [] }));
+        const availableModels: string[] = (data.data || []).map((m: any) => m.id);
+
+        const topModel = availableModels.find((n) => n === 'claude-sonnet-5-5')
+          || availableModels.find((n) => n.startsWith('claude-sonnet-5-5'))
+          || availableModels.find((n) => n === 'claude-opus-5-5')
+          || availableModels.find((n) => n === 'claude-haiku-5-5')
+          || availableModels.find((n) => n === 'claude-fable-5-1')
+          || 'claude-sonnet-5-5';
+
         return NextResponse.json({
           success: true,
-          model: 'claude-3-5-sonnet-20241022',
-          message: 'Anthropic Claude 官方 API 金鑰有效！支援文學修辭旗艦 Claude 3.5 Sonnet 與極速 Claude 3.5 Haiku。',
+          model: topModel,
+          message: `Anthropic Claude 官方金鑰驗證成功！已成功連線推薦文學旗艦模型：${topModel}（支援 Sonnet 5.5、Opus 5.5、Haiku 5.5 與 Fable 5.1）。`,
         }, { status: 200 });
       }
 

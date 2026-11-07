@@ -47,9 +47,10 @@ const PROVIDER_METADATA: Record<AIProvider, {
     docLabel: 'Anthropic Console 官網',
     desc: '業界公認文學組織力、長篇敘事邏輯與深層批判思維（PIRLS L3/L4）最佳首選。',
     models: [
-      { id: 'claude-3-5-sonnet-20241022', label: '🌟 Claude 3.5 Sonnet (強烈推薦)', desc: '故事生動流暢，四層次題本邏輯最嚴密' },
-      { id: 'claude-3-5-haiku-20241022', label: '⚡ Claude 3.5 Haiku', desc: '極速輕巧、回應靈敏' },
-      { id: 'claude-3-opus-20240229', label: '🏛️ Claude 3 Opus', desc: '頂級旗艦深層思考推理' },
+      { id: 'claude-sonnet-5-5', label: '🌟 Claude Sonnet 5.5 (強烈推薦首選)', desc: '智慧與速度平衡・文學故事與四層次題本最佳旗艦' },
+      { id: 'claude-opus-5-5', label: '🏛️ Claude Opus 5.5 (頂規深度推理)', desc: '頂尖推理大腦・適合高難度素養題與嚴密評分規準' },
+      { id: 'claude-haiku-5-5', label: '⚡ Claude Haiku 5.5 (極速輕巧)', desc: '快速問答・大量文字處理・隨堂小測驗首選' },
+      { id: 'claude-fable-5-1', label: '🔬 Claude Fable 5.1 (高難度推理)', desc: '長時間代理任務・複雜專題命題' },
     ],
   },
   openai: {
@@ -141,7 +142,7 @@ function AiSettingsContent() {
   });
   const [preferredModels, setPreferredModels] = useState<Record<string, string>>({
     gemini: 'auto',
-    claude: 'claude-3-5-sonnet-20241022',
+    claude: 'claude-sonnet-5-5',
     openai: 'gpt-4o-mini',
     groq: 'llama-3.1-8b-instant',
     deepseek: 'deepseek-flash',
@@ -170,6 +171,9 @@ function AiSettingsContent() {
           }
           if (models.groq && models.groq === 'llama-3.3-70b-versatile') {
             models.groq = 'llama-3.1-8b-instant';
+          }
+          if (models.claude && (models.claude.includes('3-5') || models.claude.includes('4-5') || models.claude === 'claude-3-opus-20240229')) {
+            models.claude = 'claude-sonnet-5-5';
           }
           setPreferredModels(models);
         }
