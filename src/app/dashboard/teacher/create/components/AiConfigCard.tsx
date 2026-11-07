@@ -299,14 +299,17 @@ export const AiConfigCard: React.FC<AiConfigCardProps> = ({
                 <option value="auto">
                   🤖 智慧自動選擇（強烈推薦：自動匹配 Google 官方最新活躍的 Flash 模型）
                 </option>
+                <option value="gemini-2.5-flash">
+                  🧠 Gemini 2.5 Flash（推薦首選：最新推論推理、繁中出題品質極高）
+                </option>
                 <option value="gemini-2.0-flash">
-                  ⚡ Gemini 2.0 Flash（最新旗艦：生成速度極快、繁中理解卓越）
+                  ⚡ Gemini 2.0 Flash（極速穩定：生成速度極快、繁中理解卓越）
                 </option>
-                <option value="gemini-1.5-pro">
-                  🧠 Gemini 1.5 Pro（深度長文理解、四層次邏輯結構嚴謹）
+                <option value="gemini-2.5-pro">
+                  🏛️ Gemini 2.5 Pro（深度邏輯：四層次結構嚴謹、高階批判設題）
                 </option>
-                <option value="gemini-1.5-flash">
-                  🍃 Gemini 1.5 Flash（穩定均衡型）
+                <option value="gemini-2.5-flash-lite">
+                  🍃 Gemini 2.5 Flash Lite（超輕量低延遲）
                 </option>
               </select>
             )}

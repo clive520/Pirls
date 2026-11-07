@@ -30,9 +30,10 @@ const PROVIDER_METADATA: Record<AIProvider, {
     desc: 'Google 官方最新旗艦模型，具備優異的繁體中文理解力與百萬 Context，免費額度充足且出題穩定。',
     models: [
       { id: 'auto', label: '🤖 智慧自動選擇', desc: '自動匹配 Google 官方最新活躍的 Flash 模型' },
-      { id: 'gemini-2.0-flash', label: '⚡ Gemini 2.0 Flash (強烈推薦)', desc: '生成速度極快、繁中理解卓越、官方主力' },
-      { id: 'gemini-1.5-flash', label: '🍃 Gemini 1.5 Flash', desc: '穩定均衡型，長文與結構化輸出可靠' },
-      { id: 'gemini-1.5-pro', label: '🧠 Gemini 1.5 Pro', desc: '深度思考推理，適合第四層次評斷題' },
+      { id: 'gemini-2.5-flash', label: '🧠 Gemini 2.5 Flash (推薦首選)', desc: '具備思考推理能力，繁中素養出題極致優異' },
+      { id: 'gemini-2.0-flash', label: '⚡ Gemini 2.0 Flash (極速穩定)', desc: '官方廣泛支援主力，出題速度極快、繁中理解卓越' },
+      { id: 'gemini-2.5-pro', label: '🏛️ Gemini 2.5 Pro (深度邏輯)', desc: '高階推論旗艦，適合第四層次評斷題與詳細評分規準' },
+      { id: 'gemini-2.5-flash-lite', label: '🍃 Gemini 2.5 Flash Lite (超輕量)', desc: '輕量高吞吐，低延遲快速反應' },
     ],
   },
   claude: {
@@ -581,6 +582,111 @@ function AiSettingsContent() {
               </div>
             </div>
           )}
+
+          {/* 各大 AI 官方申請入口與特性速查 */}
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+            <div className="font-bold text-xs text-slate-800 flex items-center space-x-1.5">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>各大 AI 官方 API Key 申請入口與特性速查：</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs text-slate-600">
+              <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center justify-between hover:bg-sky-50/40 transition">
+                <div>
+                  <span className="font-bold text-slate-800">• Google Gemini</span>
+                  <span className="text-[11px] text-slate-400 block mt-0.5">有免費額度・官方首選</span>
+                </div>
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline inline-flex items-center space-x-1 whitespace-nowrap ml-2"
+                >
+                  <span>AI Studio 官網</span>
+                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                </a>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center justify-between hover:bg-amber-50/40 transition">
+                <div>
+                  <span className="font-bold text-slate-800">• Anthropic Claude</span>
+                  <span className="text-[11px] text-slate-400 block mt-0.5">文學敘事・批判思考首選</span>
+                </div>
+                <a
+                  href="https://console.anthropic.com/settings/keys"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline inline-flex items-center space-x-1 whitespace-nowrap ml-2"
+                >
+                  <span>Anthropic Console</span>
+                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                </a>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center justify-between hover:bg-emerald-50/40 transition">
+                <div>
+                  <span className="font-bold text-slate-800">• OpenAI 官方</span>
+                  <span className="text-[11px] text-slate-400 block mt-0.5">全球普及・標準穩定</span>
+                </div>
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center space-x-1 whitespace-nowrap ml-2"
+                >
+                  <span>OpenAI Platform</span>
+                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                </a>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center justify-between hover:bg-rose-50/40 transition">
+                <div>
+                  <span className="font-bold text-slate-800">• Groq 極速晶片</span>
+                  <span className="text-[11px] text-slate-400 block mt-0.5">3秒出題・有免費額度</span>
+                </div>
+                <a
+                  href="https://console.groq.com/keys"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline inline-flex items-center space-x-1 whitespace-nowrap ml-2"
+                >
+                  <span>Groq Console</span>
+                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                </a>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center justify-between hover:bg-cyan-50/40 transition">
+                <div>
+                  <span className="font-bold text-slate-800">• DeepSeek 官方</span>
+                  <span className="text-[11px] text-slate-400 block mt-0.5">中文精準・高性價比</span>
+                </div>
+                <a
+                  href="https://platform.deepseek.com/api_keys"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-semibold text-cyan-600 hover:text-cyan-700 hover:underline inline-flex items-center space-x-1 whitespace-nowrap ml-2"
+                >
+                  <span>DeepSeek 開放平台</span>
+                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                </a>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-100 flex items-center justify-between hover:bg-indigo-50/40 transition">
+                <div>
+                  <span className="font-bold text-slate-800">• OpenRouter 聚合</span>
+                  <span className="text-[11px] text-slate-400 block mt-0.5">一把 Key 通吃全球百模</span>
+                </div>
+                <a
+                  href="https://openrouter.ai/keys"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline inline-flex items-center space-x-1 whitespace-nowrap ml-2"
+                >
+                  <span>OpenRouter 官網</span>
+                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                </a>
+              </div>
+            </div>
+          </div>
 
           {/* 隱私與安全說明 */}
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex items-start space-x-3 text-xs text-slate-600">

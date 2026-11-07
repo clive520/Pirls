@@ -65,17 +65,19 @@ export async function POST(req: NextRequest) {
               name.includes('realtime') ||
               name.includes('live') ||
               name.includes('search') ||
-              name.includes('aqa');
+              name.includes('aqa') ||
+              name.includes('1.5');
             return isGeneration && !isExcluded;
           })
           .map((m: any) => m.name.replace(/^models\//, ''));
 
-        const topModel = availableModels.find((n) => n === 'gemini-2.0-flash')
-          || availableModels.find((n) => n === 'gemini-1.5-flash')
+        const topModel = availableModels.find((n) => n === 'gemini-2.5-flash')
+          || availableModels.find((n) => n === 'gemini-2.0-flash')
+          || availableModels.find((n) => n.startsWith('gemini-2.5-flash'))
           || availableModels.find((n) => n.startsWith('gemini-2.0-flash'))
-          || availableModels.find((n) => n.startsWith('gemini-1.5-flash'))
-          || availableModels.find((n) => n === 'gemini-1.5-pro')
-          || 'gemini-2.0-flash';
+          || availableModels.find((n) => n === 'gemini-2.5-pro')
+          || availableModels.find((n) => n.includes('flash'))
+          || 'gemini-2.5-flash';
 
         return NextResponse.json({
           success: true,
