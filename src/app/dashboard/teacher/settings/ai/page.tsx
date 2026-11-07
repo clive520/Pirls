@@ -136,10 +136,10 @@ function AiSettingsContent() {
     opencode: '',
   });
   const [preferredModels, setPreferredModels] = useState<Record<string, string>>({
-    gemini: 'gemini-2.0-flash',
+    gemini: 'auto',
     claude: 'claude-3-5-sonnet-20241022',
     openai: 'gpt-4o-mini',
-    groq: 'llama-3.3-70b-versatile',
+    groq: 'llama-3.1-8b-instant',
     deepseek: 'deepseek-flash',
     openrouter: 'deepseek/deepseek-chat',
     opencode: 'deepseek-chat',
@@ -158,7 +158,17 @@ function AiSettingsContent() {
         const parsed = JSON.parse(saved);
         if (parsed.provider) setProvider(parsed.provider);
         if (parsed.apiKeys) setApiKeys(parsed.apiKeys);
-        if (parsed.preferredModels) setPreferredModels(parsed.preferredModels);
+        if (parsed.preferredModels) {
+          const models = { ...parsed.preferredModels };
+          // 自動清洗錯誤儲存的 TTS / 語音實驗模型
+          if (models.gemini && (models.gemini.includes('tts') || models.gemini.includes('audio') || models.gemini.includes('embed'))) {
+            models.gemini = 'auto';
+          }
+          if (models.groq && models.groq === 'llama-3.3-70b-versatile') {
+            models.groq = 'llama-3.1-8b-instant';
+          }
+          setPreferredModels(models);
+        }
         if (parsed.customBaseUrl) setCustomBaseUrl(parsed.customBaseUrl);
       }
     } catch (e) {

@@ -56,6 +56,11 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
+    let cleanModel = (preferredModel || 'auto').trim();
+    if (finalProvider === 'gemini' && (cleanModel.includes('tts') || cleanModel.includes('audio') || cleanModel.includes('embed'))) {
+      cleanModel = 'auto';
+    }
+
     const testPaper = await generatePIRLSTestPaper({
       mode: mode || 'theme',
       theme,
@@ -68,7 +73,7 @@ export async function POST(req: NextRequest) {
       provider: finalProvider,
       apiKey: trimmedKey || undefined,
       customBaseUrl: customBaseUrl?.trim() || undefined,
-      preferredModel: preferredModel || 'auto',
+      preferredModel: cleanModel,
       creatorId: session.userId,
       creatorName: session.displayName,
     });

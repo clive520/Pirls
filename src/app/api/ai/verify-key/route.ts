@@ -53,19 +53,34 @@ export async function POST(req: NextRequest) {
 
         const data = await modelsRes.json().catch(() => ({ models: [] }));
         const availableModels: string[] = (data.models || [])
-          .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+          .filter((m: any) => {
+            const name = ((m.name || '').replace(/^models\//, '')).toLowerCase();
+            const isGeneration = Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent');
+            const isExcluded =
+              name.includes('tts') ||
+              name.includes('audio') ||
+              name.includes('image') ||
+              name.includes('imagen') ||
+              name.includes('embed') ||
+              name.includes('realtime') ||
+              name.includes('live') ||
+              name.includes('search') ||
+              name.includes('aqa');
+            return isGeneration && !isExcluded;
+          })
           .map((m: any) => m.name.replace(/^models\//, ''));
 
-        const topModel = availableModels.find((n) => n === 'gemini-2.0-flash' || n.includes('2.0-flash'))
-          || availableModels.find((n) => n === 'gemini-1.5-flash' || n.includes('1.5-flash'))
-          || availableModels.find((n) => n.includes('flash'))
-          || availableModels[0]
+        const topModel = availableModels.find((n) => n === 'gemini-2.0-flash')
+          || availableModels.find((n) => n === 'gemini-1.5-flash')
+          || availableModels.find((n) => n.startsWith('gemini-2.0-flash'))
+          || availableModels.find((n) => n.startsWith('gemini-1.5-flash'))
+          || availableModels.find((n) => n === 'gemini-1.5-pro')
           || 'gemini-2.0-flash';
 
         return NextResponse.json({
           success: true,
           model: topModel,
-          message: `Google Gemini API 金鑰驗證成功！已成功連線推薦模型：${topModel}。`,
+          message: `Google Gemini API 金鑰驗證成功！已成功連線推薦文字旗艦模型：${topModel}。`,
         }, { status: 200 });
       }
 

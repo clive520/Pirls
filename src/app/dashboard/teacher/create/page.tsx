@@ -98,7 +98,16 @@ function TeacherCreateTestContent() {
         if (parsed.provider) setProvider(parsed.provider);
         if (parsed.apiKeys) setApiKeys(parsed.apiKeys);
         if (parsed.customBaseUrl) setCustomBaseUrl(parsed.customBaseUrl);
-        if (parsed.preferredModels) setPreferredModels(parsed.preferredModels);
+        if (parsed.preferredModels) {
+          const models = { ...parsed.preferredModels };
+          if (models.gemini && (models.gemini.includes('tts') || models.gemini.includes('audio') || models.gemini.includes('embed'))) {
+            models.gemini = 'auto';
+          }
+          if (models.groq && models.groq === 'llama-3.3-70b-versatile') {
+            models.groq = 'llama-3.1-8b-instant';
+          }
+          setPreferredModels(models);
+        }
       }
     } catch (e) {
       console.warn('讀取本地金鑰失敗', e);

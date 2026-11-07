@@ -5,20 +5,43 @@ import { formatToTestPaper } from '../format-paper';
 import { extractAndParseJSON } from '@/lib/json-helper';
 
 /**
- * Google 官方 Flash 模型優先序（優先採用廣泛支援且穩定的 2.0-flash 與 1.5-flash）
+ * Google 官方 Flash 模型優先序（優先採用廣泛支援且穩定的 2.0-flash 與 1.5-flash 文字模型）
  */
 export const ACTIVE_FLASH_PRIORITY = [
   'gemini-2.0-flash',
   'gemini-1.5-flash',
   'gemini-1.5-pro',
+  'gemini-1.5-flash-8b',
 ];
 
 /**
- * 動態探測該 API Key 當前可用且支援 generateContent 的推薦模型清單
+ * 嚴格過濾非文字生成模型（語音TTS、生圖、嵌入、即時串流）
+ */
+function isExcludedGeminiModel(name: string): boolean {
+  const lower = name.toLowerCase();
+  return (
+    lower.includes('tts') ||
+    lower.includes('audio') ||
+    lower.includes('image') ||
+    lower.includes('imagen') ||
+    lower.includes('embed') ||
+    lower.includes('realtime') ||
+    lower.includes('live') ||
+    lower.includes('search') ||
+    lower.includes('aqa')
+  );
+}
+
+/**
+ * 動態探測該 API Key 當前可用且支援 generateContent 的文字推薦模型清單
  * 優先順序：gemini-2.0-flash > gemini-1.5-flash > gemini-1.5-pro
  */
 export async function getAvailableGeminiModels(apiKey: string, preferredModel?: string): Promise<string[]> {
-  const preferred = (preferredModel || '').trim();
+  let preferred = (preferredModel || '').trim();
+  // 若偏好模型誤存了語音/TTS 實驗模型，一律重設為 auto
+  if (preferred && isExcludedGeminiModel(preferred)) {
+    preferred = 'auto';
+  }
 
   try {
     const controller = new AbortController();
@@ -31,38 +54,49 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
     if (res.ok) {
       const data = await res.json();
       const activeNames: string[] = (data.models || [])
-        .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+        .filter((m: any) => {
+          const name = (m.name || '').replace(/^models\//, '');
+          const isGeneration = Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent');
+          return isGeneration && !isExcludedGeminiModel(name);
+        })
         .map((m: any) => m.name.replace(/^models\//, ''));
 
       const candidates: string[] = [];
 
-      // 若老師指定了特定模型，優先作為第 1 候選（精確匹配或別名前綴匹配）
+      // 若老師指定了有效特定模型，優先作為第 1 候選
       if (preferred && preferred !== 'auto') {
         const matched = activeNames.find((n) => n === preferred || n.startsWith(`${preferred}-`));
-        candidates.push(matched || preferred);
+        if (matched) candidates.push(matched);
       }
 
-      // 依官方活躍優先級填入備援（至多 2 款模型，避免多次重試累積逾時）
+      // 依官方活躍優先級填入備援（2.0-flash > 1.5-flash > 1.5-pro）
       for (const m of ACTIVE_FLASH_PRIORITY) {
-        if (!candidates.includes(m) && activeNames.includes(m) && candidates.length < 2) {
-          candidates.push(m);
+        if (!candidates.includes(m)) {
+          const matched = activeNames.find((n) => n === m || n.startsWith(`${m}-`));
+          if (matched && !candidates.includes(matched)) {
+            candidates.push(matched);
+          }
         }
       }
 
-      // 若上述偏好沒對應到，從 activeNames 挑選任何含有 flash 的活躍模型
+      // 若上述偏好沒對應到，從過濾後的 activeNames 挑選任何含有 flash 的純文字模型
       if (candidates.length === 0) {
-        const anyFlash = activeNames.filter((n) => n.includes('flash'));
+        const anyFlash = activeNames.filter((n) => n.includes('flash') && !isExcludedGeminiModel(n));
         if (anyFlash.length > 0) candidates.push(...anyFlash.slice(0, 2));
       }
 
-      if (candidates.length > 0) return candidates;
+      // 最終保底備援
+      if (!candidates.includes('gemini-2.0-flash')) candidates.push('gemini-2.0-flash');
+      if (!candidates.includes('gemini-1.5-flash')) candidates.push('gemini-1.5-flash');
+
+      return candidates;
     }
   } catch (err) {
     // 探測逾時或異常
   }
 
-  // 靜態備援清單（以官方活躍且推薦的 2.0-flash 與 1.5-flash 為主）
-  if (preferred && preferred !== 'auto') {
+  // 靜態備援清單（純文字旗艦模型）
+  if (preferred && preferred !== 'auto' && !isExcludedGeminiModel(preferred)) {
     const backup = preferred === 'gemini-2.0-flash' ? 'gemini-1.5-flash' : 'gemini-2.0-flash';
     return [preferred, backup, 'gemini-1.5-pro'];
   }
