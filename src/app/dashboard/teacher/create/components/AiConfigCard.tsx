@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, RefreshCw, CheckCircle2, AlertCircle, ExternalLink, Key, Zap } from 'lucide-react';
+import { Sparkles, RefreshCw, CheckCircle2, AlertCircle, ExternalLink, Key } from 'lucide-react';
 import { AIProvider } from '@/lib/ai/types';
 
 export interface AiConfigCardProps {
@@ -444,55 +444,6 @@ export const AiConfigCard: React.FC<AiConfigCardProps> = ({
             <span className="break-all leading-relaxed font-medium">{keyStatus.message}</span>
           </div>
         )}
-
-        {/* 申請指南快速對照抽屜 */}
-        <div className="bg-white/80 p-3.5 rounded-xl border border-slate-200/80 text-[11px] text-slate-600 space-y-1.5">
-          <div className="font-bold text-slate-700 flex items-center space-x-1">
-            <Zap className="w-3.5 h-3.5 text-amber-500" />
-            <span>各大 AI 官方 API Key 申請入口與特性速查：</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 pt-1 text-slate-500">
-            <div>
-              • <strong>Google Gemini</strong>：
-              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-sky-600 hover:underline ml-1">
-                AI Studio 官網 (有免費額度) ↗
-              </a>
-            </div>
-            <div>
-              • <strong>Anthropic Claude</strong>：
-              <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer" className="text-sky-600 hover:underline ml-1">
-                Anthropic Console 官網 (文學首選) ↗
-              </a>
-            </div>
-            <div>
-              • <strong>OpenAI 官方</strong>：
-              <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="text-sky-600 hover:underline ml-1">
-                OpenAI Platform 官網 (最普及) ↗
-              </a>
-            </div>
-            <div>
-              • <strong>Groq 極速晶片</strong>：
-              <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" className="text-sky-600 hover:underline ml-1">
-                Groq Console 官網 (3秒出題有免費額度) ↗
-              </a>
-            </div>
-            <div>
-              • <strong>DeepSeek 官方</strong>：
-              <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noreferrer" className="text-sky-600 hover:underline ml-1">
-                DeepSeek 開放平台 (中文精準) ↗
-              </a>
-            </div>
-            <div>
-              • <strong>OpenRouter 聚合</strong>：
-              <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" className="text-sky-600 hover:underline ml-1">
-                OpenRouter 官網 (一把Key通吃) ↗
-              </a>
-            </div>
-          </div>
-          <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
-            🔒 安全說明：所有金鑰僅存在您的瀏覽器本地，絕不寫入中央伺服器資料庫。
-          </p>
-        </div>
       </div>
     </div>
   );
