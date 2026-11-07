@@ -55,28 +55,36 @@ export async function callOpenAICompatibleAPI(
     // 實測唯一穩定可用之 openai/gpt-oss-120b 擁有 65,536 輸出 Token 上限與充足限額，配置完整 4,096 tokens
     // 若特定舊模型有 TPM 限額則動態調控
     currentMaxTokens = (model.includes('70b') && !model.includes('120b')) ? 2800 : 4096;
+  } else if (provider === 'deepseek') {
+    // DeepSeek 支援 8,192 輸出 Token 上限，出題包含 1,200 字長文與 14 題標準卷，需充足 token 避免內容被截斷
+    currentMaxTokens = 8192;
   }
 
-  // 封裝單次呼叫流程
-  const executeCall = async (targetModel: string, tokensLimit: number) => {
+  // 封裝單次呼叫流程（支援動態開關 response_format 以應對 DeepSeek 輸出空白瑕疵）
+  const executeCall = async (targetModel: string, tokensLimit: number, useJsonFormat = true) => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 180000); // 180 秒（3 分鐘）長效運算防護
 
     try {
+      const payload: any = {
+        model: targetModel,
+        messages: [
+          { role: 'system', content: systemInstruction },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.7,
+        max_tokens: tokensLimit,
+      };
+
+      if (useJsonFormat) {
+        payload.response_format = { type: 'json_object' };
+      }
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers,
         signal: controller.signal,
-        body: JSON.stringify({
-          model: targetModel,
-          messages: [
-            { role: 'system', content: systemInstruction },
-            { role: 'user', content: userPrompt },
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.7,
-          max_tokens: tokensLimit,
-        }),
+        body: JSON.stringify(payload),
       }).finally(() => clearTimeout(timer));
 
       if (!response.ok) {
@@ -149,8 +157,43 @@ export async function callOpenAICompatibleAPI(
     throw new Error(`[${provider.toUpperCase()}] 服務器回應錯誤 (${callResult.status}): ${callResult.msg}`);
   }
 
-  const rawText = callResult.data?.choices?.[0]?.message?.content;
-  if (!rawText) throw new Error(`[${provider.toUpperCase()}] 未回傳有效文字內容`);
+  // 提取文字內容（多層次智慧防呆：相容 content、reasoning_content 與 DeepSeek 空白化自癒）
+  let rawText = callResult.data?.choices?.[0]?.message?.content?.trim() || '';
+
+  // 檢查是否將內容放在 reasoning_content（DeepSeek / 思考推理模型特有欄位）
+  if (!rawText) {
+    const reasoning = callResult.data?.choices?.[0]?.message?.reasoning_content?.trim();
+    if (reasoning && (reasoning.includes('{') && reasoning.includes('}'))) {
+      console.log(`[${provider.toUpperCase()}] content 為空，自 reasoning_content 成功截取結構化 JSON`);
+      rawText = reasoning;
+    }
+  }
+
+  // 若仍為空且為 DeepSeek（DeepSeek 在 response_format: json_object 下遇到衝突會靜默清空 content），以原生模式重試
+  if (!rawText && provider === 'deepseek') {
+    console.warn(`[DeepSeek] ${model} 未回傳有效文字（疑似受 json_object 約束影響），自動以原生模式重試...`);
+    const retryResult = await executeCall(model, currentMaxTokens, false);
+    if (retryResult.ok) {
+      rawText = retryResult.data?.choices?.[0]?.message?.content?.trim() || '';
+      if (!rawText) {
+        const reasoning = retryResult.data?.choices?.[0]?.message?.reasoning_content?.trim();
+        if (reasoning && (reasoning.includes('{') && reasoning.includes('}'))) {
+          rawText = reasoning;
+        }
+      }
+    }
+
+    // 若原模型原生模式仍為空，自動切換至官方標準通用模型 deepseek-chat 重試
+    if (!rawText && model !== 'deepseek-chat') {
+      console.warn(`[DeepSeek] 切換至官方標準通用模型 deepseek-chat 重試...`);
+      const chatResult = await executeCall('deepseek-chat', currentMaxTokens, false);
+      if (chatResult.ok) {
+        rawText = chatResult.data?.choices?.[0]?.message?.content?.trim() || '';
+      }
+    }
+  }
+
+  if (!rawText) throw new Error(`[${provider.toUpperCase()}] 未回傳有效文字內容（建議切換為 deepseek-chat 模型或稍後重試）`);
 
   // 強健解析 JSON（自動過濾前導引言與修復語法瑕疵）
   const parsed = extractAndParseJSON(rawText);
