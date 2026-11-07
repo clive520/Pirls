@@ -142,14 +142,14 @@ export const AiModelSelector: React.FC<AiModelSelectorProps> = ({
 
           {provider === 'groq' && (
             <select
-              value={preferredModels.groq || 'llama-3.1-8b-instant'}
+              value={preferredModels.groq || 'openai/gpt-oss-120b'}
               onChange={(e) => onModelChange('groq', e.target.value)}
               className="flex-1 rounded-lg border border-slate-200 py-1 px-2.5 text-xs text-slate-800 bg-slate-50/50 font-medium focus:ring-1 focus:ring-sky-500 focus:outline-none"
             >
-              <option value="llama-3.1-8b-instant">🚀 Llama 3.1 8B Instant (推薦首選・20,000 TPM 限額・2秒瞬出)</option>
-              <option value="llama-3.3-70b-versatile">🌟 Llama 3.3 70B Versatile (高階旗艦・四層次設題邏輯嚴密)</option>
-              <option value="openai/gpt-oss-20b">⚡ GPT OSS 20B (均衡高吞吐・推論速度快・大量文字處理)</option>
-              <option value="openai/gpt-oss-120b">🏛️ GPT OSS 120B (大型推理模型・深度複雜任務與批判評斷)</option>
+              <option value="openai/gpt-oss-120b">🏛️ GPT OSS 120B (實測推薦首選・大型推理・繁中最優)</option>
+              <option value="llama-3.1-8b-instant">🚀 Llama 3.1 8B Instant (極速輕量・簡單測試)</option>
+              <option value="llama-3.3-70b-versatile">🌟 Llama 3.3 70B Versatile (高階旗艦・四層次設題)</option>
+              <option value="openai/gpt-oss-20b">⚡ GPT OSS 20B (均衡高吞吐・大量文字處理)</option>
             </select>
           )}
 

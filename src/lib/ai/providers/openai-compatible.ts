@@ -28,7 +28,7 @@ export async function callOpenAICompatibleAPI(
     defaultModel = 'gpt-4o-mini';
   } else if (provider === 'groq') {
     endpoint = 'https://api.groq.com/openai/v1/chat/completions';
-    defaultModel = 'llama-3.1-8b-instant';
+    defaultModel = 'openai/gpt-oss-120b';
   } else if (provider === 'openrouter') {
     endpoint = 'https://openrouter.ai/api/v1/chat/completions';
     headers['HTTP-Referer'] = 'https://pirls-ii5od75k6a-de.a.run.app';
@@ -49,12 +49,12 @@ export async function callOpenAICompatibleAPI(
     ? params.preferredModel
     : defaultModel;
 
-  // 動態分配最大生成 Token 上限（防範 Groq 免費額度 6,000 TPM 限速）
+  // 動態分配最大生成 Token 上限
   let currentMaxTokens = 4096;
   if (provider === 'groq') {
-    // 若為 70B 或 120B 大型推理模型，將預算控制在 2,800 tokens 確保 prompt+max_tokens < 6,000 TPM
-    // 8B 或 20B 模型 TPM 高達 20,000，可放心配置 4,096 tokens
-    currentMaxTokens = (model.includes('70b') || model.includes('120b')) ? 2800 : 4096;
+    // 實測唯一穩定可用之 openai/gpt-oss-120b 擁有 65,536 輸出 Token 上限與充足限額，配置完整 4,096 tokens
+    // 若特定舊模型有 TPM 限額則動態調控
+    currentMaxTokens = (model.includes('70b') && !model.includes('120b')) ? 2800 : 4096;
   }
 
   // 封裝單次呼叫流程
@@ -115,20 +115,11 @@ export async function callOpenAICompatibleAPI(
   // 執行第一次呼叫
   let callResult = await executeCall(model, currentMaxTokens);
 
-  // 【Groq 獨家智慧自癒機制】：若調用 70B 模型遇 413 (Request too large) 或 429 (Rate limit reached TPM)
-  // 自動無縫降級至超大 20,000 TPM 限額的 Llama 3.1 8B Instant 重新生成，絕不讓教師面臨死機錯誤！
-  if (!callResult.ok && provider === 'groq' && model !== 'llama-3.1-8b-instant') {
-    const isRateOrSizeLimit =
-      callResult.status === 413 ||
-      callResult.status === 429 ||
-      callResult.msg.toLowerCase().includes('rate limit') ||
-      callResult.msg.toLowerCase().includes('tpm') ||
-      callResult.msg.toLowerCase().includes('too large');
-
-    if (isRateOrSizeLimit) {
-      console.warn(`[Groq] ${model} 觸發 TPM 速率限制 (${callResult.status})，自動無縫切換為 20,000 TPM 之 Llama 3.1 8B Instant 備援生成...`);
-      callResult = await executeCall('llama-3.1-8b-instant', 4096);
-    }
+  // 【Groq 獨家智慧自癒機制】：使用者線上實測 Groq 唯一穩定可用之主力為 openai/gpt-oss-120b
+  // 若使用其他模型遇 400、404、413 或 429 等任何異常，自動無縫切換至實測唯一可用的旗艦主力 openai/gpt-oss-120b
+  if (!callResult.ok && provider === 'groq' && model !== 'openai/gpt-oss-120b') {
+    console.warn(`[Groq] ${model} 呼叫失敗 (${callResult.status}: ${callResult.msg})，自動無縫切換為實測唯一可用之旗艦主力 openai/gpt-oss-120b 重新生成...`);
+    callResult = await executeCall('openai/gpt-oss-120b', 4096);
   }
 
   if (!callResult.ok) {

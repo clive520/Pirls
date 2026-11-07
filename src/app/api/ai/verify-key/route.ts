@@ -198,8 +198,8 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          model: 'llama-3.1-8b-instant',
-          message: 'Groq 極速推論金鑰有效！支援 Llama 3.1 8B (20,000 TPM 限額・2秒極速)、Llama 3.3 70B、GPT OSS 20B 與 GPT OSS 120B。',
+          model: 'openai/gpt-oss-120b',
+          message: 'Groq 極速推論金鑰有效！系統預設啟用實測唯一穩定主力模型 GPT OSS 120B (131k Context・大型推理・繁中出題品質最優)。',
         }, { status: 200 });
       }
 

@@ -81,7 +81,7 @@ function TeacherCreateTestContent() {
     gemini: 'auto',
     claude: 'claude-sonnet-5-5',
     openai: 'gpt-4o',
-    groq: 'llama-3.1-8b-instant',
+    groq: 'openai/gpt-oss-120b',
     deepseek: 'deepseek-flash',
     openrouter: 'deepseek/deepseek-chat',
     opencode: 'deepseek-chat',
@@ -103,8 +103,8 @@ function TeacherCreateTestContent() {
           if (models.gemini && (models.gemini.includes('tts') || models.gemini.includes('audio') || models.gemini.includes('embed'))) {
             models.gemini = 'auto';
           }
-          if (models.groq && models.groq === 'llama-3.3-70b-versatile') {
-            models.groq = 'llama-3.1-8b-instant';
+          if (models.groq && models.groq !== 'openai/gpt-oss-120b') {
+            models.groq = 'openai/gpt-oss-120b';
           }
           if (models.claude && (models.claude.includes('3-5') || models.claude.includes('4-5') || models.claude.includes('3-opus'))) {
             models.claude = 'claude-sonnet-5-5';

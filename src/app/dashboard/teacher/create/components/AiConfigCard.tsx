@@ -367,21 +367,21 @@ export const AiConfigCard: React.FC<AiConfigCardProps> = ({
             {/* Groq 極速推理 */}
             {provider === 'groq' && (
               <select
-                value={preferredModels.groq || 'llama-3.3-70b-versatile'}
+                value={preferredModels.groq || 'openai/gpt-oss-120b'}
                 onChange={(e) => onModelChange('groq', e.target.value)}
                 className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
               >
+                <option value="openai/gpt-oss-120b">
+                  🏛️ GPT OSS 120B（實測推薦首選：唯一穩定可用、120B 大型推理模型、繁中出題品質最優）
+                </option>
                 <option value="llama-3.1-8b-instant">
-                  🚀 Llama 3.1 8B Instant（推薦首選：20,000 TPM 限額、2秒瞬時出題、免費帳號絕不塞車）
+                  🚀 Llama 3.1 8B Instant（極速輕量：體積較小、反應快速、適合簡單文字測試）
                 </option>
                 <option value="llama-3.3-70b-versatile">
-                  🌟 Llama 3.3 70B Versatile（高階旗艦：Meta 最強開源模型、四層次設題邏輯嚴密）
+                  🌟 Llama 3.3 70B Versatile（高階旗艦：若無法調用將自動降級備援）
                 </option>
                 <option value="openai/gpt-oss-20b">
                   ⚡ GPT OSS 20B（均衡高吞吐：推論速度快、適合大量文字處理）
-                </option>
-                <option value="openai/gpt-oss-120b">
-                  🏛️ GPT OSS 120B（大型推理模型：深度複雜任務與批判評斷設題）
                 </option>
               </select>
             )}
