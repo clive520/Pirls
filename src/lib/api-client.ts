@@ -58,7 +58,7 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
     data = await res.text();
   }
 
-  if (!res.ok) {
+  if (!res.ok || (data && typeof data === 'object' && data.success === false)) {
     const errorMsg = data?.error || data?.message || `HTTP ${res.status}: ${res.statusText}`;
     throw new ApiClientError(errorMsg, res.status, data);
   }

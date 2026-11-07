@@ -30,7 +30,7 @@ export const QuestionEditorList: React.FC<QuestionEditorListProps> = ({
 }) => {
   return (
     <div className={`lg:col-span-7 space-y-4 ${activeTab === 'article' ? 'hidden lg:block' : 'block'}`}>
-      {testPaper.questions.map((q, qIdx) => (
+      {(testPaper.questions || []).map((q, qIdx) => (
         <QuestionEditCard
           key={q.id}
           question={q}

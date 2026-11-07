@@ -5,19 +5,17 @@ import { formatToTestPaper } from '../format-paper';
 import { extractAndParseJSON } from '@/lib/json-helper';
 
 /**
- * Google 官方活躍 Flash 模型優先序（依 Google 2026 官方規範：優先採用 gemini-3.8-flash 與 3.6-flash）
+ * Google 官方 Flash 模型優先序（優先採用廣泛支援且穩定的 2.0-flash 與 1.5-flash）
  */
 export const ACTIVE_FLASH_PRIORITY = [
-  'gemini-3.8-flash',
-  'gemini-3.6-flash',
-  'gemini-3.5-flash-lite',
+  'gemini-2.0-flash',
   'gemini-1.5-flash',
-  'gemini-1.5-flash-8b',
+  'gemini-1.5-pro',
 ];
 
 /**
  * 動態探測該 API Key 當前可用且支援 generateContent 的推薦模型清單
- * 優先順序：Gemini 3.8 Flash > 3.6 Flash > 3.5 Flash Lite
+ * 優先順序：gemini-2.0-flash > gemini-1.5-flash > gemini-1.5-pro
  */
 export async function getAvailableGeminiModels(apiKey: string, preferredModel?: string): Promise<string[]> {
   const preferred = (preferredModel || '').trim();
@@ -34,9 +32,7 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
       const data = await res.json();
       const activeNames: string[] = (data.models || [])
         .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
-        .map((m: any) => m.name.replace(/^models\//, ''))
-        // 嚴格過濾已被 Google 官方標記為不對新用戶開放的模型（如 2.0 與 2.5 系列，避免 404 報錯）
-        .filter((name: string) => !name.includes('2.0') && !name.includes('2.5'));
+        .map((m: any) => m.name.replace(/^models\//, ''));
 
       const candidates: string[] = [];
 
@@ -65,12 +61,12 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
     // 探測逾時或異常
   }
 
-  // 靜態備援清單（以官方活躍且推薦的 3.8-flash、3.6-flash 與 1.5-flash 為主）
+  // 靜態備援清單（以官方活躍且推薦的 2.0-flash 與 1.5-flash 為主）
   if (preferred && preferred !== 'auto') {
-    const backup = preferred === 'gemini-3.8-flash' ? 'gemini-3.6-flash' : 'gemini-3.8-flash';
-    return [preferred, backup, 'gemini-1.5-flash'];
+    const backup = preferred === 'gemini-2.0-flash' ? 'gemini-1.5-flash' : 'gemini-2.0-flash';
+    return [preferred, backup, 'gemini-1.5-pro'];
   }
-  return ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-1.5-flash'];
+  return ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
 }
 
 /**
@@ -130,19 +126,11 @@ export async function callGeminiAPI(params: GenerateParams, apiKey: string): Pro
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-      const isGemini3 = model.includes('3.');
       const generationConfig: any = {
         responseMimeType: 'application/json',
         temperature: 0.7,
-        maxOutputTokens: 8192, // 充裕的輸出空間，避免 thinking tokens 佔滿導致截斷
+        maxOutputTokens: 8192, // 充裕的輸出空間，確保文章與題目完整輸出
       };
-
-      // 核心加速：針對 Gemini 3.x Flash 模型設定 LOW 思考等級，壓低首字延遲至極速
-      if (isGemini3) {
-        generationConfig.thinkingConfig = {
-          thinkingLevel: 'LOW',
-        };
-      }
 
       const payload = {
         contents: [{ role: 'user', parts: [{ text: userPrompt }] }],

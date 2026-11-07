@@ -9,12 +9,12 @@ export async function POST(req: NextRequest) {
   try {
     const token = req.cookies.get('pirls_token')?.value;
     if (!token) {
-      return NextResponse.json({ success: false, error: '請先登入系統' }, { status: 200 });
+      return NextResponse.json({ success: false, error: '請先登入系統' }, { status: 401 });
     }
 
     const session = await verifySessionToken(token);
     if (!session || (session.role !== 'teacher' && session.role !== 'admin')) {
-      return NextResponse.json({ success: false, error: '無出題權限' }, { status: 200 });
+      return NextResponse.json({ success: false, error: '無出題權限' }, { status: 403 });
     }
 
     const body = await req.json();
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: false,
         error: `您尚未填寫 ${finalProvider.toUpperCase()} API Key！請先在上方「AI 模型與 API Key 設定」中貼上有效的金鑰，方可開始調用 AI 生成專屬試卷。`,
-      }, { status: 200 });
+      }, { status: 400 });
     }
 
     const testPaper = await generatePIRLSTestPaper({
@@ -82,6 +82,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: false,
       error: error.message || '生成失敗，請確認 API Key 是否有效或稍後重試',
-    }, { status: 200 });
+    }, { status: 500 });
   }
 }

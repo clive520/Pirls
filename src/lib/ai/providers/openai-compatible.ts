@@ -65,7 +65,7 @@ export async function callOpenAICompatibleAPI(
         ],
         response_format: { type: 'json_object' },
         temperature: 0.7,
-        max_tokens: 8192,
+        max_tokens: provider === 'groq' ? 4096 : 8192,
       }),
     }).finally(() => clearTimeout(timer));
 

@@ -54,19 +54,18 @@ export async function POST(req: NextRequest) {
         const data = await modelsRes.json().catch(() => ({ models: [] }));
         const availableModels: string[] = (data.models || [])
           .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
-          .map((m: any) => m.name.replace(/^models\//, ''))
-          .filter((n: string) => !n.includes('2.0') && !n.includes('2.5'));
+          .map((m: any) => m.name.replace(/^models\//, ''));
 
-        const topModel = availableModels.find((n) => n.includes('3.8-flash'))
-          || availableModels.find((n) => n.includes('3.6-flash'))
-          || availableModels.find((n) => n.includes('1.5-flash'))
+        const topModel = availableModels.find((n) => n === 'gemini-2.0-flash' || n.includes('2.0-flash'))
+          || availableModels.find((n) => n === 'gemini-1.5-flash' || n.includes('1.5-flash'))
+          || availableModels.find((n) => n.includes('flash'))
           || availableModels[0]
-          || 'gemini-3.8-flash';
+          || 'gemini-2.0-flash';
 
         return NextResponse.json({
           success: true,
           model: topModel,
-          message: `Google Gemini API 金鑰驗證成功！已連線官方活躍推薦模型：${topModel}。`,
+          message: `Google Gemini API 金鑰驗證成功！已成功連線推薦模型：${topModel}。`,
         }, { status: 200 });
       }
 

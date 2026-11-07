@@ -174,7 +174,7 @@ export const IllustrationStoryboard: React.FC<IllustrationStoryboardProps> = ({
                       onChange={(e) => onParagraphChange(parseInt(e.target.value, 10), safeSceneIdx)}
                       className="text-xs rounded-md border border-indigo-200 py-0.5 px-2 bg-indigo-50/50 text-indigo-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     >
-                      {paragraphs.map((p) => (
+                      {(paragraphs || []).map((p) => (
                         <option key={p.paragraphNumber} value={p.paragraphNumber}>
                           穿插於 第 {p.paragraphNumber} 段 之後
                         </option>

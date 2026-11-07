@@ -95,7 +95,7 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
       <div id="storyboard-container">
         <IllustrationStoryboard
           illustrations={testPaper.illustrations || []}
-          paragraphs={testPaper.paragraphs}
+          paragraphs={testPaper.paragraphs || []}
           activeSceneIdx={activeSceneIdx}
           setActiveSceneIdx={setActiveSceneIdx}
           copiedCombined={copiedCombined}
@@ -116,15 +116,15 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
 
       {/* 內文各段落與穿插的情境插圖預覽 */}
       <div className="space-y-4 text-sm text-slate-700 leading-relaxed font-sans max-h-[650px] overflow-y-auto pr-2">
-        {testPaper.paragraphs.map((p, pIdx) => {
+        {(testPaper.paragraphs || []).map((p, pIdx) => {
           const matchingIlls = (testPaper.illustrations || [])
             .map((ill, illIdx) => ({ ill, illIdx }))
             .filter(({ ill }) => (ill.paragraphNumber || 1) === p.paragraphNumber);
-          const isLast = pIdx === testPaper.paragraphs.length - 1;
+          const isLast = pIdx === (testPaper.paragraphs || []).length - 1;
           const trailingIlls = isLast
             ? (testPaper.illustrations || [])
                 .map((ill, illIdx) => ({ ill, illIdx }))
-                .filter(({ ill }) => (ill.paragraphNumber || 1) > testPaper.paragraphs.length)
+                .filter(({ ill }) => (ill.paragraphNumber || 1) > (testPaper.paragraphs || []).length)
             : [];
           const allIllsForThisPara = [...matchingIlls, ...trailingIlls];
 

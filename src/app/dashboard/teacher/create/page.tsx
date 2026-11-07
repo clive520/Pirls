@@ -574,10 +574,15 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
         preferredModel: preferredModels[provider] || 'auto',
       });
 
+      if (!data || !data.testPaper) {
+        throw new Error((data as any)?.error || '未能成功生成試卷，請確認 API Key 是否有效或稍後重試');
+      }
+
       setTestPaper(data.testPaper);
       setStep('editor');
     } catch (err: any) {
       setErrorMsg(err.message || '生成試卷失敗，請確認 API Key 是否有效');
+      setStep('input');
     } finally {
       setLoading(false);
     }
@@ -825,7 +830,7 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
           /* ==========================================================
              第二步：人機協同試題編輯器 (Human-in-the-Loop Editor)
              ========================================================== */
-          testPaper && (
+          testPaper ? (
             <div className="space-y-6">
               {/* 頂部操作列 */}
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -925,6 +930,24 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
                   onDeleteQuestion={handleDeleteQuestion}
                 />
               </div>
+            </div>
+          ) : (
+            <div className="bg-white p-8 sm:p-12 rounded-2xl border border-slate-200 text-center space-y-4 shadow-sm max-w-lg mx-auto my-12">
+              <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-slate-800">尚未載入試卷內容</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                系統未檢測到生成的試卷內容，請點擊下方按鈕返回重新檢查 API Key 或出題設定。
+              </p>
+              <button
+                type="button"
+                onClick={() => setStep('input')}
+                className="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold inline-flex items-center space-x-1.5 shadow-sm transition"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>返回重新設定</span>
+              </button>
             </div>
           )
         )}
