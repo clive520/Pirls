@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   BookOpen, Sparkles, FileText, ArrowLeft, CheckCircle2,
   RefreshCw, PlusCircle, Trash2, Save, Send, Image as ImageIcon,
-  BarChart, AlertCircle, Copy, Upload, Palette, Settings
+  BarChart, AlertCircle, Copy, Upload, Palette, Settings, HelpCircle
 } from 'lucide-react';
 import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration } from '@/lib/types';
 import { generateSmartImagePrompts, formatCombinedImagePrompt } from '@/lib/llm-adapter';
@@ -882,66 +882,76 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
 
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => setActiveTab('article')}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                      activeTab === 'article' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                    type="button"
+                    onClick={() => {
+                      document.getElementById('article-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 transition flex items-center space-x-1.5 shadow-xs"
+                    title="快速滾動至上方文章正文"
                   >
-                    檢視/編輯文章 ({testPaper.wordCount}字)
+                    <BookOpen className="w-3.5 h-3.5 text-sky-600" />
+                    <span>文章正文 ({testPaper.wordCount}字)</span>
                   </button>
                   <button
-                    onClick={() => setActiveTab('questions')}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                      activeTab === 'questions' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                    type="button"
+                    onClick={() => {
+                      document.getElementById('questions-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition flex items-center space-x-1.5 shadow-xs"
+                    title="快速滾動至下方評量試題"
                   >
-                    檢視/微調題目 ({testPaper.questions.length}題)
+                    <HelpCircle className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>評量題目 ({testPaper.questions.length}題)</span>
                   </button>
                 </div>
               </div>
 
-              {/* 雙欄主視圖 */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* 左欄：文章閱讀與圖表呈現 */}
-                <ArticleEditor
-                  testPaper={testPaper}
-                  activeTab={activeTab}
-                  editingParaIdx={editingParaIdx}
-                  setEditingParaIdx={setEditingParaIdx}
-                  onUpdateTitle={updateTitle}
-                  onUpdateParagraphText={updateParagraphText}
-                  onAddParagraph={handleAddParagraph}
-                  onDeleteParagraph={handleDeleteParagraph}
-                  activeSceneIdx={activeSceneIdx}
-                  setActiveSceneIdx={setActiveSceneIdx}
-                  copiedCombined={copiedCombined}
-                  copiedSingle={copiedSingle}
-                  onCopyCombinedPrompt={handleCopyCombinedPrompt}
-                  onCopySinglePrompt={handleCopySinglePrompt}
-                  onAddScene={handleAddScene}
-                  onRemoveScene={handleRemoveScene}
-                  onParagraphChange={handleParagraphChange}
-                  onCaptionChange={handleCaptionChange}
-                  onImageUpload={handleImageUpload}
-                  onPasteImage={handlePasteImage}
-                  onRemoveImage={handleRemoveImage}
-                  onSetImageUrl={handleSetImageUrl}
-                  onGenerateScenesForPasted={handleGenerateScenesForPasted}
-                />
+              {/* 全欄單一主視圖：上方為文章，下方接著題目 */}
+              <div className="space-y-8">
+                {/* 上方：文章閱讀文本、正文分段與繪本配圖 */}
+                <section id="article-section">
+                  <ArticleEditor
+                    testPaper={testPaper}
+                    activeTab={activeTab}
+                    editingParaIdx={editingParaIdx}
+                    setEditingParaIdx={setEditingParaIdx}
+                    onUpdateTitle={updateTitle}
+                    onUpdateParagraphText={updateParagraphText}
+                    onAddParagraph={handleAddParagraph}
+                    onDeleteParagraph={handleDeleteParagraph}
+                    activeSceneIdx={activeSceneIdx}
+                    setActiveSceneIdx={setActiveSceneIdx}
+                    copiedCombined={copiedCombined}
+                    copiedSingle={copiedSingle}
+                    onCopyCombinedPrompt={handleCopyCombinedPrompt}
+                    onCopySinglePrompt={handleCopySinglePrompt}
+                    onAddScene={handleAddScene}
+                    onRemoveScene={handleRemoveScene}
+                    onParagraphChange={handleParagraphChange}
+                    onCaptionChange={handleCaptionChange}
+                    onImageUpload={handleImageUpload}
+                    onPasteImage={handlePasteImage}
+                    onRemoveImage={handleRemoveImage}
+                    onSetImageUrl={handleSetImageUrl}
+                    onGenerateScenesForPasted={handleGenerateScenesForPasted}
+                  />
+                </section>
 
-                {/* 右欄：四層次題目微調編輯區 */}
-                <QuestionEditorList
-                  testPaper={testPaper}
-                  activeTab={activeTab}
-                  isEditing={isEditing}
-                  saving={saving}
-                  onSave={handleSaveTestPaper}
-                  onUpdatePoints={updateQuestionPoints}
-                  onUpdatePrompt={updateQuestionPrompt}
-                  onUpdateOptionText={updateOptionText}
-                  onSetCorrectOption={setCorrectOption}
-                  onDeleteQuestion={handleDeleteQuestion}
-                />
+                {/* 下方：接續四層次試題微調編輯區 */}
+                <section id="questions-section">
+                  <QuestionEditorList
+                    testPaper={testPaper}
+                    activeTab={activeTab}
+                    isEditing={isEditing}
+                    saving={saving}
+                    onSave={handleSaveTestPaper}
+                    onUpdatePoints={updateQuestionPoints}
+                    onUpdatePrompt={updateQuestionPrompt}
+                    onUpdateOptionText={updateOptionText}
+                    onSetCorrectOption={setCorrectOption}
+                    onDeleteQuestion={handleDeleteQuestion}
+                  />
+                </section>
               </div>
             </div>
           ) : (

@@ -5,7 +5,7 @@ import { IllustrationStoryboard } from './IllustrationStoryboard';
 
 interface ArticleEditorProps {
   testPaper: TestPaper;
-  activeTab: 'article' | 'questions';
+  activeTab?: 'article' | 'questions';
   editingParaIdx: number | null;
   setEditingParaIdx: (idx: number | null) => void;
   onUpdateTitle: (title: string) => void;
@@ -56,14 +56,12 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
   onGenerateScenesForPasted,
 }) => {
   return (
-    <div
-      className={`lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 ${
-        activeTab === 'questions' ? 'hidden lg:block' : 'block'
-      }`}
-    >
-      <div className="flex items-center justify-between border-b pb-3">
-        <span className="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
-          <BookOpen className="w-4 h-4 text-sky-600" />
+    <div className="w-full bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+      <div className="flex items-center justify-between border-b pb-4">
+        <span className="font-bold text-sm sm:text-base text-slate-900 flex items-center space-x-2">
+          <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center font-bold shadow-xs">
+            <BookOpen className="w-4 h-4" />
+          </div>
           <span>閱讀文本正文與分段編輯</span>
         </span>
         <div className="flex items-center space-x-2">
@@ -71,7 +69,7 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
           <button
             type="button"
             onClick={onAddParagraph}
-            className="text-xs text-sky-600 hover:text-sky-800 font-bold px-2.5 py-1 rounded-lg bg-sky-50 border border-sky-100 hover:bg-sky-100 transition flex items-center space-x-1"
+            className="text-xs text-sky-600 hover:text-sky-800 font-bold px-3 py-1.5 rounded-lg bg-sky-50 border border-sky-200 hover:bg-sky-100 transition flex items-center space-x-1"
             title="在文末增加一個新段落"
           >
             <PlusCircle className="w-3.5 h-3.5" />
@@ -114,8 +112,8 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
         />
       </div>
 
-      {/* 內文各段落與穿插的情境插圖預覽 */}
-      <div className="space-y-4 text-sm text-slate-700 leading-relaxed font-sans max-h-[650px] overflow-y-auto pr-2">
+      {/* 內文各段落與穿插的情境插圖預覽（全欄自然開展，無內部侷限滾動軸） */}
+      <div className="space-y-4 text-sm text-slate-700 leading-relaxed font-sans">
         {(testPaper.paragraphs || []).map((p, pIdx) => {
           const matchingIlls = (testPaper.illustrations || [])
             .map((ill, illIdx) => ({ ill, illIdx }))
