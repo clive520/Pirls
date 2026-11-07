@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  BookOpen, PlusCircle, ArrowLeft, FileSpreadsheet, TrendingUp
+  BookOpen, PlusCircle, ArrowLeft, FileSpreadsheet, TrendingUp, Settings
 } from 'lucide-react';
 import { TestPaper, ClassRoom, TestAssignment } from '@/lib/types';
 import { api, ApiClientError } from '@/lib/api-client';
@@ -256,6 +256,14 @@ export default function TeacherTestPapersPage() {
           </div>
 
           <div className="flex items-center space-x-2">
+            <Link
+              href="/dashboard/teacher/settings/ai"
+              className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold inline-flex items-center space-x-1.5 border border-slate-200 transition"
+              title="管理各大 AI 模型 API Key"
+            >
+              <Settings className="w-4 h-4 text-slate-500" />
+              <span className="hidden sm:inline">AI 設定</span>
+            </Link>
             <Link
               href="/dashboard/teacher/analytics/comparative"
               className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold inline-flex items-center space-x-1.5 border border-indigo-200/60 transition"

@@ -40,7 +40,7 @@ export async function callClaudeAPI(
       signal: controller.signal,
       body: JSON.stringify({
         model,
-        max_tokens: 8192,
+        max_tokens: 4096,
         temperature: 0.7,
         system: systemWithJsonInstruction,
         messages: [{ role: 'user', content: userPrompt }],

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   BookOpen, Sparkles, FileText, ArrowLeft, CheckCircle2,
   RefreshCw, PlusCircle, Trash2, Save, Send, Image as ImageIcon,
-  BarChart, AlertCircle, Copy, Upload, Palette
+  BarChart, AlertCircle, Copy, Upload, Palette, Settings
 } from 'lucide-react';
 import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration } from '@/lib/types';
 import { generateSmartImagePrompts, formatCombinedImagePrompt } from '@/lib/llm-adapter';
@@ -545,14 +545,8 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
           ? 'OpenRouter'
           : provider === 'deepseek'
           ? 'DeepSeek'
-          : 'OpenCode';
-      setErrorMsg(`您尚未填寫 ${provName} API Key！請先在下方「AI 模型與 API Key 設定」中貼上有效的金鑰，系統需要真實金鑰方能為您生成閱讀題本，不會直接產出範例文章。`);
-
-      const keyInput = document.getElementById('ai-api-key-input');
-      if (keyInput) {
-        keyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        keyInput.focus();
-      }
+          : '自建端點';
+      setErrorMsg(`您尚未設定 ${provName} API Key！請點擊下方「管理 AI 金鑰設定」前往獨立設定頁貼上有效金鑰。為確保素養評量品質，系統需真實金鑰運算，絕不隨意以示範文章混充。`);
       return;
     }
 
@@ -764,30 +758,41 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
             </div>
           </div>
 
-          {step === 'editor' && testPaper && (
-            <div className="flex items-center space-x-3">
-              <span className="text-xs text-slate-500 font-medium hidden sm:inline">
-                共 {testPaper.questions.length} 題 • 總分 {testPaper.totalPoints} 分
-              </span>
-              <button
-                onClick={handleSaveTestPaper}
-                disabled={saving}
-                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:bg-slate-400 text-white text-xs font-bold inline-flex items-center space-x-1.5 shadow-sm transition"
-              >
-                {saving ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>{isEditing ? '更新儲存中...' : '寫入題庫中...'}</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    <span>{isEditing ? '儲存試卷更新' : '儲存至題庫'}</span>
-                  </>
-                )}
-              </button>
-            </div>
-          )}
+          <div className="flex items-center space-x-2">
+            <Link
+              href="/dashboard/teacher/settings/ai?from=create"
+              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold inline-flex items-center space-x-1.5 transition border border-slate-200"
+              title="前往 AI 金鑰與模型設定"
+            >
+              <Settings className="w-3.5 h-3.5 text-slate-500" />
+              <span>⚙️ AI 設定</span>
+            </Link>
+
+            {step === 'editor' && testPaper && (
+              <div className="flex items-center space-x-3">
+                <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+                  共 {testPaper.questions.length} 題 • 總分 {testPaper.totalPoints} 分
+                </span>
+                <button
+                  onClick={handleSaveTestPaper}
+                  disabled={saving}
+                  className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:bg-slate-400 text-white text-xs font-bold inline-flex items-center space-x-1.5 shadow-sm transition"
+                >
+                  {saving ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>{isEditing ? '更新儲存中...' : '寫入題庫中...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>{isEditing ? '儲存試卷更新' : '儲存至題庫'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -817,15 +822,8 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
             provider={provider}
             setProvider={handleProviderChange}
             apiKeys={apiKeys}
-            onKeyChange={handleKeyChange}
-            customBaseUrl={customBaseUrl}
-            onBaseUrlChange={handleBaseUrlChange}
             preferredModels={preferredModels}
             onModelChange={handleModelChange}
-            keyChecking={keyChecking}
-            keyStatus={keyStatus}
-            onVerifyKey={handleVerifyKey}
-            onClearKeys={handleClearKeys}
           />) : (
           /* ==========================================================
              第二步：人機協同試題編輯器 (Human-in-the-Loop Editor)

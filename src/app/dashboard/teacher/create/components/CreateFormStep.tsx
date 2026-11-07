@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sparkles, FileText, AlertCircle, RefreshCw } from 'lucide-react';
 import { AIProvider } from '@/lib/ai/types';
-import { AiConfigCard } from './AiConfigCard';
+import { AiModelSelector } from './AiModelSelector';
 
 interface CreateFormStepProps {
   mode: 'theme' | 'paste';
@@ -23,19 +23,12 @@ interface CreateFormStepProps {
   loading: boolean;
   errorMsg: string;
   onSubmit: (e: React.FormEvent) => void;
-  // AI Config
+  // AI Model Selection
   provider: AIProvider;
   setProvider: (p: AIProvider) => void;
   apiKeys: { [key: string]: string };
-  onKeyChange: (prov: string, val: string) => void;
-  customBaseUrl: string;
-  onBaseUrlChange: (val: string) => void;
   preferredModels: { [key: string]: string };
   onModelChange: (prov: string, val: string) => void;
-  keyChecking: boolean;
-  keyStatus: { ok: boolean; message: string } | null;
-  onVerifyKey: () => void;
-  onClearKeys: () => void;
 }
 
 export const CreateFormStep: React.FC<CreateFormStepProps> = ({
@@ -61,15 +54,8 @@ export const CreateFormStep: React.FC<CreateFormStepProps> = ({
   provider,
   setProvider,
   apiKeys,
-  onKeyChange,
-  customBaseUrl,
-  onBaseUrlChange,
   preferredModels,
   onModelChange,
-  keyChecking,
-  keyStatus,
-  onVerifyKey,
-  onClearKeys,
 }) => {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -250,20 +236,13 @@ export const CreateFormStep: React.FC<CreateFormStepProps> = ({
             </div>
           </div>
 
-          {/* 多 AI 介面與金鑰記憶設定區 */}
-          <AiConfigCard
+          {/* AI 命題大腦與模型選用（金鑰在獨立設定頁管理） */}
+          <AiModelSelector
             provider={provider}
             setProvider={setProvider}
             apiKeys={apiKeys}
-            onKeyChange={onKeyChange}
-            customBaseUrl={customBaseUrl}
-            onBaseUrlChange={onBaseUrlChange}
             preferredModels={preferredModels}
             onModelChange={onModelChange}
-            keyChecking={keyChecking}
-            keyStatus={keyStatus}
-            onVerifyKey={onVerifyKey}
-            onClearKeys={onClearKeys}
           />
         </div>
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw, TrendingUp, Crown, Handshake } from 'lucide-react';
+import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw, TrendingUp, Crown, Handshake, Settings } from 'lucide-react';
 import api from '@/lib/api-client';
 import { CoTeacherManageModal } from '@/components/teacher';
 
@@ -390,6 +390,14 @@ export default function TeacherDashboardPage() {
             >
               <TrendingUp className="w-4 h-4 text-indigo-600" />
               <span>前後測雷達對照</span>
+            </Link>
+            <Link
+              href="/dashboard/teacher/settings/ai"
+              className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition border border-slate-200"
+              title="管理各大 AI 模型 API Key 與端點"
+            >
+              <Settings className="w-4 h-4 text-slate-500" />
+              <span className="hidden md:inline">AI 設定</span>
             </Link>
             <button
               onClick={handleLogout}
