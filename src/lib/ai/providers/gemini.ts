@@ -5,13 +5,18 @@ import { formatToTestPaper } from '../format-paper';
 import { extractAndParseJSON } from '@/lib/json-helper';
 
 /**
- * Google 官方 Flash / Pro 文字模型優先序（排除已停用的 1.5 系列，優先採用現役官方支援的 2.5 與 2.0 文字模型）
+ * Google 官方 Flash 文字模型優先序
+ * 優先順序：Gemini 3.8 > 3.7 > 3.6 > 3.5 > 3.5-Lite > 3.1-Lite > 2.5 > 2.0
  */
 export const ACTIVE_FLASH_PRIORITY = [
+  'gemini-3.8-flash',
+  'gemini-3.7-flash',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-3.1-flash-lite',
   'gemini-2.5-flash',
   'gemini-2.0-flash',
-  'gemini-2.5-pro',
-  'gemini-2.5-flash-lite',
 ];
 
 /**
@@ -34,7 +39,7 @@ function isExcludedGeminiModel(name: string): boolean {
 
 /**
  * 動態探測該 API Key 當前可用且支援 generateContent 的文字推薦模型清單
- * 優先順序：gemini-2.5-flash > gemini-2.0-flash > gemini-2.5-pro > gemini-2.5-flash-lite
+ * 優先順序：Gemini 3.8 > 3.7 > 3.6 > 3.5 > 3.5-Lite > 3.1-Lite
  */
 export async function getAvailableGeminiModels(apiKey: string, preferredModel?: string): Promise<string[]> {
   let preferred = (preferredModel || '').trim();
@@ -69,7 +74,7 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
         if (matched) candidates.push(matched);
       }
 
-      // 依官方活躍優先級填入備援（2.5-flash > 2.0-flash > 2.5-pro > 2.5-flash-lite）
+      // 依官方活躍優先級填入備援（3.8 > 3.7 > 3.6 > 3.5 > 3.5-Lite > 3.1-Lite）
       for (const m of ACTIVE_FLASH_PRIORITY) {
         if (!candidates.includes(m)) {
           const matched = activeNames.find((n) => n === m || n.startsWith(`${m}-`));
@@ -85,10 +90,10 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
         if (anyFlash.length > 0) candidates.push(...anyFlash.slice(0, 2));
       }
 
-      // 最終保底備援（官方主力現役模型）
+      // 最終保底備援
+      if (!candidates.includes('gemini-3.8-flash')) candidates.push('gemini-3.8-flash');
+      if (!candidates.includes('gemini-3.5-flash')) candidates.push('gemini-3.5-flash');
       if (!candidates.includes('gemini-2.5-flash')) candidates.push('gemini-2.5-flash');
-      if (!candidates.includes('gemini-2.0-flash')) candidates.push('gemini-2.0-flash');
-      if (!candidates.includes('gemini-2.5-pro')) candidates.push('gemini-2.5-pro');
 
       return candidates;
     }
@@ -98,10 +103,10 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
 
   // 靜態備援清單（純文字現役官方模型）
   if (preferred && preferred !== 'auto' && !isExcludedGeminiModel(preferred) && !preferred.includes('1.5')) {
-    const backup = preferred === 'gemini-2.5-flash' ? 'gemini-2.0-flash' : 'gemini-2.5-flash';
-    return [preferred, backup, 'gemini-2.5-pro'];
+    const backup = preferred === 'gemini-3.8-flash' ? 'gemini-3.5-flash' : 'gemini-3.8-flash';
+    return [preferred, backup, 'gemini-2.5-flash'];
   }
-  return ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro'];
+  return ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'];
 }
 
 /**
@@ -173,7 +178,7 @@ export async function callGeminiAPI(params: GenerateParams, apiKey: string): Pro
         generationConfig,
       };
 
-      // 單一模型等待 55 秒，若超時則自動切換至下一款備援模型（如 2.5-flash 或 2.0-flash）
+      // 單一模型等待 55 秒，若超時則自動切換至下一款備援模型（如 3.8-flash 或 3.5-flash）
       const response = await fetchWithRetry(url, payload, 1, 55000);
 
       if (!response.ok) {

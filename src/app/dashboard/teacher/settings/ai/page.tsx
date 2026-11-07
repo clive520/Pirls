@@ -30,10 +30,12 @@ const PROVIDER_METADATA: Record<AIProvider, {
     desc: 'Google 官方最新旗艦模型，具備優異的繁體中文理解力與百萬 Context，免費額度充足且出題穩定。',
     models: [
       { id: 'auto', label: '🤖 智慧自動選擇', desc: '自動匹配 Google 官方最新活躍的 Flash 模型' },
-      { id: 'gemini-2.5-flash', label: '🧠 Gemini 2.5 Flash (推薦首選)', desc: '具備思考推理能力，繁中素養出題極致優異' },
-      { id: 'gemini-2.0-flash', label: '⚡ Gemini 2.0 Flash (極速穩定)', desc: '官方廣泛支援主力，出題速度極快、繁中理解卓越' },
-      { id: 'gemini-2.5-pro', label: '🏛️ Gemini 2.5 Pro (深度邏輯)', desc: '高階推論旗艦，適合第四層次評斷題與詳細評分規準' },
-      { id: 'gemini-2.5-flash-lite', label: '🍃 Gemini 2.5 Flash Lite (超輕量)', desc: '輕量高吞吐，低延遲快速反應' },
+      { id: 'gemini-3.8-flash', label: '⚡ Gemini 3.8 Flash (推薦首選)', desc: '新一代主力模型・適合複雜任務與四層次設題' },
+      { id: 'gemini-3.7-flash', label: '🧠 Gemini 3.7 Flash', desc: '程式開發・多步驟推理・邏輯嚴密' },
+      { id: 'gemini-3.6-flash', label: '🌐 Gemini 3.6 Flash', desc: '一般對話・多模態理解・文意流暢' },
+      { id: 'gemini-3.5-flash', label: '🚀 Gemini 3.5 Flash', desc: '一般對話・大量請求・穩定性佳' },
+      { id: 'gemini-3.5-flash-lite', label: '💰 Gemini 3.5 Flash-Lite', desc: '低成本・高頻率請求・回應迅速' },
+      { id: 'gemini-3.1-flash-lite', label: '🍃 Gemini 3.1 Flash-Lite', desc: '輕量化・高效率任務・低延遲' },
     ],
   },
   claude: {

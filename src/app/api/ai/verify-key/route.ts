@@ -71,13 +71,15 @@ export async function POST(req: NextRequest) {
           })
           .map((m: any) => m.name.replace(/^models\//, ''));
 
-        const topModel = availableModels.find((n) => n === 'gemini-2.5-flash')
-          || availableModels.find((n) => n === 'gemini-2.0-flash')
-          || availableModels.find((n) => n.startsWith('gemini-2.5-flash'))
-          || availableModels.find((n) => n.startsWith('gemini-2.0-flash'))
-          || availableModels.find((n) => n === 'gemini-2.5-pro')
+        const topModel = availableModels.find((n) => n === 'gemini-3.8-flash')
+          || availableModels.find((n) => n === 'gemini-3.7-flash')
+          || availableModels.find((n) => n === 'gemini-3.6-flash')
+          || availableModels.find((n) => n === 'gemini-3.5-flash')
+          || availableModels.find((n) => n === 'gemini-3.5-flash-lite')
+          || availableModels.find((n) => n === 'gemini-3.1-flash-lite')
+          || availableModels.find((n) => n === 'gemini-2.5-flash')
           || availableModels.find((n) => n.includes('flash'))
-          || 'gemini-2.5-flash';
+          || 'gemini-3.8-flash';
 
         return NextResponse.json({
           success: true,

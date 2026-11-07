@@ -106,10 +106,12 @@ export const AiModelSelector: React.FC<AiModelSelectorProps> = ({
               className="flex-1 rounded-lg border border-slate-200 py-1 px-2.5 text-xs text-slate-800 bg-slate-50/50 font-medium focus:ring-1 focus:ring-sky-500 focus:outline-none"
             >
               <option value="auto">🤖 智慧自動選擇 (推薦：官方最新 Flash 模型)</option>
-              <option value="gemini-2.5-flash">🧠 Gemini 2.5 Flash (推薦首選・最新推論)</option>
-              <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (極速穩定・廣泛支援)</option>
-              <option value="gemini-2.5-pro">🏛️ Gemini 2.5 Pro (深度邏輯・第四層批判)</option>
-              <option value="gemini-2.5-flash-lite">🍃 Gemini 2.5 Flash Lite (超輕量低延遲)</option>
+              <option value="gemini-3.8-flash">⚡ Gemini 3.8 Flash (新一代主力・複雜任務推薦)</option>
+              <option value="gemini-3.7-flash">🧠 Gemini 3.7 Flash (程式開發・多步驟推理)</option>
+              <option value="gemini-3.6-flash">🌐 Gemini 3.6 Flash (一般對話・多模態理解)</option>
+              <option value="gemini-3.5-flash">🚀 Gemini 3.5 Flash (一般對話・大量請求)</option>
+              <option value="gemini-3.5-flash-lite">💰 Gemini 3.5 Flash-Lite (低成本・高頻率請求)</option>
+              <option value="gemini-3.1-flash-lite">🍃 Gemini 3.1 Flash-Lite (輕量化・高效率任務)</option>
             </select>
           )}
 
