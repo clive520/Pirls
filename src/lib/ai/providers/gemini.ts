@@ -185,6 +185,14 @@ export async function callGeminiAPI(params: GenerateParams, apiKey: string): Pro
         const errJson = await response.json().catch(() => null);
         const googleMsg = errJson?.error?.message || response.statusText;
         const statusCode = response.status;
+
+        // 捕捉 Google 402 Prepayment credits depleted 專屬錯誤並提供清晰指引
+        if (statusCode === 402 || googleMsg.includes('prepayment credits') || googleMsg.includes('depleted')) {
+          throw new Error(
+            `Google Gemini 專案預付額度已耗盡 (402 Prepayment Depleted)：您目前的 Google API Key 綁定之專案已啟用「預付費帳單（Prepay）」且餘額為 0。\n\n【如何享有完全免費額度】：\n請前往 Google AI Studio (https://aistudio.google.com/app/apikey) 點選「Create API key」並選擇「Create API key in new project」（在未綁定信用卡帳單的全新專案中建立），即可享有 Google 官方每日 1,500 次 100% 完全免費額度！`
+          );
+        }
+
         throw new Error(`Google Gemini [${model}] 錯誤 (${statusCode}): ${googleMsg}`);
       }
 
@@ -204,6 +212,10 @@ export async function callGeminiAPI(params: GenerateParams, apiKey: string): Pro
       // 若是 API Key 無效，無須再嘗試其他模型，立即拋出清楚錯誤
       if (err.message.includes('API key not valid') || err.message.includes('API_KEY_INVALID')) {
         throw new Error(`Google API Key 無效，請檢查您的金鑰是否正確輸入。(${err.message})`);
+      }
+      // 若是專案帳單餘額為 0 (402)，無須再嘗試其他模型，立即拋出清楚指引
+      if (err.message.includes('402 Prepayment Depleted')) {
+        throw err;
       }
     }
   }

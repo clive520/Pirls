@@ -81,6 +81,32 @@ export async function POST(req: NextRequest) {
           || availableModels.find((n) => n.includes('flash'))
           || 'gemini-3.8-flash';
 
+        // 額外發送 1-token 輕量試探請求，檢驗是否觸發 402 帳單額度欠費
+        try {
+          const probeRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${topModel}:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: 'hi' }] }],
+              generationConfig: { maxOutputTokens: 1 },
+            }),
+          });
+
+          if (!probeRes.ok) {
+            const probeErr = await probeRes.json().catch(() => null);
+            const probeMsg = probeErr?.error?.message || probeRes.statusText;
+            if (probeRes.status === 402 || probeMsg.includes('prepayment credits') || probeMsg.includes('depleted')) {
+              return NextResponse.json({
+                success: false,
+                error: `Google Gemini 專案預付額度已耗盡 (402)：您目前的 API Key 所在專案已綁定「預付費帳單（Prepay）」且餘額為 0。\n\n【如何享有 100% 完全免費額度】：請前往 Google AI Studio (https://aistudio.google.com/app/apikey) 點選「Create API key」並選擇「Create API key in new project」（在未綁定信用卡帳單的全新專案中建立），即可享有 Google 官方每日 1,500 次完全免費額度！`,
+              }, { status: 200 });
+            }
+          }
+        } catch {
+          // 試探請求若遇網路問題不中斷基礎驗證
+        }
+
         return NextResponse.json({
           success: true,
           model: topModel,
