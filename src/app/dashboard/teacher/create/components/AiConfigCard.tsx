@@ -389,15 +389,15 @@ export const AiConfigCard: React.FC<AiConfigCardProps> = ({
             {/* DeepSeek 官方 */}
             {provider === 'deepseek' && (
               <select
-                value={preferredModels.deepseek || 'deepseek-chat'}
+                value={preferredModels.deepseek || 'deepseek-flash'}
                 onChange={(e) => onModelChange('deepseek', e.target.value)}
                 className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
               >
-                <option value="deepseek-chat">
-                  🌟 DeepSeek V3 (deepseek-chat) - 推薦：繁中理解精準、中文命題首選
+                <option value="deepseek-flash">
+                  ⚡ DeepSeek V4.1 Flash（推薦首選：極速平價、成語典故地道、支援視覺推理）
                 </option>
-                <option value="deepseek-reasoner">
-                  🧠 DeepSeek R1 (deepseek-reasoner) - 深度思維鏈推理
+                <option value="deepseek-v4-pro">
+                  🧠 DeepSeek V4 Pro（高階旗艦：深層文字推理、第四層批判評斷設題）
                 </option>
               </select>
             )}

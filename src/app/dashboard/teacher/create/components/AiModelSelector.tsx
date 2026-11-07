@@ -159,8 +159,8 @@ export const AiModelSelector: React.FC<AiModelSelectorProps> = ({
               onChange={(e) => onModelChange('deepseek', e.target.value)}
               className="flex-1 rounded-lg border border-slate-200 py-1 px-2.5 text-xs text-slate-800 bg-slate-50/50 font-medium focus:ring-1 focus:ring-sky-500 focus:outline-none"
             >
-              <option value="deepseek-flash">⚡ DeepSeek V4.1 Flash (推薦・極速平價)</option>
-              <option value="deepseek-chat">💬 DeepSeek-V3 (中文全功能旗艦)</option>
+              <option value="deepseek-flash">⚡ DeepSeek V4.1 Flash (推薦首選・極速平價・成語地道)</option>
+              <option value="deepseek-v4-pro">🧠 DeepSeek V4 Pro (高階旗艦・深層推理・第四層批判評斷)</option>
             </select>
           )}
 

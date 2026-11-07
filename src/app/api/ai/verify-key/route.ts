@@ -229,7 +229,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
           success: true,
           model: 'deepseek-flash',
-          message: 'DeepSeek 官方 API 金鑰有效！支援 deepseek-flash (V4.1)、deepseek-chat、deepseek-v4-pro 與 deepseek-reasoner。',
+          message: 'DeepSeek 官方 API 金鑰有效！支援 DeepSeek V4.1 Flash (deepseek-flash) 與 DeepSeek V4 Pro (deepseek-v4-pro)。',
         }, { status: 200 });
       }
 
