@@ -252,10 +252,44 @@ export async function POST(req: NextRequest) {
           }, { status: 200 });
         }
 
+        const modelsData = await modelsRes.json().catch(() => null);
+        const modelList: string[] = modelsData?.data?.map((m: any) => m.id) || [];
+        const hasFlash = modelList.some((id: string) => id.includes('flash'));
+        const recommendedModel = hasFlash ? 'deepseek-flash' : 'deepseek-chat';
+
+        // 進一步檢查 DeepSeek 帳戶餘額 (DeepSeek 為預先充值扣款制)
+        let balanceNotice = '';
+        try {
+          const balRes = await fetch('https://api.deepseek.com/user/balance', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Accept': 'application/json',
+            },
+            signal: controller.signal,
+          });
+
+          if (balRes.ok) {
+            const balData = await balRes.json();
+            if (balData.is_available === false) {
+              return NextResponse.json({
+                success: false,
+                error: `DeepSeek 金鑰正確，但帳戶目前可用餘額為 0 (欠費中)！DeepSeek API 採預儲值扣款制，請先至 platform.deepseek.com/top_up 進行儲值後即可正常出題。`,
+              }, { status: 200 });
+            }
+            if (balData.balance_infos && balData.balance_infos[0]) {
+              const info = balData.balance_infos[0];
+              balanceNotice = ` (帳戶可用餘額: ${info.currency} ${info.total_balance})`;
+            }
+          }
+        } catch {
+          // 網路例外不阻擋基本金鑰驗證
+        }
+
         return NextResponse.json({
           success: true,
-          model: 'deepseek-flash',
-          message: 'DeepSeek 官方 API 金鑰有效！支援 DeepSeek V4.1 Flash (deepseek-flash) 與 DeepSeek V4 Pro (deepseek-v4-pro)。',
+          model: recommendedModel,
+          message: `DeepSeek 官方 API 金鑰有效！${balanceNotice}。系統支援 ${recommendedModel} 與智能自動降級容錯。`,
         }, { status: 200 });
       }
 

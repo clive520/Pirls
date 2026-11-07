@@ -102,17 +102,20 @@
 
 * **官方平臺**：DeepSeek 開放平台
 * **金鑰申請入口**：[https://platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys)
+* **儲值充值入口**：[https://platform.deepseek.com/top_up](https://platform.deepseek.com/top_up)
 * **金鑰前綴格式**：`sk-...`
-* **目前整合架構**：DeepSeek V4 系列
+* **計費特性**：**採預先儲值扣款制**（帳戶餘額為 0 時會回傳 `402 Insufficient Balance`，無永久免費額度）。
 
 | 模型名稱 | 官方 API Model ID | 系統推薦定位 | PIRLS 命題實務特性 |
 | :--- | :--- | :--- | :--- |
-| **DeepSeek V4.1 Flash** | `deepseek-flash` | ⚡ **【中文精準・推薦首選】** | 官方正式標準簡短名稱，極速高性價比、中文成語典故精確地道、支援視覺與推理。 |
-| **DeepSeek V4 Pro** | `deepseek-v4-pro` | 🧠 **高階文字推理旗艦** | 專攻深層邏輯推理，針對第四層次寫作手法評價與評分規準表現優異。 |
+| **DeepSeek-V3 / Chat** | `deepseek-chat` | 💬 **【官方標準推薦・穩定高相容】** | 官方全功能主力模型，支援非思考流、成語典故地道、100% 廣泛相容各大帳號。 |
+| **DeepSeek V4.1 Flash** | `deepseek-flash` | ⚡ **新世代極速推論** | 新世代架構，支援文字、視覺與推理（若個別帳號未開放自動備援至 `deepseek-chat`）。 |
+| **DeepSeek-R1 / Reasoner** | `deepseek-reasoner` | 🧠 **深度思維鏈推理** | 專攻思維鏈 CoT 深度推理，適合第四層次批判評斷與客觀評分規準。 |
+| **DeepSeek V4 Pro** | `deepseek-v4-pro` | 🏛️ **高階文字推理旗艦** | 專攻高階邏輯推理。 |
 
-> **⚠️ 規格升級記錄**：
-> * 採用官方正式簡稱 `deepseek-flash`，淘汰冗長之過渡別名。
-> * 舊版 `deepseek-chat` (V3) 已全面退場，本地記億自動平滑遷移至 `deepseek-flash`。
+> **⚠️ 智慧容錯與儲值注意事項**：
+> * **雙向智慧自癒**：系統全面支援 `deepseek-chat` 與 `deepseek-flash` 雙向自癒切換。若個別模型因帳號權限或端點未支援報錯 400/404，系統會自動切換重試，無須人工手動修改。
+> * **餘額主動檢驗**：金鑰驗證時會主動透過 `https://api.deepseek.com/user/balance` 檢查餘額；若餘額為 0 將即時提醒教師前往平台儲值，避免出題時遇到 402 錯誤。
 
 ---
 

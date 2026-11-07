@@ -82,7 +82,7 @@ function TeacherCreateTestContent() {
     claude: 'claude-sonnet-5-5',
     openai: 'gpt-4o',
     groq: 'openai/gpt-oss-120b',
-    deepseek: 'deepseek-flash',
+    deepseek: 'deepseek-chat',
     openrouter: 'deepseek/deepseek-chat',
     opencode: 'deepseek-chat',
   });
@@ -108,9 +108,6 @@ function TeacherCreateTestContent() {
           }
           if (models.claude && (models.claude.includes('3-5') || models.claude.includes('4-5') || models.claude.includes('3-opus'))) {
             models.claude = 'claude-sonnet-5-5';
-          }
-          if (models.deepseek && (models.deepseek === 'deepseek-chat' || models.deepseek === 'deepseek-reasoner')) {
-            models.deepseek = 'deepseek-flash';
           }
           setPreferredModels(models);
         }

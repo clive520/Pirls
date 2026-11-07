@@ -36,7 +36,7 @@ export async function callOpenAICompatibleAPI(
     defaultModel = 'deepseek/deepseek-chat';
   } else if (provider === 'deepseek') {
     endpoint = 'https://api.deepseek.com/chat/completions';
-    defaultModel = 'deepseek-flash';
+    defaultModel = 'deepseek-chat';
   } else if (provider === 'opencode') {
     const base = params.customBaseUrl?.trim() || 'https://api.opencode.ai/v1';
     endpoint = base.endsWith('/chat/completions')
@@ -122,7 +122,30 @@ export async function callOpenAICompatibleAPI(
     callResult = await executeCall('openai/gpt-oss-120b', 4096);
   }
 
+  // 【DeepSeek 智慧自癒與雙向相容機制】：
+  // 相容官方標準 deepseek-chat 與新世代 deepseek-flash。若遇到 400/404 模型不存在錯誤，自動雙向切換重試
+  if (!callResult.ok && provider === 'deepseek') {
+    const isModelNotFound =
+      callResult.status === 404 ||
+      (callResult.status === 400 && (
+        callResult.msg.toLowerCase().includes('model') ||
+        callResult.msg.toLowerCase().includes('not exist') ||
+        callResult.msg.toLowerCase().includes('invalid')
+      ));
+
+    if (isModelNotFound) {
+      const fallbackModel = (model === 'deepseek-flash' || model === 'deepseek-v4-pro')
+        ? 'deepseek-chat'
+        : 'deepseek-flash';
+      console.warn(`[DeepSeek] 模型 ${model} 呼叫失敗 (${callResult.status}: ${callResult.msg})，自動切換至備援相容模型 ${fallbackModel} 重新生成...`);
+      callResult = await executeCall(fallbackModel, currentMaxTokens);
+    }
+  }
+
   if (!callResult.ok) {
+    if (provider === 'deepseek' && (callResult.status === 402 || callResult.msg.toLowerCase().includes('insufficient balance'))) {
+      throw new Error(`[DEEPSEEK] 帳戶餘額不足 (402 Insufficient Balance)。DeepSeek API 為預付費扣款機制（無永久免費額度）。請前往 DeepSeek 開放平台 (https://platform.deepseek.com/top_up) 進行儲值充值，或切換至實測可用的 Groq（免費極速）或 Google Gemini（每日 1,500 次免費）。`);
+    }
     throw new Error(`[${provider.toUpperCase()}] 服務器回應錯誤 (${callResult.status}): ${callResult.msg}`);
   }
 
