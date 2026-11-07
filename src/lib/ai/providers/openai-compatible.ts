@@ -66,18 +66,30 @@ export async function callOpenAICompatibleAPI(
     const timer = setTimeout(() => controller.abort(), 180000); // 180 秒（3 分鐘）長效運算防護
 
     try {
+      // 判斷是否為思維推理模型（如 DeepSeek Reasoner/Flash/Pro、OpenAI o1/o3）
+      // 官方嚴格限制：推理模型不可傳入 temperature (會引發 400 錯誤) 且不支援 response_format: json_object (會清空輸出)
+      const isReasoning =
+        (provider === 'deepseek' && targetModel !== 'deepseek-chat') ||
+        targetModel.includes('reasoner') ||
+        targetModel.includes('flash') ||
+        targetModel.includes('pro') ||
+        targetModel.includes('o1') ||
+        targetModel.includes('o3');
+
       const payload: any = {
         model: targetModel,
         messages: [
           { role: 'system', content: systemInstruction },
           { role: 'user', content: userPrompt },
         ],
-        temperature: 0.7,
         max_tokens: tokensLimit,
       };
 
-      if (useJsonFormat) {
-        payload.response_format = { type: 'json_object' };
+      if (!isReasoning) {
+        payload.temperature = 0.7;
+        if (useJsonFormat) {
+          payload.response_format = { type: 'json_object' };
+        }
       }
 
       const response = await fetch(endpoint, {
