@@ -23,7 +23,13 @@ export async function callOpenAICompatibleAPI(
     'Authorization': `Bearer ${apiKey}`,
   };
 
-  if (provider === 'openrouter') {
+  if (provider === 'openai') {
+    endpoint = 'https://api.openai.com/v1/chat/completions';
+    defaultModel = 'gpt-4o';
+  } else if (provider === 'groq') {
+    endpoint = 'https://api.groq.com/openai/v1/chat/completions';
+    defaultModel = 'llama-3.3-70b-versatile';
+  } else if (provider === 'openrouter') {
     endpoint = 'https://openrouter.ai/api/v1/chat/completions';
     headers['HTTP-Referer'] = 'https://pirls-ii5od75k6a-de.a.run.app';
     headers['X-Title'] = 'PIRLS AI Assessment System';

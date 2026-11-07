@@ -2,7 +2,7 @@
  * PIRLS AI 模組型別定義
  */
 
-export type AIProvider = 'gemini' | 'openrouter' | 'deepseek' | 'opencode';
+export type AIProvider = 'gemini' | 'claude' | 'openai' | 'groq' | 'deepseek' | 'openrouter' | 'opencode';
 
 export interface GenerateParams {
   mode: 'theme' | 'paste';

@@ -36,9 +36,15 @@ export async function POST(req: NextRequest) {
     let finalProvider = provider || 'gemini';
     const trimmedKey = apiKey?.trim() || '';
 
-    // 雙重保險防呆：若金鑰為 OpenRouter 格式 (sk-or-v1-) 但 provider 誤選為 gemini，自動修正為 openrouter
-    if (trimmedKey.startsWith('sk-or-v1-') && finalProvider === 'gemini') {
+    // 智慧防呆：根據金鑰前綴自動辨識提供商
+    if (trimmedKey.startsWith('sk-ant-') && finalProvider !== 'claude') {
+      finalProvider = 'claude';
+    } else if (trimmedKey.startsWith('gsk_') && finalProvider !== 'groq') {
+      finalProvider = 'groq';
+    } else if (trimmedKey.startsWith('sk-or-v1-') && finalProvider !== 'openrouter') {
       finalProvider = 'openrouter';
+    } else if (trimmedKey.startsWith('AIzaSy') && finalProvider !== 'gemini') {
+      finalProvider = 'gemini';
     }
 
     // 嚴格檢驗：教師未輸入金鑰時，直接提示教師填寫，杜絕偷跑範例文章造成誤導

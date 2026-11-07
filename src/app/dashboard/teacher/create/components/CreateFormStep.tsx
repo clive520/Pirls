@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, FileText, AlertCircle, RefreshCw } from 'lucide-react';
+import { AIProvider } from '@/lib/ai/types';
 import { AiConfigCard } from './AiConfigCard';
 
 interface CreateFormStepProps {
@@ -23,8 +24,8 @@ interface CreateFormStepProps {
   errorMsg: string;
   onSubmit: (e: React.FormEvent) => void;
   // AI Config
-  provider: 'gemini' | 'openrouter' | 'deepseek' | 'opencode';
-  setProvider: (p: 'gemini' | 'openrouter' | 'deepseek' | 'opencode') => void;
+  provider: AIProvider;
+  setProvider: (p: AIProvider) => void;
   apiKeys: { [key: string]: string };
   onKeyChange: (prov: string, val: string) => void;
   customBaseUrl: string;

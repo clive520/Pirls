@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration } from '@/lib/types';
 import { generateSmartImagePrompts, formatCombinedImagePrompt } from '@/lib/llm-adapter';
+import { AIProvider } from '@/lib/ai/types';
 import { CreateFormStep, ArticleEditor, QuestionEditorList } from './components';
 import { api, ApiClientError } from '@/lib/api-client';
 
@@ -65,18 +66,24 @@ function TeacherCreateTestContent() {
   const [questionCountMode, setQuestionCountMode] = useState<'standard' | 'compact'>('standard');
   const [includeDiagram, setIncludeDiagram] = useState(true);
   // 多 AI 提供商與金鑰本地記憶庫
-  const [provider, setProvider] = useState<'gemini' | 'openrouter' | 'deepseek' | 'opencode'>('gemini');
+  const [provider, setProvider] = useState<AIProvider>('gemini');
   const [apiKeys, setApiKeys] = useState<{ [key: string]: string }>({
     gemini: '',
-    openrouter: '',
+    claude: '',
+    openai: '',
+    groq: '',
     deepseek: '',
+    openrouter: '',
     opencode: '',
   });
   const [customBaseUrl, setCustomBaseUrl] = useState('https://api.opencode.ai/v1');
   const [preferredModels, setPreferredModels] = useState<{ [key: string]: string }>({
     gemini: 'auto',
-    openrouter: 'deepseek/deepseek-chat',
+    claude: 'claude-3-5-sonnet-20241022',
+    openai: 'gpt-4o',
+    groq: 'llama-3.3-70b-versatile',
     deepseek: 'deepseek-flash',
+    openrouter: 'deepseek/deepseek-chat',
     opencode: 'deepseek-chat',
   });
   const [keyChecking, setKeyChecking] = useState(false);
@@ -100,7 +107,7 @@ function TeacherCreateTestContent() {
 
   // 更新設定並持久化儲存至瀏覽器 localStorage
   const saveVault = (
-    newProvider: 'gemini' | 'openrouter' | 'deepseek' | 'opencode',
+    newProvider: AIProvider,
     newKeys: { [key: string]: string },
     newBaseUrl: string,
     newModels: { [key: string]: string }
@@ -122,13 +129,45 @@ function TeacherCreateTestContent() {
 
   const handleKeyChange = (prov: string, val: string) => {
     const trimmed = val.trim();
-    // 智慧金鑰格式辨識與自動切換（若非 openrouter 標籤貼入 sk-or-v1- 開頭，自動切換至 openrouter）
+    // 智慧金鑰格式辨識與自動切換
+    if (trimmed.startsWith('sk-ant-') && prov !== 'claude') {
+      const updated = { ...apiKeys, claude: trimmed };
+      setApiKeys(updated);
+      setProvider('claude');
+      setKeyStatus({ ok: true, message: '💡 偵測到 Anthropic Claude 專屬金鑰 (sk-ant-...)，已自動切換至「Claude」提供商！' });
+      saveVault('claude', updated, customBaseUrl, preferredModels);
+      return;
+    }
+    if (trimmed.startsWith('gsk_') && prov !== 'groq') {
+      const updated = { ...apiKeys, groq: trimmed };
+      setApiKeys(updated);
+      setProvider('groq');
+      setKeyStatus({ ok: true, message: '💡 偵測到 Groq 專屬金鑰 (gsk_...)，已自動切換至「Groq」極速引擎！' });
+      saveVault('groq', updated, customBaseUrl, preferredModels);
+      return;
+    }
     if (trimmed.startsWith('sk-or-v1-') && prov !== 'openrouter') {
       const updated = { ...apiKeys, openrouter: trimmed };
       setApiKeys(updated);
       setProvider('openrouter');
       setKeyStatus({ ok: true, message: '💡 偵測到 OpenRouter 專屬金鑰 (sk-or-v1-...)，已自動切換至「OpenRouter」提供商！' });
       saveVault('openrouter', updated, customBaseUrl, preferredModels);
+      return;
+    }
+    if (trimmed.startsWith('sk-proj-') && prov !== 'openai') {
+      const updated = { ...apiKeys, openai: trimmed };
+      setApiKeys(updated);
+      setProvider('openai');
+      setKeyStatus({ ok: true, message: '💡 偵測到 OpenAI 專案金鑰 (sk-proj-...)，已自動切換至「OpenAI 官方」提供商！' });
+      saveVault('openai', updated, customBaseUrl, preferredModels);
+      return;
+    }
+    if (trimmed.startsWith('AIzaSy') && prov !== 'gemini') {
+      const updated = { ...apiKeys, gemini: trimmed };
+      setApiKeys(updated);
+      setProvider('gemini');
+      setKeyStatus({ ok: true, message: '💡 偵測到 Google AI Studio 金鑰 (AIzaSy...)，已自動切換至「Google Gemini」！' });
+      saveVault('gemini', updated, customBaseUrl, preferredModels);
       return;
     }
 
@@ -151,7 +190,7 @@ function TeacherCreateTestContent() {
     saveVault(provider, apiKeys, val, preferredModels);
   };
 
-  const handleProviderChange = (p: 'gemini' | 'openrouter' | 'deepseek' | 'opencode') => {
+  const handleProviderChange = (p: AIProvider) => {
     setProvider(p);
     setKeyStatus(null);
     saveVault(p, apiKeys, customBaseUrl, preferredModels);
@@ -159,7 +198,15 @@ function TeacherCreateTestContent() {
 
   const handleClearKeys = () => {
     if (confirm('確定要清除此瀏覽器暫存的所有 AI 金鑰設定嗎？')) {
-      const emptyKeys = { gemini: '', openrouter: '', deepseek: '', opencode: '' };
+      const emptyKeys = {
+        gemini: '',
+        claude: '',
+        openai: '',
+        groq: '',
+        openrouter: '',
+        deepseek: '',
+        opencode: '',
+      };
       setApiKeys(emptyKeys);
       localStorage.removeItem('pirls_ai_vault');
       setKeyStatus(null);
@@ -488,6 +535,12 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
       const provName =
         provider === 'gemini'
           ? 'Google Gemini'
+          : provider === 'claude'
+          ? 'Anthropic Claude'
+          : provider === 'openai'
+          ? 'OpenAI 官方'
+          : provider === 'groq'
+          ? 'Groq 極速'
           : provider === 'openrouter'
           ? 'OpenRouter'
           : provider === 'deepseek'

@@ -70,7 +70,86 @@ export async function POST(req: NextRequest) {
         }, { status: 200 });
       }
 
-      // 2. OpenRouter 驗證
+      // 2. Anthropic Claude 驗證
+      if (provider === 'claude') {
+        const modelsRes = await fetch('https://api.anthropic.com/v1/models', {
+          method: 'GET',
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          signal: controller.signal,
+        });
+
+        if (!modelsRes.ok) {
+          const errData = await modelsRes.json().catch(() => null);
+          const msg = errData?.error?.message || modelsRes.statusText;
+          return NextResponse.json({
+            success: false,
+            error: `Anthropic Claude 金鑰驗證失敗 (${modelsRes.status}): ${msg}`,
+          }, { status: 200 });
+        }
+
+        return NextResponse.json({
+          success: true,
+          model: 'claude-3-5-sonnet-20241022',
+          message: 'Anthropic Claude 官方 API 金鑰有效！支援文學修辭旗艦 Claude 3.5 Sonnet 與極速 Claude 3.5 Haiku。',
+        }, { status: 200 });
+      }
+
+      // 3. OpenAI 官方 API 驗證
+      if (provider === 'openai') {
+        const modelsRes = await fetch('https://api.openai.com/v1/models', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          signal: controller.signal,
+        });
+
+        if (!modelsRes.ok) {
+          const errData = await modelsRes.json().catch(() => null);
+          const msg = errData?.error?.message || modelsRes.statusText;
+          return NextResponse.json({
+            success: false,
+            error: `OpenAI 官方金鑰驗證失敗 (${modelsRes.status}): ${msg}`,
+          }, { status: 200 });
+        }
+
+        return NextResponse.json({
+          success: true,
+          model: 'gpt-4o',
+          message: 'OpenAI 官方 API 金鑰有效！支援 GPT-4o、GPT-4o-mini、o3-mini 與 o1 系列模型。',
+        }, { status: 200 });
+      }
+
+      // 4. Groq 極速推理驗證
+      if (provider === 'groq') {
+        const modelsRes = await fetch('https://api.groq.com/openai/v1/models', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          signal: controller.signal,
+        });
+
+        if (!modelsRes.ok) {
+          const errData = await modelsRes.json().catch(() => null);
+          const msg = errData?.error?.message || modelsRes.statusText;
+          return NextResponse.json({
+            success: false,
+            error: `Groq 金鑰驗證失敗 (${modelsRes.status}): ${msg}`,
+          }, { status: 200 });
+        }
+
+        return NextResponse.json({
+          success: true,
+          model: 'llama-3.3-70b-versatile',
+          message: 'Groq 極速推論金鑰有效！支援 Llama 3.3 70B (每秒 300+ 字超高速生成) 與 Mixtral 8x7B。',
+        }, { status: 200 });
+      }
+
+      // 5. OpenRouter 驗證
       if (provider === 'openrouter') {
         const authRes = await fetch('https://openrouter.ai/api/v1/auth/key', {
           method: 'GET',
