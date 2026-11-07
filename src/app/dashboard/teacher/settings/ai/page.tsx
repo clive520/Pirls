@@ -94,7 +94,6 @@ const PROVIDER_METADATA: Record<AIProvider, {
       { id: 'deepseek-chat', label: '💬 DeepSeek-V3 / Chat (官方標準推薦・穩定高相容)', desc: '官方全功能主力模型，支援非思考流、成語典故地道、100% 廣泛相容' },
       { id: 'deepseek-flash', label: '⚡ DeepSeek V4.1 Flash (新世代極速)', desc: '新世代架構・支援文字、視覺與推理（享自動降級自癒相容）' },
       { id: 'deepseek-reasoner', label: '🧠 DeepSeek-R1 / Reasoner (深度思維推理)', desc: '專攻思維鏈 CoT 深度推理，適合第四層次批判評斷與客觀評分規準' },
-      { id: 'deepseek-v4-pro', label: '🏛️ DeepSeek V4 Pro (高階旗艦)', desc: '高階旗艦推理模型' },
     ],
   },
   openrouter: {
@@ -176,6 +175,9 @@ function AiSettingsContent() {
           }
           if (models.claude && (models.claude.includes('3-5') || models.claude.includes('4-5') || models.claude === 'claude-3-opus-20240229')) {
             models.claude = 'claude-sonnet-5-5';
+          }
+          if (models.deepseek && models.deepseek === 'deepseek-v4-pro') {
+            models.deepseek = 'deepseek-chat';
           }
           setPreferredModels(models);
         }

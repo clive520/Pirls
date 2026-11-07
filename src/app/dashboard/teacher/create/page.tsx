@@ -109,6 +109,9 @@ function TeacherCreateTestContent() {
           if (models.claude && (models.claude.includes('3-5') || models.claude.includes('4-5') || models.claude.includes('3-opus'))) {
             models.claude = 'claude-sonnet-5-5';
           }
+          if (models.deepseek && models.deepseek === 'deepseek-v4-pro') {
+            models.deepseek = 'deepseek-chat';
+          }
           setPreferredModels(models);
         }
       }

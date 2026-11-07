@@ -154,7 +154,7 @@ export async function callOpenAICompatibleAPI(
       ));
 
     if (isModelNotFound) {
-      const fallbackModel = (model === 'deepseek-flash' || model === 'deepseek-v4-pro')
+      const fallbackModel = (model === 'deepseek-flash')
         ? 'deepseek-chat'
         : 'deepseek-flash';
       console.warn(`[DeepSeek] 模型 ${model} 呼叫失敗 (${callResult.status}: ${callResult.msg})，自動切換至備援相容模型 ${fallbackModel} 重新生成...`);

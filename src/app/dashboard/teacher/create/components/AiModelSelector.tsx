@@ -162,7 +162,6 @@ export const AiModelSelector: React.FC<AiModelSelectorProps> = ({
               <option value="deepseek-chat">💬 DeepSeek-V3 / Chat (官方標準推薦・高相容・享自癒)</option>
               <option value="deepseek-flash">⚡ DeepSeek V4.1 Flash (新世代極速・支援視覺)</option>
               <option value="deepseek-reasoner">🧠 DeepSeek-R1 / Reasoner (深度推理・批判評斷)</option>
-              <option value="deepseek-v4-pro">🏛️ DeepSeek V4 Pro (高階旗艦)</option>
             </select>
           )}
 

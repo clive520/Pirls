@@ -402,9 +402,6 @@ export const AiConfigCard: React.FC<AiConfigCardProps> = ({
                 <option value="deepseek-reasoner">
                   🧠 DeepSeek-R1 / Reasoner（深度思維推理：思維鏈 CoT、第四層批判評斷設題）
                 </option>
-                <option value="deepseek-v4-pro">
-                  🏛️ DeepSeek V4 Pro（高階文字推理旗艦）
-                </option>
               </select>
             )}
 
