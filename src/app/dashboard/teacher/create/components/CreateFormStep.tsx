@@ -1,5 +1,6 @@
 import React from 'react';
-import { Sparkles, FileText, AlertCircle, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
+import { Sparkles, FileText, AlertCircle, RefreshCw, Settings } from 'lucide-react';
 import { AIProvider } from '@/lib/ai/types';
 import { AiModelSelector } from './AiModelSelector';
 
@@ -69,12 +70,18 @@ export const CreateFormStep: React.FC<CreateFormStepProps> = ({
       {errorMsg && (
         <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-start space-x-3 shadow-sm">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div className="space-y-1">
+          <div className="space-y-1.5 flex-1">
             <p className="font-bold text-red-900">AI 命題生成未成功</p>
             <p className="text-xs text-red-700 leading-relaxed break-all">{errorMsg}</p>
-            <p className="text-[11px] text-red-600">
-              💡 提醒：請在下方「AI 模型與 API Key 設定」中貼上您的金鑰，並可點擊「測試金鑰有效性」確認額度與連線狀態。
-            </p>
+            <div className="pt-1 flex items-center space-x-3">
+              <Link
+                href="/dashboard/teacher/settings/ai?from=create"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-900 text-xs font-bold transition border border-red-200"
+              >
+                <Settings className="w-3.5 h-3.5 text-red-700" />
+                <span>前往「AI 設定中心」檢查金鑰與額度 ↗</span>
+              </Link>
+            </div>
           </div>
         </div>
       )}

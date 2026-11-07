@@ -138,12 +138,12 @@ export const AiModelSelector: React.FC<AiModelSelectorProps> = ({
 
           {provider === 'groq' && (
             <select
-              value={preferredModels.groq || 'llama-3.3-70b-versatile'}
+              value={preferredModels.groq || 'llama-3.1-8b-instant'}
               onChange={(e) => onModelChange('groq', e.target.value)}
               className="flex-1 rounded-lg border border-slate-200 py-1 px-2.5 text-xs text-slate-800 bg-slate-50/50 font-medium focus:ring-1 focus:ring-sky-500 focus:outline-none"
             >
-              <option value="llama-3.3-70b-versatile">⚡ Llama 3.3 70B (強烈推薦・3~5 秒瞬間出題)</option>
-              <option value="llama-3.1-8b-instant">🚀 Llama 3.1 8B (超輕量瞬時響應)</option>
+              <option value="llama-3.1-8b-instant">🚀 Llama 3.1 8B (強烈推薦・20,000 TPM 超大限額・2秒瞬出)</option>
+              <option value="llama-3.3-70b-versatile">⚡ Llama 3.3 70B (深度思考・遇速率限制自動降級 8B)</option>
               <option value="mixtral-8x7b-32768">🔀 Mixtral 8x7B (長上下文混合專家)</option>
             </select>
           )}

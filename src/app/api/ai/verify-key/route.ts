@@ -143,8 +143,8 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          model: 'llama-3.3-70b-versatile',
-          message: 'Groq 極速推論金鑰有效！支援 Llama 3.3 70B (每秒 300+ 字超高速生成) 與 Mixtral 8x7B。',
+          model: 'llama-3.1-8b-instant',
+          message: 'Groq 極速推論金鑰有效！支援 Llama 3.1 8B (20,000 TPM 超大額度・2秒極速) 與 Llama 3.3 70B。',
         }, { status: 200 });
       }
 

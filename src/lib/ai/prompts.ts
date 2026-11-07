@@ -14,31 +14,15 @@ export function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, ta
   "articleContent": "完整文章內容...",
   "paragraphs": [
     { "paragraphNumber": 1, "text": "【第一段】..." },
-    { "paragraphNumber": 2, "text": "【第二段】..." },
-    { "paragraphNumber": 3, "text": "【第三段】..." },
-    { "paragraphNumber": 4, "text": "【第四段】..." }
+    { "paragraphNumber": 2, "text": "【第二段】..." }
   ],
   "illustrations": [
     {
       "id": "ill_1",
       "paragraphNumber": 1,
-      "caption": "圖 1：【起·開端情境 / 穿插於第 1 段後】老鐘錶行門口金爺爺親切與孩子們交流",
+      "caption": "圖 1：【起·開端情境 / 穿插於第 1 段後】金爺爺親切與孩子們交流",
       "type": "illustration_url",
-      "imagePrompt": "【場景 1（起·開端情境，建議穿插於第 1 段之後）中文描述】：溫馨細緻的兒童繪本水彩手繪插畫：和藹的金爺爺在古樸老鐘錶行門口，笑瞇瞇地向身旁幾位國小學童解說鐘錶齒輪，暖陽灑落、柔和明亮、充滿童趣與故事溫度，16:9 橫向構圖，高品質繪本插圖。 / English prompt: A heartwarming children storybook watercolor illustration of kind elderly Grandpa Jin standing in front of his vintage wooden clock shop, warmly explaining gears to curious elementary school kids, sunny afternoon, soft warm lighting, detailed, charming, storybook art style --ar 16:9"
-    },
-    {
-      "id": "ill_2",
-      "paragraphNumber": 2,
-      "caption": "圖 2：【承轉·衝突高潮 / 穿插於第 2 段後】金爺爺在工作檯前專注修復停擺的古老機械鐘",
-      "type": "illustration_url",
-      "imagePrompt": "【場景 2（承轉·衝突高潮，建議穿插於第 2 段之後）中文描述】：昏黃檯燈下，金爺爺戴著放大鏡，神情極度專注地以精細鑷子調整散落的黃銅齒輪與彈簧，工作檯上擺滿修復工具，充滿工匠精神與懸疑專注氛圍，16:9 橫向構圖。 / English prompt: Storybook watercolor illustration of Grandpa Jin under a warm desk lamp, wearing a magnifying loupe, delicately adjusting brass gears on a vintage workbench full of clockmaking tools, intense focus, craftsmanship, atmospheric, cozy --ar 16:9"
-    },
-    {
-      "id": "ill_3",
-      "paragraphNumber": 4,
-      "caption": "圖 3：【合·溫馨結局 / 穿插於第 4 段後】古鐘重新清脆敲響，孩子們與金爺爺欣慰歡呼",
-      "type": "illustration_url",
-      "imagePrompt": "【場景 3（合·溫馨結局，建議穿插於第 4 段之後）中文描述】：晨光灑滿鐘錶行，高聳的大鐘指針轉動，齒輪重新運轉，金爺爺擦拭額頭汗水露出欣慰笑容，學童們興奮拍手歡呼，充滿感動與成就感，色彩明朗溫暖，16:9 橫向構圖。 / English prompt: Joyful children storybook watercolor illustration, morning sunlight pouring into the shop, clock ticking again, Grandpa Jin smiling with relief, cheerful kids clapping and celebrating, touching moment, uplifting and warm --ar 16:9"
+      "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：和藹的金爺爺在古樸老鐘錶行門口向學童解說鐘錶齒輪，暖陽灑落、柔和明亮、充滿童趣與故事溫度，16:9 橫向構圖。 / English: Watercolor children storybook illustration of kind elderly Grandpa Jin explaining clock gears to kids, warm soft lighting --ar 16:9"
     }
   ],
   "questions": [
@@ -84,23 +68,9 @@ export function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, ta
     {
       "id": "ill_1",
       "paragraphNumber": 1,
-      "caption": "圖 1：【起·開端情境 / 穿插於第 1 段後】...",
+      "caption": "圖 1：【起·開端情境 / 穿插於第 1 段後】關鍵場景",
       "type": "illustration_url",
-      "imagePrompt": "【場景 1（起·開端情境，建議穿插於第 1 段之後）中文描述】：溫馨細緻的兒童繪本水彩手繪插畫：... / English prompt: ..."
-    },
-    {
-      "id": "ill_2",
-      "paragraphNumber": 2,
-      "caption": "圖 2：【承轉·衝突高潮 / 穿插於中段後】...",
-      "type": "illustration_url",
-      "imagePrompt": "【場景 2（承轉·衝突高潮，建議穿插於中段之後）中文描述】：溫馨細緻的兒童繪本水彩手繪插畫：... / English prompt: ..."
-    },
-    {
-      "id": "ill_3",
-      "paragraphNumber": 4,
-      "caption": "圖 3：【合·溫馨結局 / 穿插於末段後】...",
-      "type": "illustration_url",
-      "imagePrompt": "【場景 3（合·溫馨結局，建議穿插於末段之後）中文描述】：溫馨細緻的兒童繪本水彩手繪插畫：... / English prompt: ..."
+      "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：... / English: Storybook watercolor illustration of ... --ar 16:9"
     }
   ],
   "questions": [
@@ -160,15 +130,12 @@ export function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, ta
    - 你必須「直接以 { 開頭，以 } 結尾」，輸出純合法 JSON 格式。
    - 嚴禁在 JSON 之前或之後輸出任何 Markdown 外的閒聊文字。
 5. 引號規範：題目與選項內如有引文，請一律使用中文全形引號「」與『』，嚴禁在字串內使用未跳脫的半形雙引號。
-6. 【PIRLS 多模態課文繪本配圖（依情節發展穿插於文章合適段落之後，絕不可全部放在文章開頭）】：
-   ${includeDiagram ? `本次任務已啟用多模態配圖需求。課文插圖應「穿插在文章故事發展的合適段落之後」，絕不可全部堆在文章最前面！你「必須」在 "illustrations" 陣列中依自選文章脈絡擷取 3 個關鍵場景，分別產出 3 組分開的「專屬 AI 繪圖提示詞 (imagePrompt)」，並指明穿插段落：
-   - 第 1 幅【起·開端情境】：paragraphNumber 設為 1（穿插在第 1 段之後，描繪開端環境或主角登場）。
-   - 第 2 幅【承轉·衝突高潮】：paragraphNumber 設為文章中間段落（如第 2 或第 3 段之後，描繪情節轉折、核心挑戰或緊繃行動）。
-   - 第 3 幅【合·溫馨結局】：paragraphNumber 設為文章結尾段落（如第 4 或最後一段之後，描繪問題解決、溫馨體悟或圓滿高潮）。
-   - 每組提示詞皆需包含中英文雙語提示詞（方便教師一鍵複製生圖）。
-   - 提示詞中請明確包含建議穿插位置說明（例如：【場景 1（建議穿插於第 1 段之後）】）。
-   - caption 欄位提供簡明得體的課文圖說（請標明穿插位置，例如：圖 1：【起·開端 / 穿插於第 1 段後】...、圖 2：【承轉·高潮 / 穿插於中段後】...、圖 3：【合·結局 / 穿插於末段後】...）。
-   - type 設為 "illustration_url"。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
+6. 【PIRLS 多模態課文配圖】：
+   ${includeDiagram ? `本次任務已啟用多模態配圖需求。課文插圖應依情節發展穿插於文章合適段落之後（不可全部堆在開頭）。請在 "illustrations" 陣列中產出 3 組分開的「專屬繪圖提示詞 (imagePrompt)」與圖說 (caption)：
+   - 圖 1【起·開端，paragraphNumber: 1】：開端情境與角色，穿插於第 1 段後。
+   - 圖 2【承轉·高潮，paragraphNumber 設為中間段落】：核心衝突挑戰，穿插於中段後。
+   - 圖 3【合·結局，paragraphNumber 設為結尾段落】：問題解決與體悟，穿插於末段後。
+   - 每組提示詞皆需包含中英文雙語提示詞（溫馨兒童繪本水彩風、16:9 橫向構圖、type: "illustration_url"）。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
 完整 JSON 架構參考如下：
 ${schemaExamplePaste}`
     : `你是一位享譽國際的 IEA PIRLS (國際閱讀素養進展研究) 命題專家與心理計量學家。
@@ -187,16 +154,12 @@ ${schemaExamplePaste}`
    嚴禁在 JSON 之前輸出任何開場白、故事摘要、引言或客套話！第一字必須是 {。
    嚴禁在 JSON 之後輸出任何補充說明或結尾語！最後一字必須是 }。
 5. 引號規範：故事內之人物對話或引文，請一律使用中文全形引號「」與『』，嚴禁在字串內使用未跳脫的半形雙引號，以維護 JSON 語法完全合法。
-6. 【PIRLS 多模態課文繪本配圖 (依情節發展穿插於文章合適段落之後，絕不可全部放在文章開頭)】：
-   ${includeDiagram ? `本次任務已啟用多模態配圖需求。課文插圖應「穿插在文章故事發展的合適段落之後」，絕不可全部堆在文章最前面！你「必須」在 "illustrations" 陣列中依文章脈絡擷取 3 個關鍵場景，分別產出 3 組分開的「專屬 AI 繪圖提示詞 (imagePrompt)」，並指明穿插段落：
-   - 第 1 幅【起·開端情境】：paragraphNumber 設為 1（穿插在第 1 段之後，描繪開端環境或主角登場）。
-   - 第 2 幅【承轉·衝突高潮】：paragraphNumber 設為文章中間段落（如第 2 或第 3 段之後，描繪情節轉折、核心挑戰或緊繃行動）。
-   - 第 3 幅【合·溫馨結局】：paragraphNumber 設為文章結尾段落（如第 4 或最後一段之後，描繪問題解決、溫馨體悟或圓滿高潮）。
-   - 每組提示詞皆需包含中英文雙語提示詞（方便教師一鍵複製至 Midjourney、ChatGPT / DALL-E 3、Bing Image Creator、Recraft、Canva 等工具直接生成高質感真實繪本插圖）。
-   - 內容需詳細描繪：主要角色外觀、神情動作、故事關鍵場景、時間光影氛圍、藝術風格（如溫馨兒童繪本水彩風、柔和手繪質感、16:9 橫向構圖，畫面無文字雜訊）。
-   - 提示詞中請明確包含建議穿插位置說明（例如：【場景 1（建議穿插於第 1 段之後）】）。
-   - caption 欄位提供簡明得體的課文圖說（請標明穿插位置，例如：圖 1：【起·開端 / 穿插於第 1 段後】老鐘錶行門口、圖 2：【承轉·高潮 / 穿插於第 2 段後】修復齒輪、圖 3：【合·結局 / 穿插於第 4 段後】重現鐘聲）。
-   - type 設為 "illustration_url"。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
+6. 【PIRLS 多模態課文配圖】：
+   ${includeDiagram ? `本次任務已啟用多模態配圖需求。課文插圖應依情節發展穿插於文章合適段落之後（不可全部堆在開頭）。請在 "illustrations" 陣列中產出 3 組分開的「專屬繪圖提示詞 (imagePrompt)」與圖說 (caption)：
+   - 圖 1【起·開端，paragraphNumber: 1】：開端情境與角色，穿插於第 1 段後。
+   - 圖 2【承轉·高潮，paragraphNumber 設為中間段落】：核心衝突挑戰，穿插於中段後。
+   - 圖 3【合·結局，paragraphNumber 設為結尾段落】：問題解決與體悟，穿插於末段後。
+   - 每組提示詞皆需包含中英文雙語提示詞（溫馨兒童繪本水彩風、16:9 橫向構圖、type: "illustration_url"）。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
    完整 JSON 架構參考如下：
 ${schemaExampleTheme}`;
 

@@ -81,7 +81,7 @@ function TeacherCreateTestContent() {
     gemini: 'auto',
     claude: 'claude-3-5-sonnet-20241022',
     openai: 'gpt-4o',
-    groq: 'llama-3.3-70b-versatile',
+    groq: 'llama-3.1-8b-instant',
     deepseek: 'deepseek-flash',
     openrouter: 'deepseek/deepseek-chat',
     opencode: 'deepseek-chat',
