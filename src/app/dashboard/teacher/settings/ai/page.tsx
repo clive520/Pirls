@@ -75,9 +75,10 @@ const PROVIDER_METADATA: Record<AIProvider, {
     docLabel: 'Groq Cloud Console 官網',
     desc: '採用 LPU 晶片架構，3 秒內瞬間完成 1,200 字文章與全套試題，出題速度最快且免費額度充足。',
     models: [
-      { id: 'llama-3.1-8b-instant', label: '🚀 Llama 3.1 8B Instant (強烈推薦・穩定首選)', desc: '20,000 TPM 超高限額，2 秒瞬時出題，免費帳號絕不塞車' },
-      { id: 'llama-3.3-70b-versatile', label: '⚡ Llama 3.3 70B Versatile (高階旗艦)', desc: '思維嚴密（免費帳號每分鐘限 6,000 Token，若遇限額系統將自動無縫切換 8B）' },
-      { id: 'mixtral-8x7b-32768', label: '🔀 Mixtral 8x7B', desc: '長上下文混合專家模型' },
+      { id: 'llama-3.1-8b-instant', label: '🚀 Llama 3.1 8B Instant (推薦首選・極速穩定)', desc: '20,000 TPM 超高限額，2 秒瞬時出題，免費帳號 100% 絕不塞車' },
+      { id: 'llama-3.3-70b-versatile', label: '🌟 Llama 3.3 70B Versatile (高階旗艦)', desc: 'Meta 最強開源旗艦，文學敘事流暢、四層次設題邏輯嚴密（享自動降級防呆）' },
+      { id: 'openai/gpt-oss-20b', label: '⚡ GPT OSS 20B (均衡高吞吐)', desc: '推論速度快，適合大量文字處理，具備良好中文語境與長文理解' },
+      { id: 'openai/gpt-oss-120b', label: '🏛️ GPT OSS 120B (大型推理模型)', desc: '120B 大型推理模型，適合較複雜任務與第四層批判評斷設題' },
     ],
   },
   deepseek: {

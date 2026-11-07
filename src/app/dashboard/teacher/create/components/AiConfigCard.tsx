@@ -368,14 +368,17 @@ export const AiConfigCard: React.FC<AiConfigCardProps> = ({
                 onChange={(e) => onModelChange('groq', e.target.value)}
                 className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"
               >
-                <option value="llama-3.3-70b-versatile">
-                  ⚡ Llama 3.3 70B (強烈推薦：每秒 300+ 字，約 3~5 秒瞬間完成全卷)
-                </option>
                 <option value="llama-3.1-8b-instant">
-                  🚀 Llama 3.1 8B (超輕量瞬時響應)
+                  🚀 Llama 3.1 8B Instant（推薦首選：20,000 TPM 限額、2秒瞬時出題、免費帳號絕不塞車）
                 </option>
-                <option value="mixtral-8x7b-32768">
-                  🔀 Mixtral 8x7B (長上下文混合專家模型)
+                <option value="llama-3.3-70b-versatile">
+                  🌟 Llama 3.3 70B Versatile（高階旗艦：Meta 最強開源模型、四層次設題邏輯嚴密）
+                </option>
+                <option value="openai/gpt-oss-20b">
+                  ⚡ GPT OSS 20B（均衡高吞吐：推論速度快、適合大量文字處理）
+                </option>
+                <option value="openai/gpt-oss-120b">
+                  🏛️ GPT OSS 120B（大型推理模型：深度複雜任務與批判評斷設題）
                 </option>
               </select>
             )}

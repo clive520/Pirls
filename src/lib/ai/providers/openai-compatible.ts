@@ -52,9 +52,9 @@ export async function callOpenAICompatibleAPI(
   // 動態分配最大生成 Token 上限（防範 Groq 免費額度 6,000 TPM 限速）
   let currentMaxTokens = 4096;
   if (provider === 'groq') {
-    // 若為 70B 模型，將預算控制在 2,800 tokens 確保 prompt+max_tokens < 6,000 TPM
-    // 8B 模型 TPM 高達 20,000，可放心配置 4,096 tokens
-    currentMaxTokens = model.includes('70b') ? 2800 : 4096;
+    // 若為 70B 或 120B 大型推理模型，將預算控制在 2,800 tokens 確保 prompt+max_tokens < 6,000 TPM
+    // 8B 或 20B 模型 TPM 高達 20,000，可放心配置 4,096 tokens
+    currentMaxTokens = (model.includes('70b') || model.includes('120b')) ? 2800 : 4096;
   }
 
   // 封裝單次呼叫流程
