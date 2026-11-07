@@ -63,6 +63,11 @@ async function checkCloudBuilds(client: any, projectId: string) {
     console.log(`✔ 找到最近的 ${builds.length} 次建置任務：`);
     for (const b of builds) {
       console.log(`- Build ID: ${b.id} | 狀態: ${b.status} | 建立時間: ${b.createTime} | 耗時: ${b.duration || '進行中'}`);
+      if (b.steps) {
+        for (const st of b.steps) {
+          console.log(`   [步驟] ${st.id || st.name} -> ${st.status}`);
+        }
+      }
       if (b.logUrl) console.log(`  日誌: ${b.logUrl}`);
     }
   } catch (e: any) {
