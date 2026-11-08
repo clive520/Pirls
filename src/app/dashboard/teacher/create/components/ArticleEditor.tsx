@@ -24,6 +24,7 @@ interface ArticleEditorProps {
   onParagraphChange: (pNum: number, illIdx: number) => void;
   onCaptionChange: (caption: string, illIdx: number) => void;
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>, illIdx: number) => void;
+  onDropImage?: (file: File, illIdx: number) => void;
   onPasteImage: (e: React.ClipboardEvent, illIdx: number) => void;
   onRemoveImage: (illIdx: number) => void;
   onSetImageUrl?: (url: string, illIdx: number) => void;
@@ -50,11 +51,13 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
   onParagraphChange,
   onCaptionChange,
   onImageUpload,
+  onDropImage,
   onPasteImage,
   onRemoveImage,
   onSetImageUrl,
   onGenerateScenesForPasted,
 }) => {
+  const [draggingIllIdx, setDraggingIllIdx] = React.useState<number | null>(null);
   return (
     <div className="w-full bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
       <div className="flex items-center justify-between border-b pb-4">
@@ -105,6 +108,7 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
           onParagraphChange={onParagraphChange}
           onCaptionChange={onCaptionChange}
           onImageUpload={onImageUpload}
+          onDropImage={onDropImage}
           onPasteImage={onPasteImage}
           onRemoveImage={onRemoveImage}
           onSetImageUrl={onSetImageUrl}
@@ -179,21 +183,56 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
                 )}
               </div>
 
-              {/* 穿插於本段落後的情境圖預覽卡片 */}
+              {/* 穿插於本段落後的情境圖預覽卡片 (支援點擊或直接拖曳圖片上傳) */}
               {allIllsForThisPara.map(({ ill, illIdx }) => (
                 <div
                   key={ill.id}
-                  className="rounded-xl border border-dashed border-indigo-200 bg-indigo-50/30 p-3 space-y-2 transition hover:border-indigo-300"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (draggingIllIdx !== illIdx) setDraggingIllIdx(illIdx);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                    setDraggingIllIdx(null);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDraggingIllIdx(null);
+                    const file = e.dataTransfer.files?.[0];
+                    if (file && onDropImage) {
+                      onDropImage(file, illIdx);
+                    }
+                  }}
+                  className={`relative rounded-xl border border-dashed p-3 space-y-2 transition-all duration-200 ${
+                    draggingIllIdx === illIdx
+                      ? 'border-indigo-600 bg-indigo-100/90 ring-4 ring-indigo-200/70 scale-[1.01] shadow-md'
+                      : 'border-indigo-200 bg-indigo-50/30 hover:border-indigo-300'
+                  }`}
                 >
+                  {/* 拖曳圖片進入時的醒目覆蓋層 */}
+                  {draggingIllIdx === illIdx && (
+                    <div className="absolute inset-0 bg-indigo-600/85 backdrop-blur-xs flex flex-col items-center justify-center text-white rounded-xl z-20 transition animate-in fade-in">
+                      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mb-1 animate-bounce">
+                        <Upload className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-xs font-bold">✨ 放開滑鼠以立即為【場景 {illIdx + 1}】上傳圖片！</span>
+                      <span className="text-[10px] text-indigo-100 mt-0.5">系統將自動壓縮並精準穿插於第 {p.paragraphNumber} 段後</span>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded-md flex items-center space-x-1">
                       <span>🖼️ 場景 {illIdx + 1} 穿插於此</span>
                       <span className="text-slate-500 font-normal">（第 {p.paragraphNumber} 段後）</span>
                     </span>
                     <div className="flex items-center space-x-2">
-                      <label className="cursor-pointer text-[11px] text-sky-700 hover:text-sky-800 font-bold px-2.5 py-1 rounded-lg bg-sky-50 border border-sky-200 hover:bg-sky-100 transition inline-flex items-center space-x-1 shadow-xs">
+                      <label className="cursor-pointer text-[11px] text-sky-700 hover:text-sky-800 font-bold px-2.5 py-1 rounded-lg bg-sky-50 border border-sky-200 hover:bg-sky-100 transition inline-flex items-center space-x-1 shadow-xs" title="可直接將圖片拖曳至此卡片，或點擊選取檔案">
                         <Upload className="w-3 h-3 text-sky-600" />
-                        <span>{ill.imageUrl ? '直接更換圖片' : '上傳此場景圖片'}</span>
+                        <span>{ill.imageUrl ? '更換圖片' : '上傳此場景圖片'}</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -244,10 +283,10 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
                   ) : (
                     <div className="text-xs text-slate-500 py-1 flex items-center justify-between">
                       <span className="line-clamp-1 italic text-slate-400">
-                        {ill.caption || '尚未上傳真實圖片，完成出題後可複製上方提示詞生圖'}
+                        {ill.caption || '可直接將生好的圖片拖曳至此卡片完成上傳'}
                       </span>
                       <span className="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 flex-shrink-0 ml-2">
-                        待生圖上傳
+                        可拖曳或點選上傳
                       </span>
                     </div>
                   )}

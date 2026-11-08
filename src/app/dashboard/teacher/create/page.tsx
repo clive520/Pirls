@@ -381,15 +381,18 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
     }
   };
 
-  // 上傳與更換圖片 (支援自動補齊場景插圖槽位)
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, illIdx = 0) => {
-    const file = e.target.files?.[0];
+  // 核心圖片壓縮並填入指定插圖槽位 (支援選擇檔案、拖曳檔案、剪貼簿 Ctrl+V)
+  const processAndSetImage = async (file: File, illIdx: number) => {
     if (!file || !testPaper) return;
+    if (!file.type.startsWith('image/')) {
+      alert('請上傳或拖曳有效的圖片檔案格式（PNG, JPG, JPEG, WEBP 等）！');
+      return;
+    }
 
     try {
       const dataUrl = await compressAndLoadImage(file);
       const updatedIllustrations = [...(testPaper.illustrations || [])];
-      
+
       // 若原插圖陣列長度不足，自動補齊
       while (updatedIllustrations.length <= illIdx) {
         const nextIdx = updatedIllustrations.length + 1;
@@ -414,11 +417,23 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
     } catch (err) {
       console.error('圖片處理失敗', err);
       alert('圖片讀取或壓縮失敗，請重新嘗試');
-    } finally {
-      if (e.target) {
-        e.target.value = '';
-      }
     }
+  };
+
+  // 上傳與更換圖片 (檔案選擇器觸發)
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, illIdx = 0) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await processAndSetImage(file, illIdx);
+    }
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  // 拖曳檔案直接上傳圖片支援 (Drag & Drop)
+  const handleDropImage = async (file: File, illIdx = 0) => {
+    await processAndSetImage(file, illIdx);
   };
 
   // 剪貼簿 Ctrl+V 直接貼上圖片支援
@@ -430,28 +445,7 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
         const file = items[i].getAsFile();
         if (file) {
           e.preventDefault();
-          try {
-            const dataUrl = await compressAndLoadImage(file);
-            const updated = [...(testPaper.illustrations || [])];
-            while (updated.length <= illIdx) {
-              const nextIdx = updated.length + 1;
-              updated.push({
-                id: `ill_scene_${nextIdx}_${Date.now()}`,
-                paragraphNumber: Math.min(nextIdx, testPaper.paragraphs?.length || 1),
-                caption: `圖 ${nextIdx}：情境插圖`,
-                type: 'illustration_url',
-                imageUrl: '',
-              });
-            }
-            updated[illIdx] = {
-              ...updated[illIdx],
-              imageUrl: dataUrl,
-              type: 'illustration_url',
-            };
-            setTestPaper({ ...testPaper, illustrations: updated });
-          } catch (err) {
-            console.error('貼上圖片失敗', err);
-          }
+          await processAndSetImage(file, illIdx);
           break;
         }
       }
@@ -930,6 +924,7 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
                     onParagraphChange={handleParagraphChange}
                     onCaptionChange={handleCaptionChange}
                     onImageUpload={handleImageUpload}
+                    onDropImage={handleDropImage}
                     onPasteImage={handlePasteImage}
                     onRemoveImage={handleRemoveImage}
                     onSetImageUrl={handleSetImageUrl}

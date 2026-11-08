@@ -21,6 +21,7 @@ export interface IllustrationStoryboardProps {
   onParagraphChange: (paraNum: number, sceneIdx: number) => void;
   onCaptionChange: (caption: string, sceneIdx: number) => void;
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>, sceneIdx: number) => void;
+  onDropImage?: (file: File, sceneIdx: number) => void;
   onPasteImage: (e: React.ClipboardEvent, sceneIdx: number) => void;
   onRemoveImage: (sceneIdx: number) => void;
   onSetImageUrl?: (url: string, sceneIdx: number) => void;
@@ -41,15 +42,41 @@ export const IllustrationStoryboard: React.FC<IllustrationStoryboardProps> = ({
   onParagraphChange,
   onCaptionChange,
   onImageUpload,
+  onDropImage,
   onPasteImage,
   onRemoveImage,
   onSetImageUrl,
   onGenerateScenesForPasted,
 }) => {
+  const [isDragging, setIsDragging] = React.useState(false);
+
   const safeSceneIdx = illustrationsList.length > 0
     ? Math.min(activeSceneIdx, illustrationsList.length - 1)
     : 0;
   const currentIll = illustrationsList[safeSceneIdx];
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent, sceneIdx: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && onDropImage) {
+      onDropImage(file, sceneIdx);
+    }
+  };
 
   return (
     <div
@@ -198,12 +225,32 @@ export const IllustrationStoryboard: React.FC<IllustrationStoryboardProps> = ({
               {/* 狀態 1：已有圖片 */}
               {currentIll.imageUrl ? (
                 <div className="space-y-3">
-                  <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex justify-center p-2 shadow-inner group">
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, safeSceneIdx)}
+                    className={`relative rounded-xl overflow-hidden border transition-all duration-200 flex justify-center p-2 shadow-inner group ${
+                      isDragging
+                        ? 'border-indigo-600 bg-indigo-50/90 ring-4 ring-indigo-200/70 scale-[1.01]'
+                        : 'border-slate-200 bg-slate-50'
+                    }`}
+                  >
                     <img
                       src={currentIll.imageUrl}
                       alt={currentIll.caption || `場景 ${safeSceneIdx + 1}`}
-                      className="max-h-64 w-full object-contain rounded-lg shadow-sm bg-white"
+                      className={`max-h-64 w-full object-contain rounded-lg shadow-sm bg-white transition duration-200 ${
+                        isDragging ? 'opacity-30 blur-[1px]' : ''
+                      }`}
                     />
+                    {isDragging && (
+                      <div className="absolute inset-0 bg-indigo-600/75 backdrop-blur-xs flex flex-col items-center justify-center text-white rounded-xl z-10 transition animate-in fade-in">
+                        <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-1.5 animate-bounce">
+                          <Upload className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-sm font-bold">✨ 放開滑鼠以立即替換此圖片！</span>
+                        <span className="text-xs text-indigo-100 mt-1">系統將自動壓縮並更新情境插圖</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* 圖說標題編輯 */}
@@ -221,9 +268,9 @@ export const IllustrationStoryboard: React.FC<IllustrationStoryboardProps> = ({
                   {/* 換圖 / 提示詞查看 / 刪圖操作列 */}
                   <div className="flex items-center justify-between pt-1">
                     <div className="flex items-center space-x-2">
-                      <label className="cursor-pointer text-[11px] font-semibold text-sky-600 hover:text-sky-700 inline-flex items-center space-x-1 px-2.5 py-1 bg-sky-50 hover:bg-sky-100 rounded-lg transition border border-sky-200">
+                      <label className="cursor-pointer text-[11px] font-semibold text-sky-600 hover:text-sky-700 inline-flex items-center space-x-1 px-2.5 py-1 bg-sky-50 hover:bg-sky-100 rounded-lg transition border border-sky-200" title="點擊選取檔案，或直接將圖片拖曳至上方圖片區">
                         <Upload className="w-3 h-3" />
-                        <span>更換圖片</span>
+                        <span>更換圖片（可拖曳或點選）</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -312,16 +359,45 @@ export const IllustrationStoryboard: React.FC<IllustrationStoryboardProps> = ({
                   ) : null}
 
                   {/* 上傳圖片區塊 (支援拖曳/點擊/貼上) */}
-                  <div className="space-y-2">
-                    <label className="border-2 border-dashed border-sky-300 hover:border-sky-500 bg-sky-50/50 hover:bg-sky-50/90 rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-1.5 group">
-                      <div className="w-9 h-9 rounded-full bg-sky-100 group-hover:bg-sky-200 flex items-center justify-center text-sky-600 transition shadow-sm">
-                        <Upload className="w-4 h-4" />
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, safeSceneIdx)}
+                    className="space-y-2"
+                  >
+                    <label
+                      className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center space-y-2 group ${
+                        isDragging
+                          ? 'border-indigo-600 bg-indigo-50/90 ring-4 ring-indigo-200/70 scale-[1.01] shadow-md'
+                          : 'border-sky-300 hover:border-sky-500 bg-sky-50/50 hover:bg-sky-50/90'
+                      }`}
+                    >
+                      <div
+                        className={`w-11 h-11 rounded-full flex items-center justify-center transition shadow-sm ${
+                          isDragging
+                            ? 'bg-indigo-600 text-white scale-110 animate-bounce'
+                            : 'bg-sky-100 group-hover:bg-sky-200 text-sky-600'
+                        }`}
+                      >
+                        <Upload className="w-5 h-5" />
                       </div>
-                      <span className="text-xs font-bold text-sky-800 block">
-                        上傳【場景 {safeSceneIdx + 1}】生好的圖片
+                      <span
+                        className={`text-sm font-bold block ${
+                          isDragging ? 'text-indigo-900' : 'text-sky-800'
+                        }`}
+                      >
+                        {isDragging
+                          ? '✨ 放開滑鼠立即上傳圖片！'
+                          : `上傳【場景 ${safeSceneIdx + 1}】生好的圖片`}
                       </span>
-                      <span className="text-[10px] text-slate-500 block">
-                        點擊選取、拖曳檔案或直接按 Ctrl+V 貼上
+                      <span
+                        className={`text-[11px] block ${
+                          isDragging ? 'text-indigo-700 font-medium' : 'text-slate-500'
+                        }`}
+                      >
+                        {isDragging
+                          ? '已偵測到拖曳檔案，放開即可自動完成高品質壓縮並置入文章'
+                          : '直接拖曳圖片檔案至此、點擊選取或按 Ctrl+V 貼上'}
                       </span>
                       <input
                         type="file"
