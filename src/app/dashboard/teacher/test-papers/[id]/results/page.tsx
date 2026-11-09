@@ -199,16 +199,6 @@ export default function TeacherTestResultsPage() {
           </div>
 
           <div className="flex items-center space-x-2 text-xs">
-            {/* 問答題全班集中批閱模式入口 */}
-            <Link
-              href={`/dashboard/teacher/test-papers/${testPaper.id}/grade-by-question${assignmentId ? `?assignmentId=${encodeURIComponent(assignmentId)}` : ''}`}
-              className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold inline-flex items-center space-x-1.5 transition shadow-xs"
-              title="審題一次批改全班同一問答題，大幅提高批改效率與評分一致性"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>問答題全班集中批閱</span>
-            </Link>
-
             <span className="hidden sm:inline-block bg-slate-100 px-3 py-1.5 rounded-lg font-medium text-slate-700">
               滿分：<strong className="text-slate-900 font-bold">{testPaper.totalPoints}</strong> 分
             </span>
@@ -443,22 +433,13 @@ export default function TeacherTestResultsPage() {
 
         {/* 學生名冊與作答記錄表格 (擴充量尺分、基準與常模 PR) */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-slate-900">學生繳卷與個別報告名冊</h2>
               <p className="text-xs text-slate-500">點擊「個別診斷報告」可查看 AI 評分三明治回饋、國際能力指標與原卷細節</p>
             </div>
-            <div className="flex items-center space-x-3">
-              <Link
-                href={`/dashboard/teacher/test-papers/${testPaper.id}/grade-by-question${assignmentId ? `?assignmentId=${encodeURIComponent(assignmentId)}` : ''}`}
-                className="px-3.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 inline-flex items-center space-x-1.5 transition"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>切換為問答題全班逐題批閱</span>
-              </Link>
-              <div className="text-xs text-slate-400 font-medium">
-                共計 {submissions.length} 筆受測記錄
-              </div>
+            <div className="text-xs text-slate-400 font-medium">
+              共計 {submissions.length} 筆受測記錄
             </div>
           </div>
 

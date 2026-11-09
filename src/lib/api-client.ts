@@ -234,66 +234,6 @@ export const api = {
         }`
       ),
 
-    /** 取得全班逐題集中批閱資料 (以題目為核心，包含試卷、所有問答題、全班學生作答) */
-    getQuestionBatchGrading: (testId: string, assignmentId?: string) =>
-      request<{
-        testPaper: TestPaper;
-        assignment?: any;
-        questions: any[];
-        submissions: Array<{
-          id: string;
-          studentId: string;
-          studentName: string;
-          seatNumber?: number;
-          className?: string;
-          totalScore: number;
-          maxScore: number;
-          scaleScore: number;
-          classPR?: number;
-          normPR?: number;
-          isTeacherReviewed: boolean;
-          submittedAt: string;
-          answers: Array<{
-            questionId: string;
-            questionNumber: number;
-            type: string;
-            score: number;
-            maxScore: number;
-            teacherScore?: number;
-            originalScore?: number;
-            studentAnswer?: string;
-            aiFeedback?: any;
-            teacherComment?: string;
-            isTeacherReviewed?: boolean;
-            code?: string;
-          }>;
-        }>;
-      }>(
-        `/api/teacher/test-papers/${testId}/grade-by-question${
-          assignmentId ? `?assignmentId=${encodeURIComponent(assignmentId)}` : ''
-        }`
-      ),
-
-    /** 批次儲存單一題目之全班評分與評語 */
-    saveQuestionBatchGrading: (
-      testId: string,
-      payload: {
-        questionId: string;
-        updates: Array<{
-          submissionId: string;
-          score: number;
-          teacherComment?: string;
-        }>;
-      }
-    ) =>
-      request<{ success: boolean; message?: string }>(
-        `/api/teacher/test-papers/${testId}/grade-by-question`,
-        {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        }
-      ),
-
     /** 取得單一學生作答卷、文章原文與同儕名冊（網頁複閱模式） */
     getSubmissionDetail: (submissionId: string) =>
       request<TeacherSubmissionDetailResponse>(`/api/teacher/submissions/${submissionId}`),

@@ -335,16 +335,6 @@ export default function TeacherReviewSubmissionPage() {
                 《{testPaper.title}》
               </h1>
             </div>
-
-            {/* 問答題全班集中批閱模式入口快捷 */}
-            <Link
-              href={`/dashboard/teacher/test-papers/${testPaper.id}/grade-by-question${searchParams.get('assignmentId') ? `?assignmentId=${searchParams.get('assignmentId')}` : ''}`}
-              className="hidden xl:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 transition shadow-2xs"
-              title="切換為全班問答題集中批閱模式（審題一次批改全班同一題）"
-            >
-              <LayoutList className="w-3.5 h-3.5 text-purple-600" />
-              <span>問答題全班集中批閱</span>
-            </Link>
           </div>
 
           {/* 中間：學生切換控制器 */}
