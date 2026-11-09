@@ -397,8 +397,6 @@ export async function fetchFromBlob(): Promise<{ data: DBState | null; exists: b
 export async function syncToBlob(state: DBState): Promise<void> {
   if (isBuildPhase()) return;
 
-  await syncToFirestore(state).catch((e) => console.warn('[DB] Firestore sync error:', e));
-
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token) return;
 

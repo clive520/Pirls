@@ -248,7 +248,7 @@ export default function TeacherReviewSubmissionPage() {
         teacherComment: modifiedComments[ans.questionId] !== undefined ? modifiedComments[ans.questionId] : (ans.teacherComment || ''),
       }));
 
-      await api.teacher.reviewSubmission(submission.id, {
+      const res = await api.teacher.reviewSubmission(submission.id, {
         answersUpdates,
         teacherGeneralNote: teacherGeneralNote.trim(),
         aiPedagogicalAdvice: aiAdvice,
@@ -260,8 +260,24 @@ export default function TeacherReviewSubmissionPage() {
       if (andGoToNext && nextStudent) {
         router.push(`/dashboard/teacher/submissions/${nextStudent.id}`);
       } else {
-        // 重新整理當前頁面資料
-        fetchSubmissionData(submission.id);
+        if (res.submission) {
+          setSubmission(res.submission);
+          // 即時更新同儕導覽名冊中的成績與核定標記，避免重複發送 GET 請求造成等待
+          setSiblings((prev) =>
+            prev.map((s) =>
+              s.id === submission.id
+                ? {
+                    ...s,
+                    totalScore: res.submission.totalScore,
+                    scaleScore: res.submission.scaleScore ?? s.scaleScore ?? 500,
+                    isTeacherReviewed: true,
+                  }
+                : s
+            )
+          );
+        } else {
+          fetchSubmissionData(submission.id);
+        }
       }
     } catch (err: any) {
       console.error(err);
