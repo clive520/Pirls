@@ -221,55 +221,61 @@ export default function GradeByQuestionPage() {
     }
   };
 
-  // 儲存全班本題成績
+  // 儲存全班本題成績（支援樂觀即時切換與極速批次保存）
   const handleSaveBatch = async (andGoToNext: boolean = false) => {
     if (!selectedQuestionId || !testPaper) return;
+
+    const targetQId = selectedQuestionId;
+    const currentGrades = { ...grades };
+    const currentComments = { ...comments };
+    const qNum = currentQuestion ? currentQuestion.questionNumber : '';
+
+    // 1. 本地樂觀更新：立即更新本機 submissions 資料，無需等待網路往返
+    setSubmissions((prev) =>
+      prev.map((sub) => {
+        const updatedAnswers = sub.answers.map((ans) => {
+          if (ans.questionId === targetQId) {
+            const score = currentGrades[sub.id] !== undefined ? currentGrades[sub.id] : ans.score;
+            return {
+              ...ans,
+              score,
+              teacherScore: score,
+              teacherComment: currentComments[sub.id] || ans.teacherComment,
+              isTeacherReviewed: true,
+            };
+          }
+          return ans;
+        });
+        return {
+          ...sub,
+          answers: updatedAnswers,
+          isTeacherReviewed: true,
+        };
+      })
+    );
+
+    // 2. 若選擇「儲存並改下一題」，立即秒級切換下一題，讓老師無延遲順暢批閱！
+    if (andGoToNext && nextCrQuestion) {
+      handleSelectQuestion(nextCrQuestion.id);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setToastMsg(`⚡ 已立即切換至第 ${nextCrQuestion.questionNumber} 題！背景正在同步第 ${qNum} 題量尺與常模...`);
+    }
+
     try {
       setSaving(true);
       const updates = submissions.map((sub) => ({
         submissionId: sub.id,
-        score: grades[sub.id] !== undefined ? grades[sub.id] : 0,
-        teacherComment: comments[sub.id] || '',
+        score: currentGrades[sub.id] !== undefined ? currentGrades[sub.id] : 0,
+        teacherComment: currentComments[sub.id] || '',
       }));
 
       await api.teacher.saveQuestionBatchGrading(testPaper.id, {
-        questionId: selectedQuestionId,
+        questionId: targetQId,
         updates,
       });
 
-      // 更新本機 submissions 狀態標記
-      setSubmissions((prev) =>
-        prev.map((sub) => {
-          const updatedAnswers = sub.answers.map((ans) => {
-            if (ans.questionId === selectedQuestionId) {
-              const score = grades[sub.id] !== undefined ? grades[sub.id] : ans.score;
-              return {
-                ...ans,
-                score,
-                teacherScore: score,
-                teacherComment: comments[sub.id] || ans.teacherComment,
-                isTeacherReviewed: true,
-              };
-            }
-            return ans;
-          });
-          return {
-            ...sub,
-            answers: updatedAnswers,
-            isTeacherReviewed: true,
-          };
-        })
-      );
-
-      const qNum = currentQuestion ? currentQuestion.questionNumber : '';
-      setToastMsg(`🎉 已成功儲存全班第 ${qNum} 題核定成績！量尺與 PR 值已即時更新。`);
+      setToastMsg(`🎉 第 ${qNum} 題全班成績儲存完成！量尺與 PR 已成功同步。`);
       setTimeout(() => setToastMsg(''), 4000);
-
-      // 若選擇「儲存並改下一題」
-      if (andGoToNext && nextCrQuestion) {
-        handleSelectQuestion(nextCrQuestion.id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
     } catch (err: any) {
       console.error(err);
       alert('儲存過程發生錯誤：' + (err.message || '請確認網路連線'));

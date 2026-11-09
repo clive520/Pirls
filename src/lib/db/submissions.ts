@@ -189,6 +189,121 @@ export async function updateSubmissionReview(
   return sub;
 }
 
+/**
+ * 批次核定全班某一道問答題之成績（高效率批次模式）
+ * 一次性完成全班作答更新、同儕 PR 重算，並僅執行一次雲端儲存同步，解決逐生儲存造成的巨量延遲。
+ */
+export async function batchUpdateSubmissionReviews(
+  reviewerName: string,
+  questionId: string,
+  updates: Array<{
+    submissionId: string;
+    newScore: number;
+    teacherComment?: string;
+  }>
+): Promise<{ updatedCount: number }> {
+  await syncCloudOnBoot();
+  const state = ensureLocalDB();
+
+  let testPaperId: string | null = null;
+  const updatedSubs: ExamSubmission[] = [];
+
+  for (const item of updates) {
+    if (!item.submissionId) continue;
+    const sub = state.submissions[item.submissionId];
+    if (!sub || !sub.answers) continue;
+
+    testPaperId = sub.testPaperId;
+
+    const processEarned = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    const processTotal = { 1: 0, 2: 0, 3: 0, 4: 0 };
+
+    const updatedAnswers: StudentAnswer[] = sub.answers.map((ans) => {
+      const pLevel = ans.processLevelNumber as 1 | 2 | 3 | 4;
+      processTotal[pLevel] += ans.points;
+
+      if (ans.questionId === questionId) {
+        const origScore = ans.originalScore !== undefined ? ans.originalScore : ans.score;
+        const validScore = Math.max(0, Math.min(ans.points, Number(item.newScore)));
+        processEarned[pLevel] += validScore;
+        return {
+          ...ans,
+          originalScore: origScore,
+          score: validScore,
+          isTeacherReviewed: true,
+          teacherScore: validScore,
+          teacherComment: item.teacherComment !== undefined ? item.teacherComment : ans.teacherComment,
+        };
+      } else {
+        processEarned[pLevel] += ans.score;
+        return ans;
+      }
+    });
+
+    const totalScore = Object.values(processEarned).reduce((a, b) => a + b, 0);
+    const maxScore = sub.maxScore;
+    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+    const scaleScore = calculatePIRLSScaleScore(totalScore, maxScore);
+    const benchmark = getBenchmarkInfo(scaleScore);
+    const normPR = estimateTheoreticalPR(scaleScore);
+
+    sub.answers = updatedAnswers;
+    sub.totalScore = totalScore;
+    sub.percentage = percentage;
+    sub.scaleScore = scaleScore;
+    sub.benchmarkKey = benchmark.key;
+    sub.benchmarkName = benchmark.name;
+    sub.benchmarkDescription = benchmark.description;
+    sub.normPR = normPR;
+    sub.processScores = {
+      level1: {
+        earned: processEarned[1],
+        total: processTotal[1],
+        percentage: processTotal[1] > 0 ? Math.round((processEarned[1] / processTotal[1]) * 100) : 0,
+      },
+      level2: {
+        earned: processEarned[2],
+        total: processTotal[2],
+        percentage: processTotal[2] > 0 ? Math.round((processEarned[2] / processTotal[2]) * 100) : 0,
+      },
+      level3: {
+        earned: processEarned[3],
+        total: processTotal[3],
+        percentage: processTotal[3] > 0 ? Math.round((processEarned[3] / processTotal[3]) * 100) : 0,
+      },
+      level4: {
+        earned: processEarned[4],
+        total: processTotal[4],
+        percentage: processTotal[4] > 0 ? Math.round((processEarned[4] / processTotal[4]) * 100) : 0,
+      },
+    };
+    sub.isTeacherReviewed = true;
+    sub.reviewedAt = new Date().toISOString();
+    sub.reviewedBy = reviewerName;
+
+    updatedSubs.push(sub);
+  }
+
+  // 一次性重新計算同試卷所有學生的班級同儕 PR
+  if (testPaperId) {
+    const testSubs = Object.values(state.submissions).filter((s) => s.testPaperId === testPaperId);
+    const allScores = testSubs.map((s) => s.totalScore);
+    for (const s of testSubs) {
+      s.classPR = calculatePercentileRank(s.totalScore, allScores);
+    }
+  }
+
+  saveLocalDB(state);
+
+  // 平行進行單筆 Firestore 寫入與全域 Blob 持久化，僅呼叫一次，極速完成
+  await Promise.allSettled([
+    ...updatedSubs.map((s) => syncSubmissionToFirestore(s)),
+    syncToBlob(state),
+  ]);
+
+  return { updatedCount: updatedSubs.length };
+}
+
 export interface TestPaperClassStats {
   submittedCount: number;
   avgScore: number;

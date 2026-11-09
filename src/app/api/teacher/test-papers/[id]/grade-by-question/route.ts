@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
-import { getTestPaperById, getTestPaperSubmissions, getAssignmentById, updateSubmissionReview } from '@/lib/db';
+import {
+  getTestPaperById,
+  getTestPaperSubmissions,
+  getAssignmentById,
+  batchUpdateSubmissionReviews,
+} from '@/lib/db';
 
 export async function GET(
   req: NextRequest,
@@ -131,25 +136,13 @@ export async function POST(
 
     const reviewerName = session.displayName || '授課教師';
 
-    // 逐筆套用給分並重算量尺與常模
-    for (const item of updates) {
-      if (!item.submissionId) continue;
-      await updateSubmissionReview(
-        item.submissionId,
-        reviewerName,
-        [
-          {
-            questionId,
-            newScore: Number(item.score),
-            teacherComment: item.teacherComment ?? '',
-          },
-        ]
-      );
-    }
+    // 採用單次高效率批次持久化，避免逐生觸發 Blob / Firestore 同步造成的嚴重延遲
+    const result = await batchUpdateSubmissionReviews(reviewerName, questionId, updates);
 
     return NextResponse.json({
       success: true,
-      message: '本題全班成績核定儲存完成！已即時同步更新 PIRLS 量尺分與同儕 PR。',
+      updatedCount: result.updatedCount,
+      message: `本題全班成績 (${result.updatedCount} 位學生) 核定儲存完成！已同步更新 PIRLS 量尺分與同儕 PR。`,
     });
   } catch (error: any) {
     console.error('[Grade by Question POST Error]:', error);
