@@ -60,6 +60,7 @@ export default function TeacherReviewSubmissionPage() {
   // 視野佈局控制：左側文章原文與學生導覽抽屜 (寬螢幕預設展開)
   const [showArticlePanel, setShowArticlePanel] = useState(true);
   const [leftTab, setLeftTab] = useState<'article' | 'students'>('article');
+  const [articleFontSize, setArticleFontSize] = useState<'text-sm' | 'text-base' | 'text-lg'>('text-base');
 
   // 載入資料
   const fetchSubmissionData = async (subId: string) => {
@@ -330,10 +331,20 @@ export default function TeacherReviewSubmissionPage() {
                   網頁全景批改模式
                 </span>
               </div>
-              <h1 className="text-sm font-bold text-slate-900 truncate">
+              <h1 className="text-sm sm:text-base font-bold text-slate-900 truncate">
                 《{testPaper.title}》
               </h1>
             </div>
+
+            {/* 問答題全班集中批閱模式入口快捷 */}
+            <Link
+              href={`/dashboard/teacher/test-papers/${testPaper.id}/grade-by-question${searchParams.get('assignmentId') ? `?assignmentId=${searchParams.get('assignmentId')}` : ''}`}
+              className="hidden xl:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 transition shadow-2xs"
+              title="切換為全班問答題集中批閱模式（審題一次批改全班同一題）"
+            >
+              <LayoutList className="w-3.5 h-3.5 text-purple-600" />
+              <span>問答題全班集中批閱</span>
+            </Link>
           </div>
 
           {/* 中間：學生切換控制器 */}
@@ -481,21 +492,57 @@ export default function TeacherReviewSubmissionPage() {
 
                 {/* 頁籤內容一：文章原文對照 */}
                 {leftTab === 'article' && (
-                  <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
-                    <div className="border-b border-slate-100 pb-3">
-                      <h2 className="text-sm font-extrabold text-slate-900 leading-snug">
-                        《{testPaper.title}》
-                      </h2>
-                      <div className="text-[11px] text-slate-400 mt-1 flex items-center space-x-2">
-                        <span>總字數：{testPaper.wordCount} 字</span>
-                        <span>•</span>
-                        <span>共 {testPaper.paragraphs?.length || 1} 個段落</span>
+                  <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                    <div className="border-b border-slate-100 pb-3 flex items-start justify-between gap-2">
+                      <div>
+                        <h2 className="text-base font-extrabold text-slate-900 leading-snug">
+                          《{testPaper.title}》
+                        </h2>
+                        <div className="text-xs text-slate-400 mt-1 flex items-center space-x-2">
+                          <span>總字數：{testPaper.wordCount} 字</span>
+                          <span>•</span>
+                          <span>共 {testPaper.paragraphs?.length || 1} 個段落</span>
+                        </div>
+                      </div>
+
+                      {/* 字體大小切換開關 */}
+                      <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl flex-shrink-0" title="調整文章字級大小">
+                        <button
+                          type="button"
+                          onClick={() => setArticleFontSize('text-sm')}
+                          className={`px-2 py-0.5 rounded-lg text-xs font-black transition ${
+                            articleFontSize === 'text-sm' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                          title="標準 (14px)"
+                        >
+                          A
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setArticleFontSize('text-base')}
+                          className={`px-2 py-0.5 rounded-lg text-xs font-black transition ${
+                            articleFontSize === 'text-base' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                          title="適中 (16px，預設推薦)"
+                        >
+                          A+
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setArticleFontSize('text-lg')}
+                          className={`px-2 py-0.5 rounded-lg text-xs font-black transition ${
+                            articleFontSize === 'text-lg' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                          title="特大 (18px)"
+                        >
+                          A++
+                        </button>
                       </div>
                     </div>
 
                     {testPaper.themeSummary && (
-                      <div className="p-3 bg-amber-50/70 border border-amber-200/60 rounded-xl text-amber-900 text-[11px] leading-relaxed">
-                        <strong className="block font-bold mb-0.5">💡 主旨綱要：</strong>
+                      <div className="p-3.5 bg-amber-50/80 border border-amber-200/70 rounded-xl text-amber-950 text-xs sm:text-sm leading-relaxed">
+                        <strong className="block font-bold mb-0.5 text-amber-900">💡 主旨綱要：</strong>
                         {testPaper.themeSummary}
                       </div>
                     )}
@@ -505,7 +552,7 @@ export default function TeacherReviewSubmissionPage() {
                         paragraphs={testPaper.paragraphs}
                         rawContent={testPaper.articleContent}
                         illustrations={testPaper.illustrations}
-                        fontSizeClass="text-[13px]"
+                        fontSizeClass={articleFontSize}
                       />
                     </div>
                   </div>
@@ -673,27 +720,27 @@ export default function TeacherReviewSubmissionPage() {
                       </div>
                     </div>
 
-                    {/* 題目題幹 */}
+                    {/* 題目題幹 (大字好讀) */}
                     <div className="space-y-1">
-                      <p className="text-sm font-bold text-slate-900 leading-relaxed">
+                      <p className="text-base sm:text-lg font-bold text-slate-900 leading-relaxed">
                         {q?.prompt || `第 ${ans.questionNumber} 題`}
                       </p>
                     </div>
 
                     {/* 選擇題簡單檢視 */}
                     {!isCR ? (
-                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs space-y-2">
-                        <div className="flex items-center justify-between">
+                      <div className="p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200/80 text-sm sm:text-base space-y-2.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="space-x-4">
                             <span>學生回答：<strong className={ans.score > 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'}>{ans.studentAnswer || '未作答'}</strong></span>
                             <span>標準正解：<strong className="text-slate-900 font-bold">{q?.correctAnswerLabel}</strong></span>
                           </div>
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${ans.score > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                          <span className={`text-xs sm:text-sm font-bold px-2.5 py-1 rounded-lg ${ans.score > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
                             {ans.score > 0 ? '✓ 答對 (得滿分)' : '✗ 答錯 (0分)'}
                           </span>
                         </div>
                         {((q as any)?.explanation || q?.options?.find(o => o.label === q?.correctAnswerLabel)?.explanation) && (
-                          <p className="text-slate-500 text-[11px] pt-1 border-t border-slate-200/60">
+                          <p className="text-slate-600 text-xs sm:text-sm pt-2 border-t border-slate-200/60 leading-relaxed">
                             💡 解析：{(q as any)?.explanation || q?.options?.find(o => o.label === q?.correctAnswerLabel)?.explanation}
                           </p>
                         )}
@@ -701,47 +748,50 @@ export default function TeacherReviewSubmissionPage() {
                     ) : (
                       /* 開放簡答題專屬閱卷區 */
                       <div className="space-y-5 pt-1">
-                        {/* 學生原始作答文字區塊 (視野放大) */}
-                        <div className="p-5 rounded-2xl bg-amber-50/60 border border-amber-200/80 text-xs space-y-2">
+                        {/* 學生原始作答文字區塊 (特大字體 16px~18px) */}
+                        <div className="p-5 sm:p-6 rounded-2xl bg-amber-50/70 border border-amber-200 text-sm space-y-2.5">
                           <div className="flex items-center justify-between text-amber-950 font-bold">
-                            <span className="flex items-center gap-1.5 text-sm">
-                              <FileText className="w-4 h-4 text-amber-700" />
+                            <span className="flex items-center gap-2 text-sm sm:text-base">
+                              <FileText className="w-5 h-5 text-amber-700" />
                               學生原始作答內容：
                             </span>
-                            <span className="text-xs text-amber-800 font-semibold bg-amber-100/80 px-2 py-0.5 rounded-md">
+                            <span className="text-xs sm:text-sm text-amber-800 font-semibold bg-amber-100/90 px-2.5 py-0.5 rounded-lg border border-amber-200">
                               {ans.studentAnswer ? `${ans.studentAnswer.length} 字` : '未作答'}
                             </span>
                           </div>
-                          <div className="p-4 rounded-xl bg-white border border-amber-200 text-slate-900 font-medium leading-relaxed whitespace-pre-line text-[14px] shadow-2xs">
+                          <div className="p-4 sm:p-5 rounded-xl bg-white border border-amber-200 text-slate-900 font-medium leading-relaxed whitespace-pre-line text-base sm:text-lg shadow-2xs">
                             {ans.studentAnswer || '（此題學生未作答）'}
                           </div>
                         </div>
 
                         {/* 官方滿分示範與給分規準參考 */}
                         {q?.rubric && (
-                          <details className="group text-xs bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden" open>
-                            <summary className="p-3.5 font-bold text-slate-800 cursor-pointer flex items-center justify-between hover:bg-slate-100/70 transition">
-                              <span className="flex items-center space-x-2">
+                          <details className="group text-sm bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden" open>
+                            <summary className="p-4 font-bold text-slate-800 cursor-pointer flex items-center justify-between hover:bg-slate-100/70 transition">
+                              <span className="flex items-center space-x-2 text-sm sm:text-base">
                                 <BookOpen className="w-4 h-4 text-indigo-600" />
                                 <span>PIRLS 官方給分規準 (Rubrics) 與滿分參考答案</span>
                               </span>
                               <ChevronDown className="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" />
                             </summary>
-                            <div className="p-4 border-t border-slate-200 bg-white space-y-3 text-slate-700">
+                            <div className="p-5 border-t border-slate-200 bg-white space-y-3.5 text-slate-700 text-xs sm:text-sm">
                               {q.rubric.sampleFullCreditAnswer && (
-                                <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-emerald-950 text-xs leading-relaxed">
-                                  <strong className="block font-bold text-emerald-900 mb-1">⭐ 滿分參考答法與思維要點：</strong>
-                                  {q.rubric.sampleFullCreditAnswer}
+                                <div className="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200 text-emerald-950 text-sm sm:text-base leading-relaxed">
+                                  <strong className="block font-bold text-emerald-900 mb-1.5 flex items-center gap-1.5">
+                                    <Sparkles className="w-4 h-4 text-emerald-600" />
+                                    ⭐ 滿分參考答法與思維要點：
+                                  </strong>
+                                  <span className="font-medium">{q.rubric.sampleFullCreditAnswer}</span>
                                 </div>
                               )}
                               {q.rubric.criteria && (
-                                <div className="space-y-1.5 pt-1">
-                                  <div className="font-bold text-xs text-slate-700">各得分階梯定義：</div>
-                                  <div className="space-y-1">
+                                <div className="space-y-2 pt-1">
+                                  <div className="font-bold text-sm text-slate-800">各得分階梯定義：</div>
+                                  <div className="space-y-1.5">
                                     {q.rubric.criteria.map((c) => (
-                                      <div key={c.score} className="text-xs flex items-start space-x-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
-                                        <span className="font-bold text-indigo-700 flex-shrink-0">【{c.score} 分】：</span>
-                                        <span className="text-slate-700">{c.description}</span>
+                                      <div key={c.score} className="text-xs sm:text-sm flex items-start space-x-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                                        <span className="font-black text-indigo-700 flex-shrink-0 text-sm">【{c.score} 分】：</span>
+                                        <span className="text-slate-800 leading-relaxed font-medium">{c.description}</span>
                                       </div>
                                     ))}
                                   </div>
@@ -753,37 +803,37 @@ export default function TeacherReviewSubmissionPage() {
 
                         {/* 系統初評診斷摘要 */}
                         {ans.aiFeedback && (
-                          <div className="p-3.5 rounded-2xl bg-slate-100/80 text-xs text-slate-600 space-y-1.5">
-                            <div className="flex items-center justify-between text-slate-800 font-bold">
+                          <div className="p-4 rounded-2xl bg-slate-100/80 text-xs sm:text-sm text-slate-700 space-y-1.5 leading-relaxed">
+                            <div className="flex items-center justify-between text-slate-900 font-bold mb-1">
                               <span>🤖 系統初評診斷：</span>
-                              <span className="font-mono">初評分數：{ans.originalScore !== undefined ? ans.originalScore : ans.score} 分</span>
+                              <span className="font-mono text-xs bg-white px-2 py-0.5 rounded border border-slate-200">初評分數：{ans.originalScore !== undefined ? ans.originalScore : ans.score} 分</span>
                             </div>
-                            <p><strong className="text-emerald-700">亮點：</strong>{ans.aiFeedback.strength}</p>
-                            <p><strong className="text-amber-700">待加強：</strong>{ans.aiFeedback.weakness}</p>
+                            <p><strong className="text-emerald-700 font-bold">亮點：</strong>{ans.aiFeedback.strength}</p>
+                            <p><strong className="text-amber-700 font-bold">待加強：</strong>{ans.aiFeedback.weakness}</p>
                           </div>
                         )}
 
                         {/* ✨ AI 深度再閱 (Gemini 2.0) 區塊 */}
-                        <div className="p-4 rounded-2xl border border-purple-200 bg-purple-50/30 text-xs space-y-3">
+                        <div className="p-4 sm:p-5 rounded-2xl border border-purple-200 bg-purple-50/30 text-xs sm:text-sm space-y-3">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <div className="flex items-center space-x-2 font-bold text-purple-900">
-                              <Sparkles className="w-4 h-4 text-purple-600" />
+                            <div className="flex items-center space-x-2 font-bold text-purple-900 text-sm sm:text-base">
+                              <Sparkles className="w-5 h-5 text-purple-600" />
                               <span>AI 深度再閱建議 (Google Gemini 2.0)</span>
                             </div>
                             <button
                               type="button"
                               onClick={() => handleAiRegrade(ans.questionId)}
                               disabled={isAiLoading}
-                              className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition shadow-xs disabled:opacity-50 inline-flex items-center space-x-1.5"
+                              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm transition shadow-xs disabled:opacity-50 inline-flex items-center space-x-1.5"
                             >
                               {isAiLoading ? (
                                 <>
-                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <Loader2 className="w-4 h-4 animate-spin" />
                                   <span>AI 深入分析中...</span>
                                 </>
                               ) : (
                                 <>
-                                  <Sparkles className="w-3.5 h-3.5" />
+                                  <Sparkles className="w-4 h-4" />
                                   <span>{aiRes ? '重新深度分析' : '呼叫 AI 深度再閱'}</span>
                                 </>
                               )}
@@ -791,11 +841,11 @@ export default function TeacherReviewSubmissionPage() {
                           </div>
 
                           {aiRes && (
-                            <div className="p-4 rounded-xl bg-white border border-purple-200 space-y-2.5 animate-fadeIn">
-                              <div className="flex items-center justify-between">
+                            <div className="p-4 sm:p-5 rounded-xl bg-white border border-purple-200 space-y-3 animate-fadeIn">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex items-center space-x-2">
-                                  <span className="font-bold text-slate-800">AI 建議核定：</span>
-                                  <span className="text-base font-black text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-lg">
+                                  <span className="font-bold text-slate-800 text-sm">AI 建議核定：</span>
+                                  <span className="text-lg font-black text-purple-700 bg-purple-100 px-3 py-0.5 rounded-lg">
                                     {aiRes.suggestedScore} 分
                                   </span>
                                   <span className="text-xs text-slate-400 font-mono">
@@ -805,18 +855,18 @@ export default function TeacherReviewSubmissionPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleAdoptAi(ans.questionId)}
-                                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition inline-flex items-center space-x-1"
+                                  className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-xs transition inline-flex items-center space-x-1.5"
                                 >
-                                  <Check className="w-3.5 h-3.5" />
+                                  <Check className="w-4 h-4" />
                                   <span>採用 AI 建議 ({aiRes.suggestedScore}分)</span>
                                 </button>
                               </div>
-                              <p className="text-xs text-slate-700 leading-relaxed">
-                                <strong className="text-purple-900">評審理由：</strong>
+                              <p className="text-xs sm:text-sm text-slate-800 leading-relaxed">
+                                <strong className="text-purple-900 font-bold">評審理由：</strong>
                                 {aiRes.reason}
                               </p>
                               {aiRes.keyEvidenceFound && aiRes.keyEvidenceFound.length > 0 && (
-                                <div className="text-[11px] text-slate-500">
+                                <div className="text-xs text-slate-600">
                                   <strong>辨識出文本證據：</strong>
                                   <span className="text-emerald-700 font-medium ml-1">
                                     {aiRes.keyEvidenceFound.join('、')}
@@ -828,12 +878,12 @@ export default function TeacherReviewSubmissionPage() {
                         </div>
 
                         {/* 👨‍🏫 教師手動給分選擇器 (按鈕放大、清晰好點) */}
-                        <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3.5">
+                        <div className="p-5 sm:p-6 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-4">
                           <div>
-                            <label className="block text-xs font-bold text-slate-800 mb-2">
+                            <label className="block text-sm sm:text-base font-bold text-slate-900 mb-2.5">
                               👨‍🏫 教師最終核定給分：
                             </label>
-                            <div className="flex flex-wrap gap-2.5">
+                            <div className="flex flex-wrap gap-3">
                               {Array.from({ length: ans.maxScore + 1 }, (_, idx) => idx).map((pts) => {
                                 const isSelected = currentScore === pts;
                                 return (
@@ -841,15 +891,15 @@ export default function TeacherReviewSubmissionPage() {
                                     key={pts}
                                     type="button"
                                     onClick={() => handleScoreChange(ans.questionId, pts)}
-                                    className={`px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 ${
+                                    className={`px-6 py-3 rounded-xl font-bold transition flex items-center space-x-2 ${
                                       isSelected
                                         ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400/40'
                                         : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
                                     }`}
                                   >
-                                    {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
-                                    <span className="text-sm">{pts} 分</span>
-                                    {pts === ans.maxScore && <span className="text-[10px] opacity-80">(滿分)</span>}
+                                    {isSelected && <Check className="w-5 h-5 stroke-[3]" />}
+                                    <span className="text-base sm:text-lg font-black">{pts} 分</span>
+                                    {pts === ans.maxScore && <span className="text-xs opacity-90 font-medium">(滿分)</span>}
                                   </button>
                                 );
                               })}
@@ -858,7 +908,7 @@ export default function TeacherReviewSubmissionPage() {
 
                           {/* 教師個別評語 / 批註 */}
                           <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1">
+                            <label className="block text-xs sm:text-sm font-bold text-slate-800 mb-1.5">
                               給學生的本題評語／勉勵叮嚀（選填，將顯示於診斷書中）：
                             </label>
                             <input
@@ -866,7 +916,7 @@ export default function TeacherReviewSubmissionPage() {
                               value={modifiedComments[ans.questionId] || ''}
                               onChange={(e) => handleCommentChange(ans.questionId, e.target.value)}
                               placeholder="例：因果轉折寫得很深刻，老師多加 1 分鼓勵你！"
-                              className="w-full text-xs rounded-xl border border-slate-300 p-3 focus:ring-2 focus:ring-indigo-500 text-slate-800 bg-white"
+                              className="w-full text-sm sm:text-base rounded-xl border border-slate-300 p-3.5 focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white shadow-2xs font-medium"
                             />
                           </div>
                         </div>
@@ -922,24 +972,24 @@ export default function TeacherReviewSubmissionPage() {
                       <BarChart3 className="w-4 h-4 text-purple-700" />
                       <span>各層次思維能力落點綜合解析：</span>
                     </span>
-                    <p className="text-xs text-slate-800 leading-relaxed bg-purple-50/50 p-3.5 rounded-xl border border-purple-100 font-medium">
+                    <p className="text-xs sm:text-sm text-slate-900 leading-relaxed bg-purple-50/60 p-4 rounded-xl border border-purple-100 font-medium">
                       {aiAdvice.levelAnalysis}
                     </p>
                   </div>
 
                   {/* 改進建議清單 */}
                   <div className="space-y-2">
-                    <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                    <span className="text-xs sm:text-sm font-bold text-indigo-900 flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-indigo-700" />
                       <span>給學生的具體閱讀策略與改進建議事項：</span>
                     </span>
-                    <div className="space-y-2">
+                    <div className="space-y-2.5">
                       {aiAdvice.improvementSuggestions?.map((item: string, idx: number) => (
                         <div
                           key={idx}
-                          className="p-3 rounded-xl bg-indigo-50/40 border border-indigo-100 text-xs text-slate-800 leading-relaxed flex items-start space-x-2.5"
+                          className="p-3.5 rounded-xl bg-indigo-50/50 border border-indigo-100 text-xs sm:text-sm text-slate-800 leading-relaxed flex items-start space-x-2.5"
                         >
-                          <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
                             {idx + 1}
                           </span>
                           <span className="flex-1 font-medium">{item}</span>
@@ -950,22 +1000,22 @@ export default function TeacherReviewSubmissionPage() {
 
                   {/* 具體行動計畫 */}
                   {aiAdvice.actionPlan && (
-                    <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200/80 text-xs text-amber-900 flex items-start space-x-2.5">
-                      <span className="font-bold flex-shrink-0">🚀 自主練習行動計畫：</span>
-                      <span className="leading-relaxed">{aiAdvice.actionPlan}</span>
+                    <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs sm:text-sm text-amber-950 flex items-start space-x-2.5">
+                      <span className="font-bold flex-shrink-0 text-amber-900">🚀 自主練習行動計畫：</span>
+                      <span className="leading-relaxed font-medium">{aiAdvice.actionPlan}</span>
                     </div>
                   )}
 
                   {/* 導師講評草稿套用 */}
                   {aiAdvice.teacherFeedbackDraft && (
                     <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-xs text-slate-500 italic">
+                      <span className="text-xs sm:text-sm text-slate-500 italic">
                         AI 已依據四層次落點自動起草綜合評語
                       </span>
                       <button
                         type="button"
                         onClick={() => setTeacherGeneralNote(aiAdvice.teacherFeedbackDraft)}
-                        className="text-xs text-purple-700 hover:text-purple-900 font-bold hover:underline inline-flex items-center space-x-1"
+                        className="text-xs sm:text-sm text-purple-700 hover:text-purple-900 font-bold hover:underline inline-flex items-center space-x-1"
                       >
                         <span>套用草稿至下方【導師總評】</span>
                         <span>↓</span>
@@ -976,18 +1026,18 @@ export default function TeacherReviewSubmissionPage() {
               )}
             </div>
 
-            {/* 全卷導師總評語 */}
-            <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 space-y-3 shadow-xs">
-              <label className="block text-xs font-bold text-slate-800 flex items-center space-x-2">
-                <MessageSquare className="w-4 h-4 text-indigo-600" />
-                <span>全卷導師綜合講評（選填，將呈現在學生報告首頁頂部）：</span>
+            {/* 全卷導師總評語 (大字好讀) */}
+            <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 space-y-3.5 shadow-xs">
+              <label className="block text-sm sm:text-base font-bold text-slate-900 flex items-center space-x-2">
+                <MessageSquare className="w-5 h-5 text-indigo-600" />
+                <span>全卷導師綜合講評（選填，將呈現在學生診斷報告首頁頂部）：</span>
               </label>
               <textarea
                 rows={3}
                 value={teacherGeneralNote}
                 onChange={(e) => setTeacherGeneralNote(e.target.value)}
                 placeholder="例：本次測驗在深層推論表現突出，值得肯定！建議持續加強第四層寫作視角的批判性反思。"
-                className="w-full text-xs rounded-2xl border border-slate-300 p-3.5 focus:ring-2 focus:ring-indigo-500 text-slate-800"
+                className="w-full text-sm sm:text-base rounded-2xl border border-slate-300 p-4 focus:ring-2 focus:ring-indigo-500 text-slate-900 shadow-2xs font-medium"
               />
             </div>
 
