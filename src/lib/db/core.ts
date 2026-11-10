@@ -44,11 +44,32 @@ export function getActiveDBPath(): string {
   return SEED_DB_PATH;
 }
 
+function initFirestoreSettings(db: FirebaseFirestore.Firestore): FirebaseFirestore.Firestore {
+  try {
+    db.settings({ ignoreUndefinedProperties: true });
+  } catch {}
+  return db;
+}
+
+export function sanitizeForFirestore<T extends Record<string, any>>(data: T): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const [key, val] of Object.entries(data)) {
+    if (val !== undefined) {
+      if (val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+        result[key] = sanitizeForFirestore(val);
+      } else {
+        result[key] = val;
+      }
+    }
+  }
+  return result;
+}
+
 export function getFirestoreInstance(): FirebaseFirestore.Firestore | null {
   if (isBuildPhase()) return null;
 
   if (admin.apps.length > 0) {
-    return admin.firestore();
+    return initFirestoreSettings(admin.firestore());
   }
 
   // 1. 本地 service-account.json
@@ -60,7 +81,7 @@ export function getFirestoreInstance(): FirebaseFirestore.Firestore | null {
         credential: admin.credential.cert(sa),
         projectId: sa.project_id,
       });
-      return admin.firestore();
+      return initFirestoreSettings(admin.firestore());
     } catch (e) {
       console.warn('[DB] Failed to init firebase-admin from service-account.json:', e);
     }
@@ -81,7 +102,7 @@ export function getFirestoreInstance(): FirebaseFirestore.Firestore | null {
         }),
         projectId,
       });
-      return admin.firestore();
+      return initFirestoreSettings(admin.firestore());
     } catch (e) {
       console.warn('[DB] Failed to init firebase-admin from env:', e);
     }
@@ -93,7 +114,7 @@ export function getFirestoreInstance(): FirebaseFirestore.Firestore | null {
       admin.initializeApp({
         projectId: process.env.GOOGLE_CLOUD_PROJECT || 'pirls-system',
       });
-      return admin.firestore();
+      return initFirestoreSettings(admin.firestore());
     } catch (e) {
       console.warn('[DB] Failed to init firebase-admin with ADC:', e);
     }
@@ -246,7 +267,8 @@ export async function syncUserToFirestore(user: User): Promise<void> {
   const db = getFirestoreInstance();
   if (!db) return;
   try {
-    await db.collection('users').doc(user.id).set(user);
+    const sanitized = sanitizeForFirestore(user);
+    await db.collection('users').doc(user.id).set(sanitized, { merge: true });
     globalThis.__pirls_blob_last_synced = Date.now();
   } catch (err: any) {
     console.error('[DB] Failed to sync user to Firestore:', err);
@@ -270,7 +292,8 @@ export async function syncClassToFirestore(cls: ClassRoom): Promise<void> {
   const db = getFirestoreInstance();
   if (!db) return;
   try {
-    await db.collection('classes').doc(cls.id).set(cls);
+    const sanitized = sanitizeForFirestore(cls);
+    await db.collection('classes').doc(cls.id).set(sanitized, { merge: true });
     globalThis.__pirls_blob_last_synced = Date.now();
   } catch (err: any) {
     console.error('[DB] Failed to sync class to Firestore:', err);
@@ -294,7 +317,8 @@ export async function syncSubmissionToFirestore(sub: ExamSubmission): Promise<vo
   const db = getFirestoreInstance();
   if (!db) return;
   try {
-    await db.collection('submissions').doc(sub.id).set(sub);
+    const sanitized = sanitizeForFirestore(sub);
+    await db.collection('submissions').doc(sub.id).set(sanitized, { merge: true });
     globalThis.__pirls_blob_last_synced = Date.now();
   } catch (err: any) {
     console.error('[DB] Failed to sync submission to Firestore:', err);
@@ -318,7 +342,8 @@ export async function syncAssignmentToFirestore(asgn: TestAssignment): Promise<v
   const db = getFirestoreInstance();
   if (!db) return;
   try {
-    await db.collection('assignments').doc(asgn.id).set(asgn);
+    const sanitized = sanitizeForFirestore(asgn);
+    await db.collection('assignments').doc(asgn.id).set(sanitized, { merge: true });
     globalThis.__pirls_blob_last_synced = Date.now();
   } catch (err: any) {
     console.error('[DB] Failed to sync assignment to Firestore:', err);
@@ -361,6 +386,38 @@ export async function batchDeleteFromFirestore(
     globalThis.__pirls_blob_last_synced = Date.now();
   } catch (err) {
     console.error('[DB] Failed batchDeleteFromFirestore:', err);
+  }
+}
+
+/**
+ * 批次新增或更新文件至 Cloud Firestore
+ * 單一 batch commit 可聚合多筆操作，效能快且具備原子性
+ */
+export async function batchSyncToFirestore(
+  items: { collection: string; id: string; data: any }[]
+): Promise<void> {
+  if (isBuildPhase() || items.length === 0) return;
+  const db = getFirestoreInstance();
+  if (!db) return;
+  try {
+    let batch = db.batch();
+    let count = 0;
+    for (const item of items) {
+      const sanitized = sanitizeForFirestore(item.data);
+      batch.set(db.collection(item.collection).doc(item.id), sanitized, { merge: true });
+      count++;
+      if (count >= 450) {
+        await batch.commit();
+        batch = db.batch();
+        count = 0;
+      }
+    }
+    if (count > 0) {
+      await batch.commit();
+    }
+    globalThis.__pirls_blob_last_synced = Date.now();
+  } catch (err) {
+    console.error('[DB] Failed batchSyncToFirestore:', err);
   }
 }
 

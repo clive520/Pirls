@@ -58,7 +58,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '請提供班級與學生資料清單' }, { status: 400 });
   }
 
-  // 驗證帳號格式或重複
+  // 驗證班級是否存在與教師存取權限
+  const { ensureLocalDB, syncCloudOnBoot } = await import('@/lib/db');
+  await syncCloudOnBoot();
+  const state = ensureLocalDB();
+  const targetClass = state.classes[classId];
+  if (!targetClass) {
+    return NextResponse.json({ error: '找不到指定的教學班級' }, { status: 404 });
+  }
+  const isOwner = targetClass.teacherId === teacher.userId || teacher.role === 'admin';
+  const isCoTeacher = Boolean(targetClass.coTeacherIds?.includes(teacher.userId));
+  if (!isOwner && !isCoTeacher) {
+    return NextResponse.json({ error: '您無權管理此班級學生名冊' }, { status: 403 });
+  }
+
+  // 驗證帳號格式、同批重複與系統現有重複
   const validBatch: Array<{
     username: string;
     plainPassword: string;
@@ -67,12 +81,27 @@ export async function POST(req: NextRequest) {
     gradeLevel: number;
   }> = [];
 
+  const seenUsernames = new Set<string>();
+
   for (const s of students) {
-    const username = s.username.trim();
+    const username = (s.username || '').trim();
+    if (!username) {
+      return NextResponse.json({ error: '學生帳號不能為空白' }, { status: 400 });
+    }
+
+    const lower = username.toLowerCase();
+    if (seenUsernames.has(lower)) {
+      return NextResponse.json(
+        { error: `批次清單中出現重複帳號 [${username}]，請確認座號或更換帳號前綴` },
+        { status: 400 }
+      );
+    }
+    seenUsernames.add(lower);
+
     const existing = await getUserByUsername(username);
     if (existing) {
       return NextResponse.json(
-        { error: `帳號 [${username}] 已存在，請確認座號或更換帳號` },
+        { error: `帳號 [${username}] 已存在於系統中，請確認座號或更換帳號前綴` },
         { status: 400 }
       );
     }
@@ -84,8 +113,8 @@ export async function POST(req: NextRequest) {
       username,
       plainPassword: initialPassword,
       displayName: s.displayName?.trim() || `學生 ${s.seatNumber} 號`,
-      seatNumber: s.seatNumber,
-      gradeLevel: gradeLevel || 4,
+      seatNumber: Number(s.seatNumber) || 1,
+      gradeLevel: Number(gradeLevel) || targetClass.gradeLevel || 4,
     });
   }
 

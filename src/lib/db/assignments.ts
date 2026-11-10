@@ -5,6 +5,7 @@ import {
   syncToBlob,
   syncAssignmentToFirestore,
   deleteAssignmentFromFirestore,
+  syncTestPaperToFirestore,
   DBState,
 } from './core';
 import { getTeacherClasses } from './classes';
@@ -166,7 +167,10 @@ export async function createAssignmentsForClasses(
   }
 
   saveLocalDB(state);
-  await syncToBlob(state);
+  await Promise.allSettled([
+    syncTestPaperToFirestore(paper).catch(() => {}),
+    syncToBlob(state),
+  ]);
 
   return createdAssignments;
 }
@@ -275,10 +279,13 @@ export async function deleteAssignment(id: string): Promise<boolean> {
   }
 
   saveLocalDB(state);
-  await deleteAssignmentFromFirestore(id).catch((e) =>
-    console.warn('[DB] Firestore assignment delete note:', e)
-  );
-  await syncToBlob(state);
+  await Promise.allSettled([
+    deleteAssignmentFromFirestore(id).catch((e) =>
+      console.warn('[DB] Firestore assignment delete note:', e)
+    ),
+    paper ? syncTestPaperToFirestore(paper).catch(() => {}) : Promise.resolve(),
+    syncToBlob(state),
+  ]);
 
   return true;
 }

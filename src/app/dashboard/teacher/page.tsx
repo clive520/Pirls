@@ -28,6 +28,7 @@ export default function TeacherDashboardPage() {
   const [batchStartSeat, setBatchStartSeat] = useState(1);
   const [studentNamesInput, setStudentNamesInput] = useState('');
   const [createdStudentSlips, setCreatedStudentSlips] = useState<any[]>([]);
+  const [isBatchCreating, setIsBatchCreating] = useState(false);
 
   // 編輯學生帳號密碼彈窗狀態
   const [showEditModal, setShowEditModal] = useState(false);
@@ -210,6 +211,7 @@ export default function TeacherDashboardPage() {
       }
     }
 
+    setIsBatchCreating(true);
     try {
       const res = await fetch('/api/teacher/students', {
         method: 'POST',
@@ -223,7 +225,7 @@ export default function TeacherDashboardPage() {
       const data = await res.json();
       if (res.ok) {
         setCreatedStudentSlips(data.students || []);
-        fetchClassStudents(selectedClassId);
+        await fetchClassStudents(selectedClassId);
         // 更新班級人數
         setClasses((prev) =>
           prev.map((c) =>
@@ -231,10 +233,13 @@ export default function TeacherDashboardPage() {
           )
         );
       } else {
-        alert(data.error);
+        alert(data.error || '建立學生帳號失敗');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(err.message || '網路通訊異常，請稍後重試');
+    } finally {
+      setIsBatchCreating(false);
     }
   };
 
@@ -815,23 +820,32 @@ export default function TeacherDashboardPage() {
                     className="mt-1 block w-full rounded-lg border-slate-300 border px-3 py-2 text-sm"
                   />
                   <p className="mt-1 text-xs text-slate-400">
-                    預設初始密碼為：<code className="text-sky-700 font-bold">pirls01</code>, <code className="text-sky-700 font-bold">pirls02</code>...
+                    預設初始密碼為：<code className="text-sky-700 font-bold">6 碼隨機數字</code>（建立後系統會顯示帳密清單並提供列印卡片）
                   </p>
                 </div>
 
                 <div className="flex justify-end space-x-2 pt-4">
                   <button
                     type="button"
+                    disabled={isBatchCreating}
                     onClick={() => setShowBatchModal(false)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                   >
                     取消
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold shadow-sm"
+                    disabled={isBatchCreating}
+                    className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-bold shadow-sm inline-flex items-center space-x-1.5"
                   >
-                    立即生成學生帳號
+                    {isBatchCreating ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>正在寫入資料庫...</span>
+                      </>
+                    ) : (
+                      <span>立即生成學生帳號</span>
+                    )}
                   </button>
                 </div>
               </form>

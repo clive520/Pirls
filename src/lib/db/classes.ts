@@ -9,6 +9,7 @@ import {
   deleteUserFromFirestore,
   syncUserToFirestore,
   batchDeleteFromFirestore,
+  batchSyncToFirestore,
 } from './core';
 
 export async function createClass(
@@ -29,8 +30,10 @@ export async function createClass(
   };
   state.classes[id] = newClass;
   saveLocalDB(state);
-  await syncClassToFirestore(newClass);
-  await syncToBlob(state);
+  await Promise.allSettled([
+    syncClassToFirestore(newClass),
+    syncToBlob(state),
+  ]);
   return newClass;
 }
 
@@ -86,11 +89,12 @@ export async function createStudentsBatch(
   const created: User[] = [];
   const targetClass = state.classes[classId];
 
-  for (const s of students) {
+  for (let i = 0; i < students.length; i++) {
+    const s = students[i];
     // 預設建立 6 碼亂數數字密碼
     const initialPlain = s.plainPassword?.trim() || Math.floor(100000 + Math.random() * 900000).toString();
     const pwdHash = await hashPassword(initialPlain);
-    const id = 'stu_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    const id = 'stu_' + Date.now() + '_' + i + '_' + Math.random().toString(36).substring(2, 7);
     const studentUser: User = {
       id,
       username: s.username,
@@ -111,11 +115,32 @@ export async function createStudentsBatch(
   }
 
   if (targetClass) {
-    targetClass.studentCount += created.length;
+    targetClass.studentCount = Object.values(state.users).filter(
+      (u) => u.classId === classId && u.role === 'student'
+    ).length;
   }
 
   saveLocalDB(state);
-  await syncToBlob(state);
+
+  // 同時批次寫入 Cloud Firestore 與 Vercel Blob，確保跨伺服器實例與重啟後資料永不丟失
+  const syncItems: { collection: string; id: string; data: any }[] = created.map((u) => ({
+    collection: 'users',
+    id: u.id,
+    data: u,
+  }));
+  if (targetClass) {
+    syncItems.push({
+      collection: 'classes',
+      id: targetClass.id,
+      data: targetClass,
+    });
+  }
+
+  await Promise.allSettled([
+    batchSyncToFirestore(syncItems),
+    syncToBlob(state),
+  ]);
+
   return created;
 }
 
@@ -127,6 +152,7 @@ export async function getClassStudents(classId: string): Promise<User[]> {
     .filter((u) => u.classId === classId)
     .sort((a, b) => (a.seatNumber || 0) - (b.seatNumber || 0));
 
+  const updatedUsers: User[] = [];
   for (const s of list) {
     if (!s.initialPassword) {
       // 學生尚無記錄初始密碼時，自動生成 6 碼亂數數字密碼並同步更新雜湊
@@ -134,12 +160,21 @@ export async function getClassStudents(classId: string): Promise<User[]> {
       s.initialPassword = random6;
       s.passwordHash = await hashPassword(random6);
       needSave = true;
+      updatedUsers.push(s);
     }
   }
 
   if (needSave) {
     saveLocalDB(state);
-    await syncToBlob(state);
+    const syncItems = updatedUsers.map((u) => ({
+      collection: 'users',
+      id: u.id,
+      data: u,
+    }));
+    await Promise.allSettled([
+      batchSyncToFirestore(syncItems),
+      syncToBlob(state),
+    ]);
   }
 
   return list;
@@ -160,7 +195,18 @@ export async function batchResetClassPasswords(classId: string): Promise<{ succe
   }
 
   saveLocalDB(state);
-  await syncToBlob(state);
+
+  const syncItems = classStudents.map((u) => ({
+    collection: 'users',
+    id: u.id,
+    data: u,
+  }));
+
+  await Promise.allSettled([
+    batchSyncToFirestore(syncItems),
+    syncToBlob(state),
+  ]);
+
   return { success: true, count: classStudents.length };
 }
 
@@ -171,13 +217,17 @@ export async function deleteStudent(studentId: string): Promise<boolean> {
   if (student) {
     const classId = student.classId;
     delete state.users[studentId];
-    if (classId && state.classes[classId] && state.classes[classId].studentCount > 0) {
-      state.classes[classId].studentCount -= 1;
+    if (classId && state.classes[classId]) {
+      state.classes[classId].studentCount = Object.values(state.users).filter(
+        (u) => u.classId === classId && u.role === 'student'
+      ).length;
       await syncClassToFirestore(state.classes[classId]);
     }
     saveLocalDB(state);
-    await deleteUserFromFirestore(studentId);
-    await syncToBlob(state);
+    await Promise.allSettled([
+      deleteUserFromFirestore(studentId),
+      syncToBlob(state),
+    ]);
     return true;
   }
   return false;

@@ -382,10 +382,14 @@ export const api = {
       }),
 
     /** 批次建立學生帳號 */
-    createStudents: (classId: string, studentNames: string[]) =>
-      request<{ success: boolean; students: User[] }>('/api/teacher/students', {
+    createStudents: (
+      classId: string,
+      students: Array<{ username: string; displayName: string; seatNumber: number; plainPassword?: string }>,
+      gradeLevel?: number
+    ) =>
+      request<{ success: boolean; message: string; students: any[] }>('/api/teacher/students', {
         method: 'POST',
-        body: JSON.stringify({ classId, studentNames }),
+        body: JSON.stringify({ classId, gradeLevel, students }),
       }),
   },
 
