@@ -1,6 +1,6 @@
 import React from 'react';
-import { Save, RefreshCw, HelpCircle, Layers } from 'lucide-react';
-import { TestPaper } from '@/lib/types';
+import { Save, RefreshCw, HelpCircle, Layers, AlertCircle, Sparkles } from 'lucide-react';
+import { TestPaper, QuestionRubric } from '@/lib/types';
 import { QuestionEditCard } from './QuestionEditCard';
 
 interface QuestionEditorListProps {
@@ -14,6 +14,9 @@ interface QuestionEditorListProps {
   onUpdateOptionText: (qIndex: number, optIndex: number, newText: string) => void;
   onSetCorrectOption: (qIndex: number, optIndex: number) => void;
   onDeleteQuestion: (qIndex: number) => void;
+  onRegenerateRubric?: (qIndex: number) => Promise<void>;
+  onUpdateRubric?: (qIndex: number, rubric: QuestionRubric) => void;
+  regeneratingQIdx?: number | null;
 }
 
 export const QuestionEditorList: React.FC<QuestionEditorListProps> = ({
@@ -27,7 +30,15 @@ export const QuestionEditorList: React.FC<QuestionEditorListProps> = ({
   onUpdateOptionText,
   onSetCorrectOption,
   onDeleteQuestion,
+  onRegenerateRubric,
+  onUpdateRubric,
+  regeneratingQIdx = null,
 }) => {
+  // 檢測是否有簡答題配分與規準未同步
+  const mismatchedQuestions = (testPaper.questions || []).filter(
+    (q) => q.type === 'constructed_response' && q.rubric && q.points !== q.rubric.maxScore
+  );
+
   return (
     <div className="w-full space-y-5">
       {/* 題目區塊標題列 */}
@@ -55,11 +66,26 @@ export const QuestionEditorList: React.FC<QuestionEditorListProps> = ({
         </div>
       </div>
 
+      {/* 若有題目配分與規準未同步，頂部提醒條 */}
+      {mismatchedQuestions.length > 0 && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-3.5 flex items-center justify-between">
+          <div className="flex items-center space-x-2 text-xs font-bold text-amber-900">
+            <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+            <span>
+              注意：目前第 {mismatchedQuestions.map((q) => q.questionNumber).join('、')} 題的題目配分與評分規準 (Rubrics) 最高分尚未對齊。
+            </span>
+          </div>
+          <span className="text-[11px] text-amber-700 font-medium hidden sm:inline">
+            請點擊各題之「✨ 調用 AI 重新生成評分規準」進行同步
+          </span>
+        </div>
+      )}
+
       {/* 題目卡片清單（全欄展開） */}
       <div className="space-y-4">
         {(testPaper.questions || []).map((q, qIdx) => (
           <QuestionEditCard
-            key={q.id}
+            key={q.id || `q-${qIdx}`}
             question={q}
             index={qIdx}
             onUpdatePoints={onUpdatePoints}
@@ -67,6 +93,9 @@ export const QuestionEditorList: React.FC<QuestionEditorListProps> = ({
             onUpdateOptionText={onUpdateOptionText}
             onDeleteQuestion={onDeleteQuestion}
             onSetCorrectOption={onSetCorrectOption}
+            onRegenerateRubric={onRegenerateRubric}
+            onUpdateRubric={onUpdateRubric}
+            isRegenerating={regeneratingQIdx === qIdx}
           />
         ))}
       </div>

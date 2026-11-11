@@ -1,5 +1,6 @@
 import {
   TestPaper,
+  QuestionRubric,
   ExamSubmission,
   ClassRoom,
   User,
@@ -158,6 +159,26 @@ export const api = {
     deleteTestPaper: (id: string) =>
       request<{ success: boolean; message?: string }>(`/api/teacher/test-papers/${id}`, {
         method: 'DELETE',
+      }),
+
+    /** 調用 AI 重新生成指定配分的 PIRLS 官方給分規準 (Rubrics) */
+    regenerateQuestionRubric: (params: {
+      articleTitle: string;
+      articleContent: string;
+      prompt: string;
+      processLevel: string;
+      processLevelNumber: number;
+      targetGrade?: number;
+      newPoints: number;
+      currentRubric?: QuestionRubric;
+      provider?: string;
+      apiKey?: string;
+      customBaseUrl?: string;
+      preferredModel?: string;
+    }) =>
+      request<{ success: boolean; rubric: QuestionRubric; error?: string }>('/api/ai/regenerate-rubric', {
+        method: 'POST',
+        body: JSON.stringify(params),
       }),
 
     /** 指派試卷至班級、調整公開與作答設定 (相容舊呼叫) */

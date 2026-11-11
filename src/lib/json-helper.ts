@@ -115,7 +115,7 @@ function repairTruncatedJSON(jsonStr: string): string {
   return repaired;
 }
 
-export function extractAndParseJSON(rawText: string): any {
+export function extractAndParseJSON<T = any>(rawText: string): T {
   if (!rawText || typeof rawText !== 'string') {
     throw new Error('LLM 未回傳有效文字');
   }

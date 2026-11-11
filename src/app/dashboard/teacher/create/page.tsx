@@ -8,7 +8,7 @@ import {
   RefreshCw, PlusCircle, Trash2, Save, Send, Image as ImageIcon,
   BarChart, AlertCircle, Copy, Upload, Palette, Settings, HelpCircle
 } from 'lucide-react';
-import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration } from '@/lib/types';
+import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration, QuestionRubric } from '@/lib/types';
 import { generateSmartImagePrompts, formatCombinedImagePrompt } from '@/lib/llm-adapter';
 import { AIProvider } from '@/lib/ai/types';
 import { CreateFormStep, ArticleEditor, QuestionEditorList } from './components';
@@ -592,10 +592,82 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
   };
 
   const [saving, setSaving] = useState(false);
+  const [regeneratingRubricQIdx, setRegeneratingRubricQIdx] = useState<number | null>(null);
+
+  // 調用 AI 依新配分重新生成指定簡答題之 IEA PIRLS 給分規準 (Rubrics)
+  const handleRegenerateRubric = async (qIndex: number) => {
+    if (!testPaper || !testPaper.questions[qIndex]) return;
+    const q = testPaper.questions[qIndex];
+    try {
+      setRegeneratingRubricQIdx(qIndex);
+      const activeKey = apiKeys[provider]?.trim() || '';
+      const prefModel = preferredModels[provider] || 'auto';
+
+      const res = await api.teacher.regenerateQuestionRubric({
+        articleTitle: testPaper.title,
+        articleContent: testPaper.articleContent,
+        prompt: q.prompt,
+        processLevel: q.processLevel,
+        processLevelNumber: q.processLevelNumber,
+        targetGrade: testPaper.targetGrade,
+        newPoints: q.points,
+        currentRubric: q.rubric,
+        provider,
+        apiKey: activeKey,
+        customBaseUrl: customBaseUrl.trim() || undefined,
+        preferredModel: prefModel,
+      });
+
+      if (res.success && res.rubric) {
+        const updated = { ...testPaper };
+        updated.questions[qIndex] = {
+          ...updated.questions[qIndex],
+          rubric: res.rubric,
+          points: res.rubric.maxScore,
+        };
+        updated.totalPoints = updated.questions.reduce((sum, item) => sum + item.points, 0);
+        setTestPaper(updated);
+        alert(`🎉 第 ${q.questionNumber} 題已成功調用 AI 重新生成【${res.rubric.maxScore} 分】官方給分規準 (Rubrics)！`);
+      } else {
+        alert('生成規準失敗：' + (res.error || '未知錯誤'));
+      }
+    } catch (err: any) {
+      console.error('重新生成規準失敗', err);
+      alert('重新生成規準失敗：' + (err.message || '請確認網路連線與 AI API 金鑰'));
+    } finally {
+      setRegeneratingRubricQIdx(null);
+    }
+  };
+
+  // 手動微調更新規準
+  const handleUpdateRubric = (qIndex: number, newRubric: QuestionRubric) => {
+    if (!testPaper || !testPaper.questions[qIndex]) return;
+    const updated = { ...testPaper };
+    updated.questions[qIndex] = {
+      ...updated.questions[qIndex],
+      rubric: newRubric,
+      points: newRubric.maxScore,
+    };
+    updated.totalPoints = updated.questions.reduce((sum, item) => sum + item.points, 0);
+    setTestPaper(updated);
+  };
 
   // 儲存試卷至題庫（支援全新出題 POST 與再度編輯更新 PUT）
   const handleSaveTestPaper = async () => {
     if (!testPaper || saving) return;
+
+    // 防呆檢查：開放簡答題配分與評分規準是否完全對齊
+    const mismatchedQuestions = (testPaper.questions || []).filter(
+      (q) => q.type === 'constructed_response' && q.rubric && q.points !== q.rubric.maxScore
+    );
+    if (mismatchedQuestions.length > 0) {
+      const qNames = mismatchedQuestions.map((q) => `第 ${q.questionNumber} 題（配分 ${q.points} 分 / 規準最高 ${q.rubric?.maxScore} 分）`).join('\n• ');
+      const proceed = confirm(
+        `⚠️ 發現試卷中有題目配分與評分規準 (Rubrics) 尚未對齊：\n\n• ${qNames}\n\n為確保學生作答後的閱卷客觀性與 PIRLS 量尺換算正確，建議先點擊該題之「✨ 調用 AI 重新生成評分規準」進行同步。\n\n請問您確定要略過校準並直接儲存嗎？`
+      );
+      if (!proceed) return;
+    }
+
     try {
       setSaving(true);
       if (isEditing && editingId) {
@@ -945,6 +1017,9 @@ A masterwork children storybook watercolor illustration for "${testPaper.title}"
                     onUpdateOptionText={updateOptionText}
                     onSetCorrectOption={setCorrectOption}
                     onDeleteQuestion={handleDeleteQuestion}
+                    onRegenerateRubric={handleRegenerateRubric}
+                    onUpdateRubric={handleUpdateRubric}
+                    regeneratingQIdx={regeneratingRubricQIdx}
                   />
                 </section>
               </div>
