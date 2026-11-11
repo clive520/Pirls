@@ -41,8 +41,34 @@ export async function GET(
 
   const testPaper = await getTestPaperById(submission.testPaperId);
 
+  // 取得班級平均國際量尺分數與平均原始得分，供常模落點儀表對照
+  let classAvgScaleScore: number | undefined = undefined;
+  let classAvgScore: number | undefined = undefined;
+  if (submission.classId && submission.classId !== 'open_practice_community') {
+    try {
+      const { getTestPaperSubmissions } = await import('@/lib/db');
+      const allSubs = await getTestPaperSubmissions(submission.testPaperId);
+      const classSubs = allSubs.filter((s) => s.classId === submission.classId);
+      if (classSubs.length > 0) {
+        classAvgScaleScore = Math.round(
+          classSubs.reduce((acc, s) => acc + (s.scaleScore || 500), 0) / classSubs.length
+        );
+        classAvgScore =
+          Math.round(
+            (classSubs.reduce((acc, s) => acc + s.totalScore, 0) / classSubs.length) * 10
+          ) / 10;
+      }
+    } catch (e) {
+      console.warn('[Submission API] Failed to compute class averages:', e);
+    }
+  }
+
   return NextResponse.json({
-    submission,
+    submission: {
+      ...submission,
+      classAvgScaleScore,
+      classAvgScore,
+    },
     testPaper,
   });
 }

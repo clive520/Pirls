@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { BenchmarkKey, ExamSubmission, TestPaper } from '@/lib/types';
 import { getBenchmarkInfo } from '@/lib/pirls-norm';
-import { ThinkingSkillsRadarCard } from '@/components/analytics';
+import { ThinkingSkillsRadarCard, PIRLSBenchmarkScaleMeter } from '@/components/analytics';
 import { api, ApiClientError } from '@/lib/api-client';
 
 interface SubmissionItem {
@@ -313,8 +313,16 @@ export default function TeacherTestResultsPage() {
 
         {/* Stage 5: PIRLS 五大國際基準全班分佈 (International Benchmarks Distribution) */}
         {benchmarkDistribution && (
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+            <PIRLSBenchmarkScaleMeter
+              scaleScore={stats.avgScaleScore || 500}
+              title="一、班級平均 PIRLS 國際標準基準落點"
+              showTitle={true}
+              showTopCard={false}
+              showBottomDescription={false}
+            />
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3 pt-2">
               <div>
                 <h2 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
                   <Trophy className="w-4 h-4 text-amber-500" />

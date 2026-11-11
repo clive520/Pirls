@@ -14,7 +14,7 @@ import {
 import { BenchmarkKey, ExamSubmission, TestPaper } from '@/lib/types';
 import { getBenchmarkInfo } from '@/lib/pirls-norm';
 import { ArticleContent } from '@/components/article';
-import { ThinkingSkillsRadarCard } from '@/components/analytics';
+import { ThinkingSkillsRadarCard, PIRLSBenchmarkScaleMeter } from '@/components/analytics';
 import { api, ApiClientError } from '@/lib/api-client';
 
 interface SiblingItem {
@@ -666,6 +666,17 @@ export default function TeacherReviewSubmissionPage() {
                   subtitle="隨教師核定給分即時重新試算四層次掌握率"
                   radarTitle="PIRLS 四個思考能力雷達"
                   data={dynamicProcessScores}
+                />
+              </div>
+
+              {/* PIRLS 國際標準基準落點儀表 (彩色光譜條、常模 500、學生落點與班級平均) */}
+              <div className="pt-4 border-t border-slate-100">
+                <PIRLSBenchmarkScaleMeter
+                  scaleScore={submission.scaleScore ?? 500}
+                  classAvgScaleScore={submission.classAvgScaleScore}
+                  showTitle={true}
+                  showTopCard={true}
+                  showBottomDescription={true}
                 />
               </div>
             </div>

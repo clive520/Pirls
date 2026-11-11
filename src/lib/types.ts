@@ -257,6 +257,8 @@ export interface ExamSubmission {
   maxScore: number;
   percentage: number;
   scaleScore?: number; // PIRLS 國際量尺估計分 (250 ~ 750，平均數 500、標準差 100)
+  classAvgScaleScore?: number; // 班級平均國際量尺分數
+  classAvgScore?: number; // 班級平均原始得分
   benchmarkKey?: BenchmarkKey;
   benchmarkName?: string;
   benchmarkDescription?: string;

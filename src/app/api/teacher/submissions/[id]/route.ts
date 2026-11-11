@@ -42,8 +42,28 @@ export async function GET(
     isTeacherReviewed: !!s.isTeacherReviewed,
   }));
 
+  // 計算該班級在此試卷的平均國際量尺分數與平均得分
+  let classAvgScaleScore: number | undefined = undefined;
+  let classAvgScore: number | undefined = undefined;
+  if (submission.classId) {
+    const classSubs = allSubs.filter((s) => s.classId === submission.classId);
+    if (classSubs.length > 0) {
+      classAvgScaleScore = Math.round(
+        classSubs.reduce((acc, s) => acc + (s.scaleScore || 500), 0) / classSubs.length
+      );
+      classAvgScore =
+        Math.round(
+          (classSubs.reduce((acc, s) => acc + s.totalScore, 0) / classSubs.length) * 10
+        ) / 10;
+    }
+  }
+
   return NextResponse.json({
-    submission,
+    submission: {
+      ...submission,
+      classAvgScaleScore,
+      classAvgScore,
+    },
     testPaper,
     siblings,
     currentUserId: session.userId,

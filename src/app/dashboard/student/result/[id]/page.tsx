@@ -9,7 +9,7 @@ import {
   TrendingUp, Users, Globe2, ShieldCheck, Check, X, HelpCircle, FileText, MessageSquare, BarChart3
 } from 'lucide-react';
 import { ExamSubmission, TestPaper } from '@/lib/types';
-import { ThinkingSkillsRadarCard } from '@/components/analytics';
+import { ThinkingSkillsRadarCard, PIRLSBenchmarkScaleMeter } from '@/components/analytics';
 import { api, ApiClientError } from '@/lib/api-client';
 import {
   calculatePIRLSScaleScore,
@@ -242,6 +242,16 @@ export default function StudentResultPage() {
               </span>
             </div>
           </div>
+
+          {/* PIRLS 國際標準基準落點儀表 (彩色光譜條、常模 500、學生落點與班級平均) */}
+          <PIRLSBenchmarkScaleMeter
+            scaleScore={scaleScore}
+            classAvgScaleScore={submission.classAvgScaleScore}
+            showTitle={false}
+            showTopCard={true}
+            showBottomDescription={false}
+            isEyeCareLargeFont={isLargeText}
+          />
 
           {/* 量尺分數與同儕常模 PR 數據展示 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
