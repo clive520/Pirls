@@ -1302,6 +1302,35 @@ const htmlContent = `<!DOCTYPE html>
     const lightboxModal = document.getElementById('lightboxModal');
     const lightboxImg = document.getElementById('lightboxImg');
 
+    // Helper to resolve image paths reliably across local file:// and web server deployments
+    function resolveImgUrl(rawPath) {
+      if (!rawPath) return '';
+      let clean = rawPath.replace(/\\/g, '/');
+      if (window.location.protocol === 'file:') {
+        return encodeURI(clean);
+      }
+      clean = clean.replace(/^\.?\//, '');
+      if (clean.startsWith('presentation/')) {
+        clean = clean.replace(/^presentation\//, '');
+      }
+      const p = window.location.pathname;
+      if (p.includes('/presentation')) {
+        return '/presentation/' + encodeURI(clean);
+      }
+      return '/' + encodeURI(clean);
+    }
+
+    function handleImgError(img, origPath) {
+      if (img.dataset.failed) return;
+      img.dataset.failed = '1';
+      const clean = origPath.replace(/\\/g, '/').replace(/^\.?\//, '');
+      if (!img.src.includes('/presentation/')) {
+        img.src = '/presentation/' + encodeURI(clean);
+      } else {
+        img.src = '/' + encodeURI(clean);
+      }
+    }
+
     // Build Slide HTML
     function buildSlides() {
       slideContainer.innerHTML = '';
@@ -1345,6 +1374,7 @@ const htmlContent = `<!DOCTYPE html>
             </div>
           \`;
         } else {
+          const imgUrl = resolveImgUrl(s.image);
           slideDiv.innerHTML = \`
             <div class="step-slide">
               <!-- Left Info Panel -->
@@ -1380,16 +1410,16 @@ const htmlContent = `<!DOCTYPE html>
                       <span>→</span>
                     </button>
                   </div>
-                  <div class="zoom-hint" onclick="openLightbox('\${s.image}')">
+                  <div class="zoom-hint" onclick="openLightbox(resolveImgUrl('\${s.image}'))">
                     <span>🔍 點擊右側截圖可燈箱放大檢視</span>
                   </div>
                 </div>
               </div>
 
               <!-- Right Image Panel -->
-              <div class="image-panel" onclick="openLightbox('\${s.image}')" title="點擊放大圖片">
+              <div class="image-panel" onclick="openLightbox(resolveImgUrl('\${s.image}'))" title="點擊放大圖片">
                 <div class="image-wrapper">
-                  <img src="\${s.image}" alt="\${s.title}" loading="\${idx < 5 ? 'eager' : 'lazy'}">
+                  <img src="\${imgUrl}" alt="\${s.title}" loading="\${idx < 5 ? 'eager' : 'lazy'}" onerror="handleImgError(this, '\${s.image}')">
                   <div class="image-badge">
                     <span>🔍 點擊全螢幕放大</span>
                   </div>
@@ -1405,6 +1435,7 @@ const htmlContent = `<!DOCTYPE html>
       overviewGrid.innerHTML = '';
       slidesData.forEach((s, idx) => {
         if (s.type === 'cover') return;
+        const thumbUrl = resolveImgUrl(s.image);
         const card = document.createElement('div');
         card.className = 'thumb-card';
         card.dataset.chapter = s.chapterId;
@@ -1413,7 +1444,7 @@ const htmlContent = `<!DOCTYPE html>
           toggleOverview(false);
         };
         card.innerHTML = \`
-          <img class="thumb-img" src="\${s.image}" alt="\${s.title}" loading="lazy">
+          <img class="thumb-img" src="\${thumbUrl}" alt="\${s.title}" loading="lazy" onerror="handleImgError(this, '\${s.image}')">
           <div class="thumb-info">
             <span class="thumb-step">\${s.chapterName} ・ \${s.stepText}</span>
             <span class="thumb-title">\${s.title}</span>
@@ -1619,3 +1650,7 @@ if (!fs.existsSync(publicDir)) {
 const localPath = path.join(publicDir, 'index.html');
 fs.writeFileSync(localPath, htmlContent, 'utf-8');
 console.log('Saved to:', localPath);
+
+const singleFilePath = 'D:\\antigravity\\Pirls\\public\\presentation.html';
+fs.writeFileSync(singleFilePath, htmlContent, 'utf-8');
+console.log('Saved to:', singleFilePath);
