@@ -229,11 +229,11 @@ export default function StudentCardsPrintPage({ params }: { params: { classId: s
                 <div className="pt-2.5 flex items-center justify-between gap-3">
                   {/* 左側：座號、姓名、帳號與 6 位數字密碼 */}
                   <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex items-baseline space-x-2">
-                      <span className="text-sm font-black text-sky-800 bg-sky-100/70 px-2 py-0.5 rounded">
+                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                      <span className="flex-shrink-0 text-xs sm:text-sm font-black text-sky-800 bg-sky-100/70 px-2 py-0.5 rounded">
                         {s.seatNumber ? `${s.seatNumber} 號` : '學生'}
                       </span>
-                      <span className="text-base sm:text-lg font-black text-slate-900 truncate">
+                      <span className="text-sm sm:text-base font-black text-slate-900 break-words leading-snug">
                         {s.displayName}
                       </span>
                     </div>
@@ -266,10 +266,10 @@ export default function StudentCardsPrintPage({ params }: { params: { classId: s
                       <img
                         src={qrCodes[s.id]}
                         alt="登入 QR Code"
-                        className="w-22 h-22 sm:w-24 sm:h-24 rounded-lg bg-white p-1"
+                        className="w-20 h-20 sm:w-22 sm:h-22 rounded-lg bg-white p-1"
                       />
                     ) : (
-                      <div className="w-22 h-22 sm:w-24 sm:h-24 flex items-center justify-center text-xs text-slate-400">
+                      <div className="w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center text-xs text-slate-400">
                         生成中...
                       </div>
                     )}
