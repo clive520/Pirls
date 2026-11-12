@@ -1303,28 +1303,33 @@ const htmlContent = `<!DOCTYPE html>
     const lightboxImg = document.getElementById('lightboxImg');
 
     // Helper to resolve image paths reliably across local file:// and web server deployments
+    function cleanImagePath(p) {
+      if (!p) return '';
+      let s = String(p).split('\\\\').join('/');
+      while (s.indexOf('./') === 0) s = s.substring(2);
+      while (s.indexOf('/') === 0) s = s.substring(1);
+      if (s.indexOf('presentation/') === 0) s = s.substring(13);
+      return s;
+    }
+
     function resolveImgUrl(rawPath) {
       if (!rawPath) return '';
-      let clean = rawPath.replace(/\\/g, '/');
+      const clean = cleanImagePath(rawPath);
       if (window.location.protocol === 'file:') {
         return encodeURI(clean);
       }
-      clean = clean.replace(/^\.?\//, '');
-      if (clean.startsWith('presentation/')) {
-        clean = clean.replace(/^presentation\//, '');
-      }
-      const p = window.location.pathname;
-      if (p.includes('/presentation')) {
+      const pathname = window.location.pathname || '';
+      if (pathname.indexOf('/presentation') !== -1) {
         return '/presentation/' + encodeURI(clean);
       }
       return '/' + encodeURI(clean);
     }
 
     function handleImgError(img, origPath) {
-      if (img.dataset.failed) return;
+      if (!img || img.dataset.failed) return;
       img.dataset.failed = '1';
-      const clean = origPath.replace(/\\/g, '/').replace(/^\.?\//, '');
-      if (!img.src.includes('/presentation/')) {
+      const clean = cleanImagePath(origPath);
+      if (img.src.indexOf('/presentation/') === -1) {
         img.src = '/presentation/' + encodeURI(clean);
       } else {
         img.src = '/' + encodeURI(clean);
