@@ -126,7 +126,7 @@ export async function POST(
 }
 
 /**
- * 透過 Google Gemini 2.5 / 2.0 進行真 AI 深度落點分析與閱讀建議
+ * 透過 Google Gemini 2.0 / 1.5 進行真 AI 深度落點分析與閱讀教練指南
  */
 async function callGeminiForPedagogicalAdvice(params: {
   testPaper: TestPaper;
@@ -138,21 +138,44 @@ async function callGeminiForPedagogicalAdvice(params: {
   const { testPaper, submission, processScores: p, questionDetails, apiKey } = params;
 
   const systemInstruction = `你是一位享譽國際的 IEA PIRLS (國際閱讀素養進展研究) 官方專家評委與語文素養領域資深輔導團顧問。
-請根據學生在整份閱讀測驗中的作答表現，深度對照「課文全文情節」與「學生的具體作答內容」，進行高水準的教育診斷。
+請根據學生在整份閱讀測驗中的作答表現，深度對照「課文全文情節」與「學生的具體作答內容」，為這位小學生量身打造一份充滿溫度、具象且切中關鍵的【閱讀成長教練指南】。
 
 【核心原則】：
-1. 拒絕空泛套話：禁止只給「圈畫時間地點」、「用因為所以」等通用空泛模板，必須【具體引用本篇課文的人物、情節、段落、或核心詞語】！
-2. 深度分析落差：針對學生失分或作答不夠完整的題目，深入指出其回答與課文事實/情節轉折之間的「精確落差」（例如：在第X題，學生僅提到...，但忽略了課文中...的關鍵轉折）。
-3. 量身打造建議：給出 3~4 項具有高教學價值的「具體閱讀策略與改進建議」，每一項必須包含策略標題（如【...】）與具體說明，清楚告訴學生在閱讀本篇文章或同類文章時，作答內容與課文細節有何落差，應如何回到課文某情節或某段落找線索、補強論述。
+1. 拒絕空泛套話：禁止使用高階抽象教育學名詞（如「以讀者視角客觀評析寫作手法」），對象是國小學童，請用孩子能讀懂、親切且鼓勵的語氣。
+2. 照鏡子式精準對照：在錯題鏡像中，必須【引用學生真實寫的原話】與【課文具體段落情節或主角台詞】，清楚點出落差與滿分示範。
+3. 具體可落地的祕技：給予孩子 2~3 個好記好用的答題口訣或通關祕技（如拉長句子魔法、轉折詞尋寶法）。
 4. 輸出格式強制為合法 JSON 物件，請勿輸出額外贅字：
 {
-  "levelAnalysis": "針對四層次能力的綜合深入解析（約 150-250 字，具體提及課文故事名稱、主角/主題、在各層次的具體表現與思維特徵）",
+  "thinkingProfile": {
+    "superpower": {
+      "title": "本次展現的思維超能力（例如：細節神探、因果偵探、心境解密師、批判鑑賞家）",
+      "description": "用 1~2 句親切溫暖的話，具體指出他在本篇文章中哪個部分/題型表現得特別棒、特別敏銳"
+    },
+    "unlockingSkill": {
+      "title": "正在解鎖的高階技能（例如：心境翻譯官、線索拼圖師、作者心思解密員）",
+      "description": "用 1~2 句充滿激勵的話，指出他接下來只要掌握什麼關鍵，就能讓理解更上層樓"
+    }
+  },
+  "questionMirrors": [
+    {
+      "questionNumber": 5,
+      "prompt": "題目題幹摘要",
+      "studentAnswer": "學生當時寫的原話（務必引用學生真實作答）",
+      "clueFromArticle": "課文在此題藏著的秘密線索（引用課文具體情節、段落或角色說的話）",
+      "howToImprove": "下次這樣寫就能拿滿分（肯定學生寫對的部分，示範如何加入課文線索補強成滿分答案）"
+    }
+  ],
+  "tacticsTips": [
+    "【通關小祕技名稱】：具體操作法（例如：簡答題寫完後，檢查有沒有加上「因為課文提到...」）",
+    "【通關小祕技名稱】：具體操作法..."
+  ],
+  "microAction": "本週專屬的 1 個閱讀微任務（小而精，例如：這週在國語課讀課文時，挑選 1 句主角說的話...）",
+  "levelAnalysis": "針對四層次能力的綜合深入解析（約 120-180 字，具體提及課文故事名稱、主角/主題、在各層次的具體表現與思維特徵）",
   "improvementSuggestions": [
-    "【策略標題】：結合本篇課文具體情節與學生作答落差的精進建議...",
     "【策略標題】：結合本篇課文具體情節與學生作答落差的精進建議...",
     "【策略標題】：結合本篇課文具體情節與學生作答落差的精進建議..."
   ],
-  "actionPlan": "針對本課文體（文學/訊息性）與該生思維弱項的每週自主閱讀精進計畫（約 60-100 字）",
+  "actionPlan": "針對本課文體與弱項的自主閱讀精進計畫（約 60 字）",
   "teacherFeedbackDraft": "富有教育溫度的教師親筆評語草稿（約 80-120 字，提及學生本次在該篇文章中的表現、肯定其亮點並給予勉勵）"
 }`;
 
@@ -182,9 +205,9 @@ ${testPaper.articleContent.slice(0, 2200)}
 【學生各題作答與失分詳情】
 ${questionsPrompt}
 
-請以專業 PIRLS 閱讀評委視角，對照課文具體情節與學生的實際作答落差，輸出 JSON 結構化深度診斷與量身精進建議。`;
+請以國小語文閱讀教練的視角，為 ${submission.studentName} 同學量身生成 JSON 結構化深度診斷與答題鏡像建議。`;
 
-  const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+  const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash'];
 
   for (const model of modelsToTry) {
     try {
@@ -209,11 +232,17 @@ ${questionsPrompt}
       if (!rawText) continue;
 
       const parsed = extractAndParseJSON<any>(rawText);
-      if (parsed && parsed.levelAnalysis && Array.isArray(parsed.improvementSuggestions)) {
+      if (parsed && (parsed.levelAnalysis || parsed.thinkingProfile)) {
         return {
-          levelAnalysis: parsed.levelAnalysis,
-          improvementSuggestions: parsed.improvementSuggestions.filter((s: any) => typeof s === 'string' && s.trim().length > 0),
-          actionPlan: parsed.actionPlan || `每週安排 2 次精讀《${testPaper.title}》同類型文體，對照因果情節練習深層詮釋。`,
+          thinkingProfile: parsed.thinkingProfile || undefined,
+          questionMirrors: Array.isArray(parsed.questionMirrors) ? parsed.questionMirrors : undefined,
+          tacticsTips: Array.isArray(parsed.tacticsTips) ? parsed.tacticsTips : undefined,
+          microAction: parsed.microAction || undefined,
+          levelAnalysis: parsed.levelAnalysis || '',
+          improvementSuggestions: Array.isArray(parsed.improvementSuggestions)
+            ? parsed.improvementSuggestions.filter((s: any) => typeof s === 'string' && s.trim().length > 0)
+            : [],
+          actionPlan: parsed.actionPlan || parsed.microAction || `每週安排 2 次精讀《${testPaper.title}》同類型文體，對照因果情節練習深層詮釋。`,
           teacherFeedbackDraft: parsed.teacherFeedbackDraft || `${submission.studentName} 同學在《${testPaper.title}》評量中思維敏銳，只要持續對照課文細節補充論據，表現定能更加亮眼！`,
           isAiGenerated: true,
           generatedAt: new Date().toISOString(),
@@ -228,7 +257,7 @@ ${questionsPrompt}
 }
 
 /**
- * 智慧型動態規則備援引擎（無 API Key 時保證零中斷且精準結合文本與題目）
+ * 智慧型動態規則備援引擎（無 API Key 或連線超時時，保證零中斷且精準結合真實作答與課文事實）
  */
 function generateFallbackPedagogicalAdvice(params: {
   testPaper: TestPaper;
@@ -252,72 +281,132 @@ function generateFallbackPedagogicalAdvice(params: {
   const isLit = testPaper.textType === 'literary';
   const textTypeName = isLit ? '文學性故事' : '訊息性科普說明文';
 
-  // 1. 各層次思維能力落點分析
-  const levelAnalysis = `在本次《${testPaper.title}》（${textTypeName}）閱讀評量中，你在【${strongest.name}】（得分率 ${strongest.pct}%）展現出最卓越的思維掌握度，能夠精準把握文中的核心事實與關鍵線索；而在【${weakest.name}】（得分率 ${weakest.pct}%）則有較多進步空間。整體四維思考落點呈現「${strongest.pct >= 80 ? '高階推論領航' : '循序漸進'}」的特質，只要針對弱項思維習慣進行微調，深入比對課文細節與前後因果，閱讀理解力將能全面躍升！`;
+  // 1. 打造孩子專屬思維超能力與解鎖技能
+  const superpowerMap: Record<number, { title: string; description: string }> = {
+    1: {
+      title: '細節神探',
+      description: `你在《${testPaper.title}》中對關鍵事實與故事細節有極高的敏銳度，能像偵探一樣快速揪出人事物線索！`,
+    },
+    2: {
+      title: '因果偵探',
+      description: `你在《${testPaper.title}》中能敏銳辨識主角行為前後的因果關聯，直接推論思維非常扎實！`,
+    },
+    3: {
+      title: '心境解密師',
+      description: `你能穿透文字表層，跨段落統整出人物的情感轉變與整篇文章的核心意涵，綜合分析力令人讚賞！`,
+    },
+    4: {
+      title: '批判鑑賞家',
+      description: `你具備成熟的讀者視角，能客觀評估作者的寫作安排、修辭手法與情感表達，展現高階鑑賞力！`,
+    },
+  };
 
-  // 2. 給學生的具體閱讀改進建議事項
-  const improvementSuggestions: string[] = [];
+  const unlockingSkillMap: Record<number, { title: string; description: string }> = {
+    1: {
+      title: '線索定位鏡',
+      description: '遇到細節題時，試著在課文裡用手指圈出關鍵詞，確認完全吻合再作答，就能穩拿基本盤！',
+    },
+    2: {
+      title: '因果串接術',
+      description: '遇到探討「為什麼」的推論題時，答案往往藏在前後相鄰的句子裡，找出關鍵起因就能精準破題！',
+    },
+    3: {
+      title: '心境翻譯官',
+      description: '遇到簡答題考驗情感轉變時，試著寫出「起初...後來因為經歷了...所以變成...」，論述更加飽滿！',
+    },
+    4: {
+      title: '作者心思解密員',
+      description: '試著從讀者角度思考：「作者為什麼要這樣安排情節或挑選這個詞句？」大膽寫下你的感受與佐證！',
+    },
+  };
 
-  // 尋找簡答題或失分題的實質線索
-  const flawedCr = questionDetails.find((q) => q.type === 'constructed_response' && q.earned < q.maxScore);
-  const anyLoss = questionDetails.find((q) => q.earned < q.maxScore);
+  const thinkingProfile = {
+    superpower: superpowerMap[strongest.num] || superpowerMap[1],
+    unlockingSkill: unlockingSkillMap[weakest.num] || unlockingSkillMap[3],
+  };
 
-  if (p.level1.percentage < 80) {
+  // 2. 篩選學生真實失分題目，打造「錯題鏡像對照鏡 (Question Mirrors)」
+  const missedQuestions = questionDetails.filter((q) => q.earned < q.maxScore);
+  // 優先挑選簡答題 (constructed_response) 與失分最大的題目
+  const sortedMissed = [...missedQuestions].sort((a, b) => {
+    if (a.type === 'constructed_response' && b.type !== 'constructed_response') return -1;
+    if (b.type === 'constructed_response' && a.type !== 'constructed_response') return 1;
+    return (b.maxScore - b.earned) - (a.maxScore - a.earned);
+  });
+
+  const selectedForMirror = sortedMissed.slice(0, 2);
+  const questionMirrors: any[] = [];
+
+  selectedForMirror.forEach((q) => {
+    const rawAnswer = (q.studentAnswer || '').trim();
+    const hasAnswer = rawAnswer.length > 0;
+    const clueText = q.sampleAnswer || q.criteriaSummary || '課文相關段落中的具體事件與主角關鍵動作';
+    
+    let howToImproveText = '';
+    if (hasAnswer) {
+      howToImproveText = `你已經回答出「${rawAnswer.slice(0, 25)}${rawAnswer.length > 25 ? '...' : ''}」的方向，非常棒！如果能在答案中多補上一句課文具體事實（例如：${q.sampleAnswer ? q.sampleAnswer.slice(0, 30) + '...' : '結合文章中的關鍵情節佐證'}），就能穩拿滿分 ${q.maxScore} 分喔！`;
+    } else {
+      howToImproveText = `這題空白太可惜了！遇到這類簡答題，即使不確定，只要先寫出你對課文情節的印象，並附上主角的名字或動作，就能爭取到關鍵分數喔！`;
+    }
+
+    questionMirrors.push({
+      questionNumber: q.qNum,
+      prompt: q.prompt,
+      studentAnswer: hasAnswer ? rawAnswer : '（當時空白未答）',
+      clueFromArticle: `課文在此題的核心線索在於：${clueText}`,
+      howToImprove: howToImproveText,
+    });
+  });
+
+  // 若學生全對（滿分），給予高階典範鼓勵
+  if (questionMirrors.length === 0 && questionDetails.length > 0) {
+    const topQ = questionDetails.find((q) => q.type === 'constructed_response') || questionDetails[questionDetails.length - 1];
+    questionMirrors.push({
+      questionNumber: topQ.qNum,
+      prompt: topQ.prompt,
+      studentAnswer: topQ.studentAnswer || '作答完整',
+      clueFromArticle: `課文核心精髓：${topQ.sampleAnswer || '完整掌握文章脈絡與情節要義'}`,
+      howToImprove: `表現卓越！你的作答既切合題旨，又能引用課文具體細節作為有力論據，是全班極佳的答題典範！`,
+    });
+  }
+
+  // 3. 答題通關小祕技 (Tactics Tips)
+  const tacticsTips = [
+    '【拉長句子魔法】：回答簡答題時，千萬別只寫單詞，試著用「因為課文提到……所以導致……，這說明了……」將想法說完整！',
+    '【課文事實雙重錨定】：給出自己的想法後，記得務必在答案裡「引用文章中的 1 個具體動作、對話或情節」，有憑有據就能拿滿分！',
+    '【關鍵字尋寶法】：題幹裡的生字詞或特定物件，就是回到課文的「門牌號碼」，回到該詞的前後兩句仔細閱讀，答案通常就在身邊！',
+  ];
+
+  // 4. 本週閱讀微任務 (Micro-Action)
+  const microAction = isLit
+    ? `這週閱讀下一篇故事時，挑選 1 個最吸引你的情節，問自己：「主角為什麼在這個時候做這個決定？」並在課文找出 1 句證據！`
+    : `這週閱讀說明文時，挑出 1 個新學到的知識點，試著用自己的話說給家人或同學聽：「這篇文章告訴我們……」練習提煉核心概念！`;
+
+  // 5. 四層次落點綜合解析 (保留相容)
+  const levelAnalysis = `在本次《${testPaper.title}》（${textTypeName}）閱讀評量中，你在【${strongest.name}】（得分率 ${strongest.pct}%）展現出最卓越的「${thinkingProfile.superpower.title}」思維特質；而在【${weakest.name}】（得分率 ${weakest.pct}%）則是接下來啟動「${thinkingProfile.unlockingSkill.title}」的最佳躍升點！只要掌握作答時引用課文事實的習慣，理解力將能全方位突破！`;
+
+  // 6. 給學生的改進建議 (舊版相容)
+  const improvementSuggestions = [
+    `【思維亮點—${thinkingProfile.superpower.title}】：${thinkingProfile.superpower.description}`,
+    `【解鎖密碼—${thinkingProfile.unlockingSkill.title}】：${thinkingProfile.unlockingSkill.description}`,
+  ];
+  if (selectedForMirror.length > 0) {
     improvementSuggestions.push(
-      `【關鍵細節定位精讀】：在閱讀《${testPaper.title}》這類篇幅較長的文章時，養成圈畫關鍵字詞、人物主旨與時間轉折的習慣，避免在細節提取題型中因匆促作答而遺漏關鍵訊息。`
-    );
-  } else {
-    improvementSuggestions.push(
-      `【維持高度事實定位力】：你對《${testPaper.title}》文章中關鍵細節的敏銳度極高！能快速精確找到文章的事實線索，這是高層次推論思考非常堅實的基礎。`
+      `【真實作答升級示範】：針對第 ${selectedForMirror[0].qNum} 題，作答時只要將課文的關鍵事實補上，就能把 1~2 分的落差補滿！`
     );
   }
 
-  if (p.level2.percentage < 80) {
-    improvementSuggestions.push(
-      `【追蹤課文因果轉折鏈】：遇到探究「為什麼主角會這樣做」或「事件起因」的推論題時，答案往往隱含在相鄰句子的前後關聯中。試著在心中梳理「因為課文提到……所以導致……」，就能精確推導出隱含意義。`
-    );
-  } else {
-    improvementSuggestions.push(
-      `【因果推論脈絡清晰】：你在直接推論層次表現十分沉穩，能敏銳辨識課文文字背後未明說的因果關係與情節走向。`
-    );
-  }
-
-  if (p.level3.percentage < 80) {
-    improvementSuggestions.push(
-      `【跨段落統整人物心境與轉折】：遇到簡答題考驗心態轉變或核心主旨時，作答請採取「前後對比法」：清楚寫出起初的情境、中間經歷的關鍵事件、以及最後轉變後的具體表現，並確實引用課文的情節詞句作為佐證。`
-    );
-  } else {
-    improvementSuggestions.push(
-      `【深層主旨綜合詮釋精準】：你能跨越不同自然段落，統整並歸納出整篇文本的核心精神與深刻意涵，綜合分析能力令人讚賞！`
-    );
-  }
-
-  if (p.level4.percentage < 80) {
-    improvementSuggestions.push(
-      `【以讀者視角客觀評析寫作手法】：第四層檢驗評估題要求從讀者角度審視「作者為什麼這樣安排或使用這些詞語」。回答時試著結合文章表達效果（例如營造何種氛圍、凸顯何種情感），並提供生活經驗或理性論據對照。`
-    );
-  } else {
-    improvementSuggestions.push(
-      `【具備優秀批判反思視角】：你能客觀評估文章的敘述手法、用詞精妙度與觀點立場，展現出高階閱讀者必備的批判性思考力！`
-    );
-  }
-
-  if (flawedCr) {
-    improvementSuggestions.push(
-      `【簡答題滿分秘訣—觀點＋課文事實佐證】：如第 ${flawedCr.qNum} 題，作答時請切記「結論＋雙重理由」的原則，務必至少引用課文中的 1~2 項具體情節作為證據，就能穩拿滿分規準！`
-    );
-  }
-
-  // 3. 具體行動計畫
-  const actionPlan = `建議每週固定安排 1～2 次 15 分鐘深度閱讀，讀完《${testPaper.title}》同文體文章後，挑選 1 個最引發共鳴的情節，在筆記本寫下「我認為作者這樣寫非常吸引人，因為……」練習第四層檢驗思考。`;
-
-  // 4. 教師親筆綜合評語草稿
-  const teacherFeedbackDraft = `${submission.studentName} 同學在本次《${testPaper.title}》閱讀評量中表現用心！特別在【${strongest.name}】展現了清晰敏銳的思考；針對【${weakest.name}】的部分，請參考上方為你整理的具體精讀與答題建議，相信你下次一定能更上一層樓！`;
+  // 7. 教師親筆綜合評語草稿
+  const teacherFeedbackDraft = `${submission.studentName} 同學在本次《${testPaper.title}》閱讀評量中展現了「${thinkingProfile.superpower.title}」的敏銳特質！特別在第 ${selectedForMirror.length > 0 ? selectedForMirror[0].qNum : 1} 題若能再深入結合課文細節，思維表現定能全面飛躍，老師對你很有信心，繼續加油！`;
 
   return {
+    thinkingProfile,
+    questionMirrors,
+    tacticsTips,
+    microAction,
     levelAnalysis,
     improvementSuggestions,
-    actionPlan,
+    actionPlan: microAction,
     teacherFeedbackDraft,
     isAiGenerated: false,
     generatedAt: new Date().toISOString(),

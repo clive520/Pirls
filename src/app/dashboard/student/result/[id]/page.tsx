@@ -6,7 +6,8 @@ import Link from 'next/link';
 import {
   Award, ArrowLeft, CheckCircle2, AlertCircle, Sparkles,
   BookOpen, Lightbulb, Compass, Share2, Printer, Trophy,
-  TrendingUp, Users, Globe2, ShieldCheck, Check, X, HelpCircle, FileText, MessageSquare, BarChart3
+  TrendingUp, Users, Globe2, ShieldCheck, Check, X, HelpCircle, FileText, MessageSquare, BarChart3,
+  Target, Eye
 } from 'lucide-react';
 import { ExamSubmission, TestPaper } from '@/lib/types';
 import { ThinkingSkillsRadarCard, PIRLSBenchmarkScaleMeter } from '@/components/analytics';
@@ -377,19 +378,151 @@ export default function StudentResultPage() {
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <span>老師複閱指導：各層次思維落點分析與閱讀改進建議</span>
+                    <span>我的閱讀成長教練指南：思維落點與破關祕技</span>
                     <span className="text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900">
                       AI 深度診斷
                     </span>
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                    針對本次《{submission.testPaperTitle}》四層次落點為你量身打造的精進指南
+                    針對你在《{submission.testPaperTitle}》中的作答與課文線索為你量身打造
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* 落點深度分析 */}
+            {/* 1. 思維風格超能力與解鎖技能標籤 */}
+            {submission.aiPedagogicalAdvice.thinkingProfile && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 超能力 */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/60 border border-amber-200/90 flex items-start space-x-3.5 shadow-2xs">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-md">
+                        本次思維超能力
+                      </span>
+                      <span className="text-base font-black text-amber-950">
+                        【{submission.aiPedagogicalAdvice.thinkingProfile.superpower?.title}】
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-amber-900 leading-relaxed font-medium">
+                      {submission.aiPedagogicalAdvice.thinkingProfile.superpower?.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 待解鎖高階技能 */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50/60 border border-indigo-200/90 flex items-start space-x-3.5 shadow-2xs">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                    <Target className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-indigo-800 bg-indigo-100/90 px-2 py-0.5 rounded-md">
+                        正在解鎖技能
+                      </span>
+                      <span className="text-base font-black text-indigo-950">
+                        【{submission.aiPedagogicalAdvice.thinkingProfile.unlockingSkill?.title}】
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-indigo-900 leading-relaxed font-medium">
+                      {submission.aiPedagogicalAdvice.thinkingProfile.unlockingSkill?.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2. 神探辦案：錯題原答鏡像對照 (核心亮點) */}
+            {submission.aiPedagogicalAdvice.questionMirrors &&
+              submission.aiPedagogicalAdvice.questionMirrors.length > 0 && (
+                <div className="space-y-3.5">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h4 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                      <Eye className="w-5 h-5 text-purple-700" />
+                      <span>神探辦案：我的錯題對照鏡 ({submission.aiPedagogicalAdvice.questionMirrors.length} 題)</span>
+                    </h4>
+                    <span className="text-xs text-slate-400">
+                      看懂自己寫了什麼，找出課文線索
+                    </span>
+                  </div>
+
+                  <div className="space-y-3.5">
+                    {submission.aiPedagogicalAdvice.questionMirrors.map((m, idx) => (
+                      <div
+                        key={idx}
+                        className="p-4 sm:p-5 rounded-2xl bg-slate-50/90 border border-slate-200/90 space-y-3 text-sm sm:text-base"
+                      >
+                        <div className="font-bold text-slate-900 flex items-baseline gap-2">
+                          <span className="px-2.5 py-0.5 rounded-lg bg-purple-100 text-purple-900 font-extrabold text-xs flex-shrink-0">
+                            第 {m.questionNumber} 題
+                          </span>
+                          <span className="text-slate-800">{m.prompt}</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                          {/* 學生作答 */}
+                          <div className="p-3.5 rounded-xl bg-white border border-rose-100/90 space-y-1">
+                            <span className="text-xs font-bold text-rose-700 block">
+                              ✏️ 你當時寫的：
+                            </span>
+                            <p className="text-slate-800 font-mono italic leading-relaxed text-xs sm:text-sm">
+                              {m.studentAnswer}
+                            </p>
+                          </div>
+
+                          {/* 課文線索 */}
+                          <div className="p-3.5 rounded-xl bg-white border border-sky-100/90 space-y-1">
+                            <span className="text-xs font-bold text-sky-700 block">
+                              🔍 課文藏的秘密線索：
+                            </span>
+                            <p className="text-slate-800 leading-relaxed font-medium text-xs sm:text-sm">
+                              {m.clueFromArticle}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 下次升級指引 */}
+                        <div className="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-emerald-950 flex items-start space-x-2.5">
+                          <Sparkles className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <div className="leading-relaxed text-xs sm:text-sm">
+                            <strong className="font-bold text-emerald-900">🚀 下次這樣寫拿滿分：</strong>
+                            <span className="font-medium ml-1">{m.howToImprove}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            {/* 3. 答題通關小祕技 (Tactics Tips) */}
+            {submission.aiPedagogicalAdvice.tacticsTips &&
+              submission.aiPedagogicalAdvice.tacticsTips.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-sm sm:text-base font-bold text-indigo-950 flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-indigo-700" />
+                    <span>答題通關小祕技：</span>
+                  </h4>
+                  <div className="space-y-2.5">
+                    {submission.aiPedagogicalAdvice.tacticsTips.map((tip, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3.5 sm:p-4 rounded-xl bg-indigo-50/50 border border-indigo-100 text-xs sm:text-sm text-slate-800 leading-relaxed flex items-start space-x-3"
+                      >
+                        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+                          {idx + 1}
+                        </span>
+                        <span className="flex-1 font-medium">{tip}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            {/* 4. 四層次落點綜合解析 */}
             {submission.aiPedagogicalAdvice.levelAnalysis && (
               <div className="p-5 rounded-2xl bg-purple-50/70 border border-purple-200/80 text-sm sm:text-base text-slate-900 leading-relaxed space-y-2">
                 <div className="font-bold text-purple-950 flex items-center gap-2 text-sm sm:text-base">
@@ -402,8 +535,10 @@ export default function StudentResultPage() {
               </div>
             )}
 
-            {/* 具體閱讀改進建議清單 */}
-            {submission.aiPedagogicalAdvice.improvementSuggestions &&
+            {/* 5. 舊版相容改進建議清單 */}
+            {(!submission.aiPedagogicalAdvice.questionMirrors || submission.aiPedagogicalAdvice.questionMirrors.length === 0) &&
+              (!submission.aiPedagogicalAdvice.tacticsTips || submission.aiPedagogicalAdvice.tacticsTips.length === 0) &&
+              submission.aiPedagogicalAdvice.improvementSuggestions &&
               submission.aiPedagogicalAdvice.improvementSuggestions.length > 0 && (
                 <div className="space-y-3.5">
                   <h4 className="text-sm sm:text-base font-bold text-indigo-950 flex items-center gap-2">
@@ -426,13 +561,15 @@ export default function StudentResultPage() {
                 </div>
               )}
 
-            {/* 自主練習行動計畫 */}
-            {submission.aiPedagogicalAdvice.actionPlan && (
+            {/* 6. 本週專屬閱讀微任務 / 行動計畫 */}
+            {(submission.aiPedagogicalAdvice.microAction || submission.aiPedagogicalAdvice.actionPlan) && (
               <div className="p-5 rounded-2xl bg-amber-50/80 border border-amber-200/90 text-sm sm:text-base text-amber-950 flex items-start space-x-3">
                 <Compass className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <strong className="block font-bold text-amber-950 text-sm sm:text-base">每週自主閱讀精進計畫：</strong>
-                  <span className="leading-relaxed font-medium">{submission.aiPedagogicalAdvice.actionPlan}</span>
+                  <strong className="block font-bold text-amber-950 text-sm sm:text-base">📝 本週我的 1 個閱讀微任務：</strong>
+                  <span className="leading-relaxed font-medium">
+                    {submission.aiPedagogicalAdvice.microAction || submission.aiPedagogicalAdvice.actionPlan}
+                  </span>
                 </div>
               </div>
             )}

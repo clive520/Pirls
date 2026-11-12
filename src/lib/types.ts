@@ -291,9 +291,32 @@ export interface ExamSubmission {
   aiPedagogicalAdvice?: AiPedagogicalAdvice;
 }
 
+export interface QuestionMirrorInsight {
+  questionNumber: number;
+  prompt: string; // 題目題幹
+  studentAnswer: string; // 學生當時作答
+  clueFromArticle: string; // 課文隱藏的秘密線索 (課文段落/情節)
+  howToImprove: string; // 下次這樣寫就能拿滿分 (具體示範與補強指引)
+}
+
+export interface StudentThinkingProfile {
+  superpower: {
+    title: string; // 例如：「細節神探」
+    description: string; // 肯定孩子的閱讀亮點
+  };
+  unlockingSkill: {
+    title: string; // 例如：「心境翻譯官」
+    description: string; // 指引正在解鎖的高階思維技能
+  };
+}
+
 export interface AiPedagogicalAdvice {
-  levelAnalysis: string; // 各層次思維能力落點分析
-  improvementSuggestions: string[]; // 給學生的閱讀具體改進建議事項
+  thinkingProfile?: StudentThinkingProfile; // 思維風格與超能力標籤
+  questionMirrors?: QuestionMirrorInsight[]; // 錯題鏡像對照（真實原答 vs 文章關鍵線索 vs 升級示範）
+  tacticsTips?: string[]; // 答題通關小祕技（口訣式/具體操作法）
+  microAction?: string; // 本週閱讀微任務
+  levelAnalysis: string; // 各層次思維能力落點綜合解析
+  improvementSuggestions: string[]; // 給學生的閱讀具體改進建議事項 (舊版相容)
   actionPlan?: string; // 具體行動計畫
   teacherFeedbackDraft?: string; // 導師親筆講評草稿
   isAiGenerated?: boolean; // 是否由大語言模型即時生成

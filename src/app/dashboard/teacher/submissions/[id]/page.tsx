@@ -9,7 +9,7 @@ import {
   Globe2, TrendingUp, ShieldCheck, Printer, FileSpreadsheet,
   Edit3, Sparkles, Check, X, RotateCcw, ChevronDown, ChevronUp,
   FileText, MessageSquare, Loader2, Save, ChevronLeft, ChevronRight,
-  Split, LayoutList, Columns, PanelLeftClose, PanelLeftOpen
+  Split, LayoutList, Columns, PanelLeftClose, PanelLeftOpen, Target
 } from 'lucide-react';
 import { BenchmarkKey, ExamSubmission, TestPaper } from '@/lib/types';
 import { getBenchmarkInfo } from '@/lib/pirls-norm';
@@ -1068,52 +1068,190 @@ export default function TeacherReviewSubmissionPage() {
               </div>
 
               {aiAdvice && (
-                <div className="bg-white p-5 rounded-2xl border border-purple-200 space-y-4 animate-fadeIn">
-                  {/* 落點分析 */}
-                  <div className="space-y-1.5">
-                    <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
-                      <BarChart3 className="w-4 h-4 text-purple-700" />
-                      <span>各層次思維能力落點綜合解析：</span>
-                    </span>
-                    <p className="text-xs sm:text-sm text-slate-900 leading-relaxed bg-purple-50/60 p-4 rounded-xl border border-purple-100 font-medium">
-                      {aiAdvice.levelAnalysis}
-                    </p>
-                  </div>
-
-                  {/* 改進建議清單 */}
-                  <div className="space-y-2">
-                    <span className="text-xs sm:text-sm font-bold text-indigo-900 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-indigo-700" />
-                      <span>給學生的具體閱讀策略與改進建議事項：</span>
-                    </span>
-                    <div className="space-y-2.5">
-                      {aiAdvice.improvementSuggestions?.map((item: string, idx: number) => (
-                        <div
-                          key={idx}
-                          className="p-3.5 rounded-xl bg-indigo-50/50 border border-indigo-100 text-xs sm:text-sm text-slate-800 leading-relaxed flex items-start space-x-2.5"
-                        >
-                          <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                            {idx + 1}
-                          </span>
-                          <span className="flex-1 font-medium">{item}</span>
+                <div className="bg-white p-5 sm:p-6 rounded-2xl border border-purple-200 space-y-5 animate-fadeIn">
+                  {/* 1. 思維風格超能力與解鎖技能標籤 */}
+                  {aiAdvice.thinkingProfile && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                      {/* 超能力 */}
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50/60 border border-amber-200/90 flex items-start space-x-3 shadow-2xs">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                          <Sparkles className="w-5 h-5" />
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[11px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-md">
+                              本次思維超能力
+                            </span>
+                            <span className="text-sm font-black text-amber-950">
+                              【{aiAdvice.thinkingProfile.superpower?.title}】
+                            </span>
+                          </div>
+                          <p className="text-xs text-amber-900 leading-relaxed font-medium">
+                            {aiAdvice.thinkingProfile.superpower?.description}
+                          </p>
+                        </div>
+                      </div>
 
-                  {/* 具體行動計畫 */}
-                  {aiAdvice.actionPlan && (
-                    <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs sm:text-sm text-amber-950 flex items-start space-x-2.5">
-                      <span className="font-bold flex-shrink-0 text-amber-900">🚀 自主練習行動計畫：</span>
-                      <span className="leading-relaxed font-medium">{aiAdvice.actionPlan}</span>
+                      {/* 待解鎖高階技能 */}
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50/60 border border-indigo-200/90 flex items-start space-x-3 shadow-2xs">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                          <Target className="w-5 h-5" />
+                        </div>
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[11px] font-bold text-indigo-800 bg-indigo-100/80 px-2 py-0.5 rounded-md">
+                              正在解鎖技能
+                            </span>
+                            <span className="text-sm font-black text-indigo-950">
+                              【{aiAdvice.thinkingProfile.unlockingSkill?.title}】
+                            </span>
+                          </div>
+                          <p className="text-xs text-indigo-900 leading-relaxed font-medium">
+                            {aiAdvice.thinkingProfile.unlockingSkill?.description}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
 
-                  {/* 導師講評草稿套用 */}
+                  {/* 2. 神探辦案：錯題鏡像對照鏡 (核心亮點) */}
+                  {aiAdvice.questionMirrors && aiAdvice.questionMirrors.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                          <Eye className="w-4 h-4 text-purple-700" />
+                          <span>神探辦案：錯題原答鏡像對照 ({aiAdvice.questionMirrors.length} 題)</span>
+                        </span>
+                        <span className="text-[11px] text-slate-400">
+                          真實作答與課文事實對照
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        {aiAdvice.questionMirrors.map((m: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/90 space-y-2.5 text-xs sm:text-sm"
+                          >
+                            <div className="font-bold text-slate-900 flex items-baseline gap-2">
+                              <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-900 font-bold text-xs flex-shrink-0">
+                                第 {m.questionNumber} 題
+                              </span>
+                              <span className="text-slate-800 line-clamp-2">{m.prompt}</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
+                              {/* 學生作答 */}
+                              <div className="p-3 rounded-xl bg-white border border-rose-100/80 space-y-1">
+                                <span className="text-[11px] font-bold text-rose-700 block">
+                                  ✏️ 學生當時作答：
+                                </span>
+                                <p className="text-slate-800 font-mono italic leading-relaxed">
+                                  {m.studentAnswer}
+                                </p>
+                              </div>
+
+                              {/* 課文線索 */}
+                              <div className="p-3 rounded-xl bg-white border border-sky-100/80 space-y-1">
+                                <span className="text-[11px] font-bold text-sky-700 block">
+                                  🔍 課文藏的秘密線索：
+                                </span>
+                                <p className="text-slate-800 leading-relaxed font-medium">
+                                  {m.clueFromArticle}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* 下次升級指引 */}
+                            <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/80 text-emerald-950 flex items-start space-x-2">
+                              <Sparkles className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                              <div className="leading-relaxed">
+                                <strong className="font-bold text-emerald-900">🚀 滿分升級示範：</strong>
+                                <span className="font-medium ml-1">{m.howToImprove}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. 答題通關小祕技 (Tactics Tips) */}
+                  {aiAdvice.tacticsTips && aiAdvice.tacticsTips.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-xs sm:text-sm font-bold text-indigo-900 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-indigo-700" />
+                        <span>答題通關小祕技：</span>
+                      </span>
+                      <div className="space-y-2">
+                        {aiAdvice.tacticsTips.map((tip: string, idx: number) => (
+                          <div
+                            key={idx}
+                            className="p-3 rounded-xl bg-indigo-50/50 border border-indigo-100 text-xs sm:text-sm text-slate-800 leading-relaxed flex items-start space-x-2.5"
+                          >
+                            <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                              {idx + 1}
+                            </span>
+                            <span className="flex-1 font-medium">{tip}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. 四層次落點綜合解析 */}
+                  {aiAdvice.levelAnalysis && (
+                    <div className="space-y-1.5">
+                      <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                        <BarChart3 className="w-4 h-4 text-purple-700" />
+                        <span>各層次思維能力落點綜合解析：</span>
+                      </span>
+                      <p className="text-xs sm:text-sm text-slate-900 leading-relaxed bg-purple-50/60 p-4 rounded-xl border border-purple-100 font-medium">
+                        {aiAdvice.levelAnalysis}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 5. 舊版相容改進建議清單 (若無 tacticsTips 且無 questionMirrors 時呈現) */}
+                  {(!aiAdvice.questionMirrors || aiAdvice.questionMirrors.length === 0) &&
+                    (!aiAdvice.tacticsTips || aiAdvice.tacticsTips.length === 0) &&
+                    aiAdvice.improvementSuggestions?.length > 0 && (
+                      <div className="space-y-2">
+                        <span className="text-xs sm:text-sm font-bold text-indigo-900 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-indigo-700" />
+                          <span>給學生的具體閱讀策略與改進建議事項：</span>
+                        </span>
+                        <div className="space-y-2.5">
+                          {aiAdvice.improvementSuggestions.map((item: string, idx: number) => (
+                            <div
+                              key={idx}
+                              className="p-3.5 rounded-xl bg-indigo-50/50 border border-indigo-100 text-xs sm:text-sm text-slate-800 leading-relaxed flex items-start space-x-2.5"
+                            >
+                              <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                                {idx + 1}
+                              </span>
+                              <span className="flex-1 font-medium">{item}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* 6. 本週閱讀微任務 / 具體行動計畫 */}
+                  {(aiAdvice.microAction || aiAdvice.actionPlan) && (
+                    <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200/90 text-xs sm:text-sm text-amber-950 flex items-start space-x-2.5">
+                      <span className="font-bold flex-shrink-0 text-amber-900">📝 本週專屬閱讀微任務：</span>
+                      <span className="leading-relaxed font-medium">
+                        {aiAdvice.microAction || aiAdvice.actionPlan}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* 7. 導師講評草稿套用 */}
                   {aiAdvice.teacherFeedbackDraft && (
                     <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                       <span className="text-xs sm:text-sm text-slate-500 italic">
-                        AI 已依據四層次落點自動起草綜合評語
+                        AI 已依據學生作答自動起草個人化綜合評語
                       </span>
                       <button
                         type="button"
