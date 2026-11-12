@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  BookOpen, PlusCircle, ArrowLeft, FileSpreadsheet, TrendingUp, Settings
+  BookOpen, PlusCircle, ArrowLeft, FileSpreadsheet, TrendingUp, Settings, Compass
 } from 'lucide-react';
 import { TestPaper, ClassRoom, TestAssignment } from '@/lib/types';
 import { api, ApiClientError } from '@/lib/api-client';
@@ -15,10 +15,22 @@ import {
   EditAssignmentModal,
   AssignmentTrackingTable,
   TestPaperLibraryGrid,
+  PracticeSubmissionsTable,
 } from '@/components/teacher/test-papers';
 
 export default function TeacherTestPapersPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-400 font-bold">載入題庫與指派中心...</div>}>
+      <TeacherTestPapersContent />
+    </Suspense>
+  );
+}
+
+function TeacherTestPapersContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlTab = searchParams.get('tab');
+
   const [testPapers, setTestPapers] = useState<TestPaper[]>([]);
   const [classes, setClasses] = useState<ClassRoom[]>([]);
   const [assignments, setAssignments] = useState<TestAssignment[]>([]);
@@ -28,8 +40,14 @@ export default function TeacherTestPapersPage() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
 
-  // 視圖切換：'assignments' (指派明細表) | 'library' (題庫卡片清單)
-  const [activeTab, setActiveTab] = useState<'assignments' | 'library'>('assignments');
+  // 學生自主練習成果列表
+  const [practiceSubmissions, setPracticeSubmissions] = useState<any[]>([]);
+  const [loadingPractice, setLoadingPractice] = useState(false);
+
+  // 視圖切換：'assignments' (指派明細表) | 'library' (題庫卡片清單) | 'practice' (學生自主練習成果)
+  const [activeTab, setActiveTab] = useState<'assignments' | 'library' | 'practice'>(
+    urlTab === 'practice' ? 'practice' : urlTab === 'library' ? 'library' : 'assignments'
+  );
 
   // 題庫過濾條件
   const [filterScope, setFilterScope] = useState<'all' | 'mine' | 'public'>('all');
@@ -47,6 +65,18 @@ export default function TeacherTestPapersPage() {
   // 編輯指派 Modal 狀態（調整既有獨立指派）
   const [editingAssignment, setEditingAssignment] = useState<TestAssignment | null>(null);
   const [updatingAssignment, setUpdatingAssignment] = useState(false);
+
+  const fetchPracticeData = async () => {
+    try {
+      setLoadingPractice(true);
+      const res = await api.teacher.getPracticeSubmissions();
+      setPracticeSubmissions(res.submissions || []);
+    } catch (err) {
+      console.warn('載入自主練習清單警告:', err);
+    } finally {
+      setLoadingPractice(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -68,6 +98,9 @@ export default function TeacherTestPapersPage() {
 
       setAssignments(asgnData.assignments || []);
       setAssignmentStats((asgnData.stats as Record<string, AssignmentProgressStats>) || {});
+
+      // 載入自主練習成果
+      await fetchPracticeData();
     } catch (err: any) {
       console.error('資料載入失敗:', err);
       if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
@@ -292,9 +325,9 @@ export default function TeacherTestPapersPage() {
           publicCount={publicPaperCount}
         />
 
-        {/* 雙視圖切換 Tabs */}
+        {/* 三視圖切換 Tabs */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setActiveTab('assignments')}
               className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center space-x-2 transition ${
@@ -328,6 +361,26 @@ export default function TeacherTestPapersPage() {
                 {testPapers.length}
               </span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('practice')}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center space-x-2 transition ${
+                activeTab === 'practice'
+                  ? 'bg-purple-600 text-white shadow-sm'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <Compass className="w-4 h-4" />
+              <span>🧭 學生自主練習成果與批閱</span>
+              <span className={`ml-1 text-[11px] px-2 py-0.5 rounded-full font-mono ${
+                activeTab === 'practice' ? 'bg-purple-700 text-purple-100' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {practiceSubmissions.length} 份
+              </span>
+              {practiceSubmissions.some((s) => s.reviewStatus === 'unreviewed') && (
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse ml-0.5" title="有待複閱試卷" />
+              )}
+            </button>
           </div>
         </div>
 
@@ -346,7 +399,7 @@ export default function TeacherTestPapersPage() {
             onDeleteAssignment={handleDeleteAssignment}
             onSwitchToLibrary={() => setActiveTab('library')}
           />
-        ) : (
+        ) : activeTab === 'library' ? (
           /* 分頁二：📚 題庫試卷總覽 */
           <TestPaperLibraryGrid
             papers={filteredPapers}
@@ -366,6 +419,14 @@ export default function TeacherTestPapersPage() {
             onOpenAssign={openAssignModal}
             onDelete={handleDeleteTestPaper}
             onTogglePublic={handleTogglePaperPublic}
+          />
+        ) : (
+          /* 分頁三：🧭 學生自主練習成果與批閱 */
+          <PracticeSubmissionsTable
+            submissions={practiceSubmissions}
+            classes={classes}
+            onRefresh={fetchPracticeData}
+            loading={loadingPractice}
           />
         )}
       </main>

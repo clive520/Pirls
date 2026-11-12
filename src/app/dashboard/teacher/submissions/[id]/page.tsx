@@ -359,13 +359,20 @@ export default function TeacherReviewSubmissionPage() {
         <div className="max-w-[1720px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* 左側：返回成績冊與試卷標題 */}
           <div className="flex items-center space-x-3 min-w-0">
-            <Link
-              href={`/dashboard/teacher/test-papers/${testPaper.id}/results`}
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push('/dashboard/teacher/test-papers');
+                }
+              }}
               className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition flex-shrink-0"
-              title="返回全班成績冊"
+              title="返回上一頁"
             >
               <ArrowLeft className="w-5 h-5" />
-            </Link>
+            </button>
 
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-xs flex-shrink-0">
               <Edit3 className="w-4 h-4" />

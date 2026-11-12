@@ -61,6 +61,7 @@ export interface AuthSession {
   status: UserStatus;
   classId?: string;
   className?: string;
+  seatNumber?: number;
   gradeLevel?: number;
 }
 
@@ -246,6 +247,7 @@ export type ReviewStatus = 'unreviewed' | 'ai_reviewed' | 'teacher_reviewed';
 export interface ExamSubmission {
   id: string;
   assignmentId?: string; // 關聯的獨立指派事件 ID
+  isPractice?: boolean; // 是否為自主練習提交
   testPaperId: string;
   testPaperTitle: string;
   targetGrade: number;

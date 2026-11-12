@@ -9,6 +9,7 @@ import {
   ComparativeAnalysisData,
   ClassCoTeachersData,
   TestAssignment,
+  ReviewStatus,
 } from './types';
 
 export class ApiClientError extends Error {
@@ -336,6 +337,45 @@ export const api = {
         }
       ),
 
+    /** 取得學生自主練習成果清單（支援班級、審查狀態與關鍵字篩選） */
+    getPracticeSubmissions: (params?: { classId?: string; status?: string; q?: string }) => {
+      const qp = new URLSearchParams();
+      if (params?.classId) qp.set('classId', params.classId);
+      if (params?.status) qp.set('status', params.status);
+      if (params?.q) qp.set('q', params.q);
+      const qs = qp.toString();
+      return request<{
+        success: boolean;
+        submissions: Array<{
+          id: string;
+          studentId: string;
+          studentName: string;
+          seatNumber?: number;
+          classId: string;
+          className: string;
+          testPaperId: string;
+          testPaperTitle: string;
+          targetGrade: number;
+          textType: 'literary' | 'informational';
+          totalScore: number;
+          maxScore: number;
+          percentage: number;
+          scaleScore: number;
+          benchmarkKey: string;
+          benchmarkName: string;
+          normPR?: number;
+          durationSeconds?: number;
+          submittedAt: string;
+          reviewStatus: ReviewStatus;
+          isTeacherReviewed: boolean;
+          teacherGeneralNote?: string | null;
+          hasAiAdvice?: boolean;
+        }>;
+        totalCount: number;
+        classes: Array<{ id: string; name: string; gradeLevel: number }>;
+      }>(`/api/teacher/practice-submissions${qs ? `?${qs}` : ''}`);
+    },
+
     /** 取得任教班級清單 */
     getClasses: () =>
       request<{ classes: ClassRoom[] }>('/api/teacher/classes'),
@@ -449,6 +489,33 @@ export const api = {
     /** 取得指派給我班級的未完成/已完成測驗任務 */
     getAssignedTests: () =>
       request<{ assignedTests: any[] }>('/api/student/assigned-tests'),
+
+    /** 取得學生的自主練習歷程清單 */
+    getPracticeHistory: () =>
+      request<{
+        success: boolean;
+        practiceSubmissions: Array<{
+          id: string;
+          testPaperId: string;
+          testPaperTitle: string;
+          targetGrade: number;
+          textType: 'literary' | 'informational';
+          totalScore: number;
+          maxScore: number;
+          percentage: number;
+          scaleScore?: number;
+          benchmarkKey?: string;
+          benchmarkName?: string;
+          normPR?: number;
+          durationSeconds?: number;
+          submittedAt: string;
+          reviewStatus: ReviewStatus;
+          isTeacherReviewed: boolean;
+          teacherGeneralNote?: string | null;
+          hasAiAdvice?: boolean;
+        }>;
+        totalCount: number;
+      }>('/api/student/practice-history'),
 
     /** 取得學生測驗試卷與作答狀態 */
     getExam: (testPaperId: string, assignmentId?: string) => {

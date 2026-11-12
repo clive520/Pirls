@@ -19,8 +19,23 @@ export default function PracticeTakingPage() {
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [nickname, setNickname] = useState('自主學習同學');
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>('normal');
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.user) {
+          setCurrentUser(data.user);
+          if (data.user.displayName) {
+            setNickname(data.user.displayName);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // 自學答題流程階段: 'reading' (先閱讀文章) | 'answering' (再回答題目)
   const [phase, setPhase] = useState<'reading' | 'answering'>('reading');
@@ -221,13 +236,21 @@ export default function PracticeTakingPage() {
             {/* 作答者暱稱 */}
             <div className="hidden md:flex items-center space-x-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl text-xs">
               <User className="w-3.5 h-3.5 text-slate-400" />
-              <input
-                type="text"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="輸入姓名/暱稱"
-                className="bg-transparent border-none text-slate-800 text-xs w-24 focus:outline-none font-bold"
-              />
+              {currentUser ? (
+                <span className="font-bold text-slate-800" title="已登入，成績將自動同步至個人歷程與教師端">
+                  {currentUser.className ? `${currentUser.className} ` : ''}
+                  {currentUser.seatNumber ? `${currentUser.seatNumber}號 ` : ''}
+                  {currentUser.displayName}
+                </span>
+              ) : (
+                <input
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="輸入姓名/暱稱"
+                  className="bg-transparent border-none text-slate-800 text-xs w-24 focus:outline-none font-bold"
+                />
+              )}
             </div>
 
             {/* 階段專屬按鈕 */}

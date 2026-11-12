@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw, TrendingUp, Crown, Handshake, Settings } from 'lucide-react';
+import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw, TrendingUp, Crown, Handshake, Settings, Compass } from 'lucide-react';
 import api from '@/lib/api-client';
 import { CoTeacherManageModal } from '@/components/teacher';
 
@@ -388,6 +388,13 @@ export default function TeacherDashboardPage() {
             >
               <BookOpen className="w-4 h-4 text-sky-600" />
               <span>題庫與派卷</span>
+            </Link>
+            <Link
+              href="/dashboard/teacher/test-papers?tab=practice"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold transition border border-purple-200/60"
+            >
+              <Compass className="w-4 h-4 text-purple-600" />
+              <span>學生自主練習批閱</span>
             </Link>
             <Link
               href={`/dashboard/teacher/analytics/comparative${selectedClassId ? `?classId=${selectedClassId}` : ''}`}
