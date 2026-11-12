@@ -125,6 +125,18 @@ export interface TeacherSubmissionDetailResponse {
 // 領域命名空間 API
 // =========================================================================
 
+function getStoredGeminiApiKey(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const raw = localStorage.getItem('pirls_ai_vault');
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw);
+    return parsed?.apiKeys?.gemini || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export const api = {
   // -----------------------------------------------------------------------
   // 教師端 (Teacher)
@@ -289,10 +301,13 @@ export const api = {
           reason: string;
           rubricMatched?: string;
           keyEvidenceFound?: string[];
+          strength?: string;
+          weakness?: string;
+          scaffoldingTip?: string;
         }>;
       }>(`/api/teacher/submissions/${submissionId}/ai-regrade`, {
         method: 'POST',
-        body: JSON.stringify({ questionId }),
+        body: JSON.stringify({ questionId, apiKey: getStoredGeminiApiKey() }),
       }),
 
     /** 一鍵對整份試卷的開放簡答題執行 AI 深度再閱卷核定並存庫 */
@@ -304,6 +319,7 @@ export const api = {
         regradedCount: number;
       }>(`/api/teacher/submissions/${submissionId}/auto-regrade-all`, {
         method: 'POST',
+        body: JSON.stringify({ apiKey: getStoredGeminiApiKey() }),
       }),
 
     /** 呼叫 AI 提煉四層次思維能力落點分析與學生具體改進建議 (支援 saveToDb: true 自動存庫) */
@@ -316,7 +332,7 @@ export const api = {
         `/api/teacher/submissions/${submissionId}/ai-pedagogical-advice`,
         {
           method: 'POST',
-          body: JSON.stringify({ currentScores, saveToDb }),
+          body: JSON.stringify({ currentScores, saveToDb, apiKey: getStoredGeminiApiKey() }),
         }
       ),
 

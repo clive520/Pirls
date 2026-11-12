@@ -194,7 +194,41 @@ export default function TeacherReviewSubmissionPage() {
       setAiRegradeLoading((prev) => ({ ...prev, [questionId]: true }));
       const data = await api.teacher.aiRegradeQuestion(submission.id, questionId);
       if (data.results && data.results.length > 0) {
-        setAiRegradeResults((prev) => ({ ...prev, [questionId]: data.results[0] }));
+        const res0 = data.results[0];
+        setAiRegradeResults((prev) => ({ ...prev, [questionId]: res0 }));
+
+        // 即時更新 submission.answers 中的 aiFeedback 與 aiRegraded 狀態
+        setSubmission((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            answers: prev.answers.map((a) => {
+              if (a.questionId === questionId) {
+                return {
+                  ...a,
+                  aiRegraded: true,
+                  aiRegradeSuggestion: {
+                    suggestedScore: res0.suggestedScore,
+                    reason: res0.reason,
+                    evidenceFound: res0.keyEvidenceFound || [],
+                    improvedFeedback: (res0 as any).improvedFeedback,
+                  },
+                  aiFeedback: {
+                    strength: res0.strength || a.aiFeedback?.strength || '',
+                    weakness: res0.weakness || a.aiFeedback?.weakness || '',
+                    scaffoldingTip: res0.scaffoldingTip || a.aiFeedback?.scaffoldingTip || '試著對照文章關鍵字再思考看看',
+                    evidenceFound: (res0.keyEvidenceFound && res0.keyEvidenceFound.length > 0) || false,
+                    evidenceDetails: res0.keyEvidenceFound || [],
+                  },
+                };
+              }
+              return a;
+            }),
+          };
+        });
+
+        setToastMsg('✨ 該題 AI 深度審閱完成！亮點與待加強已依文章事實深入更新。');
+        setTimeout(() => setToastMsg(''), 3500);
       }
     } catch (err: any) {
       console.error(err);
@@ -212,6 +246,8 @@ export default function TeacherReviewSubmissionPage() {
       if (aiRes.reason && !modifiedComments[questionId]) {
         handleCommentChange(questionId, `[AI建議採分] ${aiRes.reason}`);
       }
+      setToastMsg(`✅ 已採納該題 AI 建議 ${aiRes.suggestedScore} 分！`);
+      setTimeout(() => setToastMsg(''), 3000);
     }
   };
 
@@ -824,15 +860,52 @@ export default function TeacherReviewSubmissionPage() {
                           </details>
                         )}
 
-                        {/* 系統初評診斷摘要 */}
+                        {/* 系統初評 / AI 深度審閱診斷摘要 */}
                         {ans.aiFeedback && (
-                          <div className="p-4 rounded-2xl bg-slate-100/80 text-xs sm:text-sm text-slate-700 space-y-1.5 leading-relaxed">
-                            <div className="flex items-center justify-between text-slate-900 font-bold mb-1">
-                              <span>🤖 系統初評診斷：</span>
-                              <span className="font-mono text-xs bg-white px-2 py-0.5 rounded border border-slate-200">初評分數：{ans.originalScore !== undefined ? ans.originalScore : ans.score} 分</span>
+                          <div
+                            className={`p-4 sm:p-5 rounded-2xl text-xs sm:text-sm space-y-2 leading-relaxed transition ${
+                              ans.aiRegraded || aiRes
+                                ? 'bg-gradient-to-r from-purple-50/90 via-indigo-50/70 to-purple-50/90 border border-purple-200 text-purple-950 shadow-xs'
+                                : 'bg-slate-100/80 border border-slate-200/60 text-slate-700'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between font-bold mb-1.5">
+                              <span className="flex items-center gap-1.5">
+                                {ans.aiRegraded || aiRes ? (
+                                  <>
+                                    <Sparkles className="w-4 h-4 text-purple-600 inline" />
+                                    <span className="text-purple-950 font-black text-sm">✨ AI 深度審閱診斷 (結合課文與學生作答)：</span>
+                                  </>
+                                ) : (
+                                  <span className="text-slate-900 font-bold">🤖 系統初評診斷：</span>
+                                )}
+                              </span>
+                              <span className="font-mono text-xs bg-white px-2.5 py-0.5 rounded-full border border-slate-200 shadow-2xs">
+                                {ans.aiRegraded || aiRes ? (
+                                  <span className="text-purple-700 font-bold">
+                                    核定建議：{aiRes?.suggestedScore ?? ans.aiRegradeSuggestion?.suggestedScore ?? ans.score} 分
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-600">
+                                    初評分數：{ans.originalScore !== undefined ? ans.originalScore : ans.score} 分
+                                  </span>
+                                )}
+                              </span>
                             </div>
-                            <p><strong className="text-emerald-700 font-bold">亮點：</strong>{ans.aiFeedback.strength}</p>
-                            <p><strong className="text-amber-700 font-bold">待加強：</strong>{ans.aiFeedback.weakness}</p>
+                            <p>
+                              <strong className="text-emerald-700 font-bold">亮點：</strong>
+                              <span className="font-medium text-slate-800">{ans.aiFeedback.strength}</span>
+                            </p>
+                            <p>
+                              <strong className="text-amber-700 font-bold">待加強：</strong>
+                              <span className="font-medium text-slate-800">{ans.aiFeedback.weakness}</span>
+                            </p>
+                            {ans.aiFeedback.scaffoldingTip && (
+                              <p>
+                                <strong className="text-sky-700 font-bold">思考導引：</strong>
+                                <span className="font-medium text-slate-700">{ans.aiFeedback.scaffoldingTip}</span>
+                              </p>
+                            )}
                           </div>
                         )}
 

@@ -752,7 +752,34 @@ export default function StudentResultPage() {
 
                   {/* 正向三明治回饋框 (大字號) */}
                   {ans.aiFeedback && (
-                    <div className="bg-sky-50/70 rounded-2xl p-5 border border-sky-200 space-y-3 text-sm sm:text-base">
+                    <div
+                      className={`rounded-2xl p-5 sm:p-6 border space-y-3.5 text-sm sm:text-base ${
+                        ans.aiRegraded
+                          ? 'bg-gradient-to-br from-purple-50/70 via-indigo-50/40 to-sky-50/50 border-purple-200'
+                          : 'bg-sky-50/70 border-sky-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-200/70">
+                        <span className="text-xs sm:text-sm font-bold flex items-center gap-1.5 text-purple-950">
+                          {ans.aiRegraded ? (
+                            <>
+                              <Sparkles className="w-4 h-4 text-purple-600" />
+                              <span>✨ AI 深度再閱審核診斷 (結合課文脈絡)</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 text-sky-600" />
+                              <span className="text-slate-700">🤖 系統初評診斷指引</span>
+                            </>
+                          )}
+                        </span>
+                        {ans.aiRegraded && (
+                          <span className="text-xs bg-purple-100 text-purple-900 font-bold px-2.5 py-0.5 rounded-full">
+                            已完成深度複閱
+                          </span>
+                        )}
+                      </div>
+
                       {/* Top: 肯定 */}
                       <div className="flex items-start space-x-2.5 text-emerald-950">
                         <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />

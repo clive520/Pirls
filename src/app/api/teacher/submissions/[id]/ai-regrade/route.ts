@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
-import { getSubmissionById, getTestPaperById } from '@/lib/db';
+import { getSubmissionById, getTestPaperById, saveSubmissionDirectly } from '@/lib/db';
 import { regradeQuestionWithAI } from '@/lib/gemini-regrader';
 
 export async function POST(
@@ -31,6 +31,7 @@ export async function POST(
 
     const body = await req.json().catch(() => ({}));
     const { questionId } = body;
+    const apiKey = (body.apiKey || '').trim() || process.env.GEMINI_API_KEY?.trim();
 
     // 篩選欲重新評閱之題目 (若指定 questionId 則只針對該題，否則針對全卷開放簡答題)
     const targetAnswers = questionId
@@ -51,14 +52,37 @@ export async function POST(
         testPaper,
         question: q,
         studentAnswer: ans.studentAnswer,
+        apiKey,
       });
+
+      // 同步更新 ans 裡的 aiFeedback 與 aiRegradeSuggestion
+      ans.aiRegraded = true;
+      ans.aiRegradeSuggestion = {
+        suggestedScore: result.suggestedScore,
+        reason: result.reason,
+        evidenceFound: result.keyEvidenceFound,
+        improvedFeedback: result.improvedFeedback,
+      };
+      ans.aiFeedback = {
+        strength: result.strength,
+        weakness: result.weakness,
+        scaffoldingTip: result.scaffoldingTip || '試著對照文章關鍵字再思考看看',
+        evidenceFound: result.keyEvidenceFound.length > 0,
+        evidenceDetails: result.keyEvidenceFound,
+      };
 
       regradeResults.push({
         ...result,
         questionNumber: q.questionNumber,
         originalScore: ans.score,
+        strength: result.strength,
+        weakness: result.weakness,
+        scaffoldingTip: result.scaffoldingTip,
       });
     }
+
+    // 持久化儲存最新 AI 審閱結果至資料庫
+    await saveSubmissionDirectly(submission);
 
     return NextResponse.json({
       success: true,

@@ -293,6 +293,8 @@ export interface AiPedagogicalAdvice {
   levelAnalysis: string; // 各層次思維能力落點分析
   improvementSuggestions: string[]; // 給學生的閱讀具體改進建議事項
   actionPlan?: string; // 具體行動計畫
+  teacherFeedbackDraft?: string; // 導師親筆講評草稿
+  isAiGenerated?: boolean; // 是否由大語言模型即時生成
   generatedAt?: string;
 }
 

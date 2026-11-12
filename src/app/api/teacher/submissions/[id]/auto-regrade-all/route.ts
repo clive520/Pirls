@@ -27,6 +27,9 @@ export async function POST(
       return NextResponse.json({ error: '無教師閱卷權限' }, { status: 403 });
     }
 
+    const body = await req.json().catch(() => ({}));
+    const apiKey = (body.apiKey || '').trim() || process.env.GEMINI_API_KEY?.trim();
+
     const submissionId = params.id;
     const submission = await getSubmissionById(submissionId);
     if (!submission) {
@@ -55,6 +58,7 @@ export async function POST(
           testPaper,
           question: q,
           studentAnswer: ans.studentAnswer || '',
+          apiKey,
         });
 
         if (regradeRes) {
@@ -70,6 +74,13 @@ export async function POST(
             reason: regradeRes.reason,
             evidenceFound: regradeRes.keyEvidenceFound,
             improvedFeedback: regradeRes.improvedFeedback,
+          };
+          ans.aiFeedback = {
+            strength: regradeRes.strength,
+            weakness: regradeRes.weakness,
+            scaffoldingTip: regradeRes.scaffoldingTip || '試著對照文章關鍵字再思考看看',
+            evidenceFound: regradeRes.keyEvidenceFound.length > 0,
+            evidenceDetails: regradeRes.keyEvidenceFound,
           };
           regradedCount++;
         }
