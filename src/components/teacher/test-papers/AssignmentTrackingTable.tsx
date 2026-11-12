@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import {
   FileSpreadsheet, BookOpen, Clock, Calendar, BarChart3,
-  Settings2, Trash2, Printer, Sparkles, Lock, RefreshCw,
+  Settings2, Trash2, Printer, Lock, RefreshCw,
   AlertCircle, CheckCircle2, UserCheck
 } from 'lucide-react';
 import { TestAssignment, TestPaper } from '@/lib/types';
@@ -247,20 +247,10 @@ export const AssignmentTrackingTable: React.FC<AssignmentTrackingTableProps> = (
                       <Link
                         href={`/dashboard/teacher/test-papers/${asgn.testPaperId}/results?assignmentId=${asgn.id}`}
                         className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold inline-flex items-center space-x-1 transition"
-                        title="檢視本次獨立指派的成績冊"
+                        title="檢視本次獨立指派的成績冊與能力雷達"
                       >
                         <BarChart3 className="w-3.5 h-3.5" />
                         <span>成績</span>
-                      </Link>
-
-                      {/* 思維雷達 */}
-                      <Link
-                        href={`/dashboard/teacher/test-papers/${asgn.testPaperId}/results?assignmentId=${asgn.id}#radar-analysis`}
-                        className="px-2 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold inline-flex items-center space-x-1 transition"
-                        title="檢視思維能力雷達分析"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>雷達</span>
                       </Link>
 
                       {/* 調整期限與設定 (EditAssignmentModal) */}
