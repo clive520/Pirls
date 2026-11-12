@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
-import { getSubmissionById, getTestPaperById } from '@/lib/db';
+import { getSubmissionById, getTestPaperById, saveSubmissionDirectly } from '@/lib/db';
 
 export async function POST(
   req: NextRequest,
@@ -27,6 +27,9 @@ export async function POST(
     if (!testPaper) {
       return NextResponse.json({ error: '找不到對應試卷' }, { status: 404 });
     }
+
+    const body = await req.json().catch(() => ({}));
+    const saveToDb = body.saveToDb ?? true;
 
     const p = submission.processScores || {
       level1: { earned: 0, total: 0, percentage: 0 },
@@ -140,9 +143,15 @@ export async function POST(
       generatedAt: new Date().toISOString(),
     };
 
+    if (saveToDb) {
+      submission.aiPedagogicalAdvice = advice;
+      await saveSubmissionDirectly(submission);
+    }
+
     return NextResponse.json({
       success: true,
       advice,
+      submission,
     });
   } catch (err: any) {
     console.error('[AI Pedagogical Advice Error]:', err);

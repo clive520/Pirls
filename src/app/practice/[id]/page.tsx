@@ -27,6 +27,24 @@ export default function PracticeTakingPage() {
   // 做題中隨時查看文章的彈窗狀態
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
 
+  // 作答計時器狀態
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!startTime || submitting) return;
+    const interval = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [startTime, submitting]);
+
+  const formatTime = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const remSecs = secs % 60;
+    return `${String(mins).padStart(2, '0')}:${String(remSecs).padStart(2, '0')}`;
+  };
+
   useEffect(() => {
     const fetchExam = async () => {
       try {
@@ -37,6 +55,7 @@ export default function PracticeTakingPage() {
         }
         const data = await res.json();
         setTestPaper(data.testPaper);
+        setStartTime(Date.now());
       } catch (err) {
         console.error(err);
       } finally {
@@ -94,6 +113,9 @@ export default function PracticeTakingPage() {
 
     try {
       setSubmitting(true);
+      const finalDuration = startTime ? Math.max(1, Math.floor((Date.now() - startTime) / 1000)) : elapsedSeconds;
+      const startedAtIso = startTime ? new Date(startTime).toISOString() : new Date().toISOString();
+
       const res = await fetch('/api/practice/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,6 +123,9 @@ export default function PracticeTakingPage() {
           testPaperId: testPaper.id,
           rawAnswers: answers,
           nickname,
+          durationSeconds: finalDuration,
+          timeSpentSeconds: finalDuration,
+          startedAt: startedAtIso,
         }),
       });
 
@@ -185,6 +210,12 @@ export default function PracticeTakingPage() {
               >
                 大字級
               </button>
+            </div>
+
+            {/* 作答時間計時 */}
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-indigo-50/80 border border-indigo-100 text-indigo-700 font-mono text-xs font-bold shadow-2xs">
+              <Clock className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
+              <span>{formatTime(elapsedSeconds)}</span>
             </div>
 
             {/* 作答者暱稱 */}

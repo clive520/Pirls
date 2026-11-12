@@ -5,7 +5,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   BookOpen, ArrowLeft, ArrowRight, Send, CheckCircle2, AlertCircle,
-  HelpCircle, RefreshCw, ZoomIn, ZoomOut, Check, FileText, ChevronRight
+  HelpCircle, RefreshCw, ZoomIn, ZoomOut, Check, FileText, ChevronRight, Clock
 } from 'lucide-react';
 import { TestPaper, TestQuestion } from '@/lib/types';
 import { ArticleContent, ArticleModal } from '@/components/article';
@@ -35,6 +35,26 @@ export default function StudentExamPage() {
   // 當前選中的題目快速索引
   const [activeQuestionId, setActiveQuestionId] = useState<string>('');
 
+  // 作答計時器狀態
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // 計時器每秒累加
+  useEffect(() => {
+    if (!startTime || submitting) return;
+    const interval = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [startTime, submitting]);
+
+  // 格式化分秒
+  const formatTime = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const remSecs = secs % 60;
+    return `${String(mins).padStart(2, '0')}:${String(remSecs).padStart(2, '0')}`;
+  };
+
   useEffect(() => {
     const fetchExam = async () => {
       try {
@@ -58,6 +78,7 @@ export default function StudentExamPage() {
         }
 
         setTestPaper(data.testPaper);
+        setStartTime(Date.now());
         if (data.testPaper?.questions?.length > 0) {
           setActiveQuestionId(data.testPaper.questions[0].id);
         }
@@ -100,10 +121,16 @@ export default function StudentExamPage() {
 
     setSubmitting(true);
     try {
+      const finalDuration = startTime ? Math.max(1, Math.floor((Date.now() - startTime) / 1000)) : elapsedSeconds;
+      const startedAtIso = startTime ? new Date(startTime).toISOString() : new Date().toISOString();
+
       const data = await api.student.submitExam({
         testPaperId: testPaper.id,
         assignmentId,
         rawAnswers: answers,
+        durationSeconds: finalDuration,
+        timeSpentSeconds: finalDuration,
+        startedAt: startedAtIso,
       });
 
       router.push(`/dashboard/student/result/${data.submissionId}`);
@@ -182,6 +209,12 @@ export default function StudentExamPage() {
           </div>
 
           <div className="flex items-center space-x-3 sm:space-x-4">
+            {/* 作答時間計時 */}
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-indigo-50/80 border border-indigo-100 text-indigo-700 font-mono text-xs font-bold shadow-2xs">
+              <Clock className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
+              <span>{formatTime(elapsedSeconds)}</span>
+            </div>
+
             {/* 字體放大縮小按鈕 */}
             <div className="hidden sm:flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
               <button

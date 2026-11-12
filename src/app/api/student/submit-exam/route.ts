@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { testPaperId, assignmentId, rawAnswers } = body;
+    const { testPaperId, assignmentId, rawAnswers, durationSeconds, timeSpentSeconds, startedAt } = body;
+    const finalDuration = Number(durationSeconds ?? timeSpentSeconds ?? 0) || undefined;
 
     if (!testPaperId || !rawAnswers) {
       return NextResponse.json({ error: '作答資料不完整' }, { status: 400 });
@@ -125,6 +126,9 @@ export async function POST(req: NextRequest) {
       normPR,
       processScores: gradingResult.processScores,
       answers: gradingResult.answers,
+      startedAt: startedAt || undefined,
+      durationSeconds: finalDuration,
+      reviewStatus: 'unreviewed',
     });
 
     return NextResponse.json({

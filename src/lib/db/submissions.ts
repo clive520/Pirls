@@ -167,6 +167,8 @@ export async function updateSubmissionReview(
     },
   };
   sub.isTeacherReviewed = true;
+  sub.reviewStatus = 'teacher_reviewed';
+  sub.reviewedByRole = 'teacher';
   sub.reviewedAt = new Date().toISOString();
   sub.reviewedBy = reviewerName;
   if (teacherGeneralNote !== undefined) {
@@ -246,4 +248,21 @@ export async function getAssignmentStatsSummary(): Promise<Record<string, TestPa
   }
 
   return summary;
+}
+
+/**
+ * 直接更新與儲存受測紀錄 (支援平行 Firestore 與 Blob 快速持久化)
+ */
+export async function saveSubmissionDirectly(submission: ExamSubmission): Promise<ExamSubmission> {
+  await syncCloudOnBoot();
+  const state = ensureLocalDB();
+  state.submissions[submission.id] = submission;
+  saveLocalDB(state);
+
+  await Promise.allSettled([
+    syncSubmissionToFirestore(submission),
+    syncToBlob(state),
+  ]);
+
+  return submission;
 }

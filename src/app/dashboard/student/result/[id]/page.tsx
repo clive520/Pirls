@@ -115,8 +115,18 @@ export default function StudentResultPage() {
             </Link>
             <div>
               <h1 className="text-base font-bold text-slate-900">PIRLS 個人素養診斷報告</h1>
-              <p className="text-xs text-slate-500">
-                {submission.studentName} 同學 • 《{submission.testPaperTitle}》
+              <p className="text-xs text-slate-500 flex items-center space-x-1.5 mt-0.5">
+                <span>{submission.studentName} 同學</span>
+                <span>•</span>
+                <span>《{submission.testPaperTitle}》</span>
+                {submission.durationSeconds ? (
+                  <>
+                    <span>•</span>
+                    <span className="font-mono text-slate-600 font-medium">
+                      ⏱️ 作答時間：{Math.floor(submission.durationSeconds / 60)}分{submission.durationSeconds % 60}秒
+                    </span>
+                  </>
+                ) : null}
               </p>
             </div>
           </div>
@@ -210,6 +220,28 @@ export default function StudentResultPage() {
                   教師已針對個別開放簡答題完成細膩審查，下方可查看老師的個別批註與核定給分。
                 </p>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* AI 深度再閱卷核定通知 */}
+        {!submission.isTeacherReviewed && submission.reviewStatus === 'ai_reviewed' && (
+          <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-sky-50 via-indigo-50 to-blue-50 border border-sky-200 text-sky-950 flex items-start space-x-4 shadow-xs">
+            <div className="w-11 h-11 rounded-2xl bg-sky-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 text-lg shadow-sm">
+              🤖
+            </div>
+            <div className="space-y-1.5 flex-1">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <strong className="font-bold text-base sm:text-lg text-sky-950">
+                  本份評量已由 IEA PIRLS AI 閱卷專家完成深度再閱核定
+                </strong>
+                <span className="text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-sky-200/90 text-sky-900">
+                  AI 複閱完成
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-sky-800 leading-relaxed">
+                開放簡答題已逐題依據 IEA PIRLS 國際雙位數給分規準 (Rubrics) 完成深度語意審核與分數校準。
+              </p>
             </div>
           </div>
         )}

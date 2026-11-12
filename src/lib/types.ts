@@ -241,6 +241,8 @@ export interface PIRLSBenchmarkInfo {
   instructionalFocus: string;
 }
 
+export type ReviewStatus = 'unreviewed' | 'ai_reviewed' | 'teacher_reviewed';
+
 export interface ExamSubmission {
   id: string;
   assignmentId?: string; // 關聯的獨立指派事件 ID
@@ -272,6 +274,13 @@ export interface ExamSubmission {
   };
   answers: StudentAnswer[];
   submittedAt: string;
+  // 作答時間記錄
+  startedAt?: string; // 學生進入測驗開始作答時間 ISO
+  durationSeconds?: number; // 學生作答總耗時 (秒)
+  // 複閱三態管理 ('unreviewed' 未複閱 | 'ai_reviewed' AI 複閱 | 'teacher_reviewed' 老師複閱)
+  reviewStatus?: ReviewStatus;
+  reviewedByRole?: 'ai' | 'teacher'; // 審核角色
+  aiReviewedAt?: string; // AI 完成自動再閱卷時間 ISO
   // 教師手動複閱與整體評估註記
   isTeacherReviewed?: boolean;
   reviewedAt?: string;

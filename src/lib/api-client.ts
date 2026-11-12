@@ -295,16 +295,28 @@ export const api = {
         body: JSON.stringify({ questionId }),
       }),
 
-    /** 呼叫 AI 提煉四層次思維能力落點分析與學生具體改進建議 */
+    /** 一鍵對整份試卷的開放簡答題執行 AI 深度再閱卷核定並存庫 */
+    autoRegradeAllSubmission: (submissionId: string) =>
+      request<{
+        success: boolean;
+        message: string;
+        submission: ExamSubmission;
+        regradedCount: number;
+      }>(`/api/teacher/submissions/${submissionId}/auto-regrade-all`, {
+        method: 'POST',
+      }),
+
+    /** 呼叫 AI 提煉四層次思維能力落點分析與學生具體改進建議 (支援 saveToDb: true 自動存庫) */
     getAiPedagogicalAdvice: (
       submissionId: string,
-      currentScores?: Record<string, number>
+      currentScores?: Record<string, number>,
+      saveToDb?: boolean
     ) =>
-      request<{ success: boolean; advice: AiPedagogicalAdvice }>(
+      request<{ success: boolean; advice: AiPedagogicalAdvice; submission?: ExamSubmission }>(
         `/api/teacher/submissions/${submissionId}/ai-pedagogical-advice`,
         {
           method: 'POST',
-          body: JSON.stringify({ currentScores }),
+          body: JSON.stringify({ currentScores, saveToDb }),
         }
       ),
 
@@ -441,6 +453,8 @@ export const api = {
       assignmentId?: string;
       rawAnswers: Record<string, any>;
       timeSpentSeconds?: number;
+      durationSeconds?: number;
+      startedAt?: string;
     }) =>
       request<{ success: boolean; submissionId: string; message?: string }>(
         '/api/student/submit-exam',

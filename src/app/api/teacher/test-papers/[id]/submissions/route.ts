@@ -94,6 +94,13 @@ export async function GET(
       isTeacherReviewed: Boolean(s.isTeacherReviewed),
       teacherGeneralNote: s.teacherGeneralNote,
       submittedAt: s.submittedAt,
+      startedAt: s.startedAt,
+      durationSeconds: s.durationSeconds,
+      reviewStatus: s.reviewStatus || (s.isTeacherReviewed ? (s.reviewedBy === 'AI 智慧複閱' ? 'ai_reviewed' : 'teacher_reviewed') : 'unreviewed'),
+      reviewedByRole: s.reviewedByRole || (s.isTeacherReviewed ? (s.reviewedBy === 'AI 智慧複閱' ? 'ai' : 'teacher') : undefined),
+      reviewedBy: s.reviewedBy,
+      aiReviewedAt: s.aiReviewedAt,
+      hasAiPedagogicalAdvice: Boolean(s.aiPedagogicalAdvice),
     })),
   });
 }

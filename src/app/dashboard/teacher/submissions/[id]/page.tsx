@@ -371,6 +371,12 @@ export default function TeacherReviewSubmissionPage() {
               <span>
                 {submission.studentName} ({submission.className || '未分班'} • {submission.seatNumber ? `${submission.seatNumber}號` : '-'})
               </span>
+              {submission.durationSeconds ? (
+                <span className="text-[11px] text-slate-500 font-mono flex items-center space-x-1 border-l border-slate-200 pl-2">
+                  <Clock className="w-3 h-3 text-slate-400" />
+                  <span>{Math.floor(submission.durationSeconds / 60)}分{submission.durationSeconds % 60}秒</span>
+                </span>
+              ) : null}
               <span className="text-[11px] text-slate-400 font-mono">
                 [{currentIndex + 1} / {siblings.length}]
               </span>
