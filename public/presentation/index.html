@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PIRLS 閱讀理解測驗系統 — 教師操作指南</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-base: 'Plus Jakarta Sans', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --bg: #090D16;
+      --surface: #111726;
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --surface-hover: #182032;
+      --text: #F1F5F9;
+      --text-muted: #94A3B8;
+      --accent: #38BDF8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --card-bg: rgba(17, 23, 38, 0.85);
+      --header-bg: rgba(9, 13, 22, 0.85);
+      --progress-bg: rgba(255, 255, 255, 0.1);
+      --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 20px 35px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    html.light {
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface-border: rgba(0, 0, 0, 0.08);
+      --surface-hover: #F1F5F9;
+      --text: #0F172A;
+      --text-muted: #64748B;
+      --accent: #0284C7;
+      --accent-glow: rgba(2, 132, 199, 0.18);
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --header-bg: rgba(248, 250, 252, 0.9);
+      --progress-bg: rgba(0, 0, 0, 0.08);
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 15px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: var(--font-base);
+      background-color: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Top Progress Bar */
+    .top-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--progress-bg);
+      z-index: 100;
+    }
+
+    .top-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #38BDF8, #818CF8, #34D399);
+      width: 0%;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Header Navbar */
+    header {
+      position: fixed;
+      top: 4px;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 90;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+    }
+
+    .brand-badge {
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(129, 140, 248, 0.2));
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-weight: 600;
+    }
+
+    /* Chapter Quick Nav */
+    .chapter-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chapter-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chapter-pill:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+
+    .chapter-pill.active {
+      background: var(--surface);
+      border-color: var(--accent);
+      color: var(--text);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .chapter-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Header Controls */
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slide-counter {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      padding: 6px 12px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+    }
+
+    .btn-icon {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      color: var(--text);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon:hover {
+      background: var(--surface-hover);
+      border-color: var(--text-muted);
+      transform: translateY(-1px);
+    }
+
+    /* Main Slide Container */
+    main {
+      position: absolute;
+      top: 64px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 32px;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 1540px;
+      height: 100%;
+      max-height: 860px;
+      animation: fadeInSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeInSlide {
+      from {
+        opacity: 0;
+        transform: scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Cover Slide Styling */
+    .cover-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      width: 100%;
+      height: 100%;
+      padding: 40px;
+    }
+
+    .cover-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.15), rgba(129, 140, 248, 0.15));
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .cover-title {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #FFFFFF 30%, #94A3B8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    html.light .cover-title {
+      background: linear-gradient(135deg, #0F172A 30%, #475569 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-subtitle {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .cover-desc {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 720px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+
+    .chapter-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      width: 100%;
+      max-width: 1100px;
+      margin-bottom: 40px;
+    }
+
+    .chapter-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chapter-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .card-num {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent);
+      font-family: var(--font-base);
+    }
+
+    .card-count {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: var(--surface-hover);
+      color: var(--text-muted);
+    }
+
+    .card-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .cover-actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .btn-start {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #090D16;
+      background: linear-gradient(135deg, #38BDF8, #818CF8);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(56, 189, 248, 0.35);
+      transition: all 0.25s ease;
+    }
+
+    .btn-start:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 14px 30px rgba(56, 189, 248, 0.45);
+    }
+
+    .shortcut-hints {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 16px;
+    }
+
+    .shortcut-hints kbd {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.8rem;
+    }
+
+    /* Standard Presentation Slide Layout */
+    .step-slide {
+      display: flex;
+      gap: 32px;
+      width: 100%;
+      height: 100%;
+      align-items: stretch;
+    }
+
+    /* Left Info Card */
+    .info-panel {
+      flex: 0 0 380px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      padding: 36px 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .info-header {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .badge-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chapter-tag {
+      font-size: 0.82rem;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .step-tag {
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--surface-hover);
+      color: var(--text-muted);
+      border: 1px solid var(--surface-border);
+    }
+
+    .step-title {
+      font-size: 1.85rem;
+      font-weight: 800;
+      line-height: 1.35;
+      letter-spacing: -0.015em;
+      color: var(--text);
+    }
+
+    /* Key Points Section */
+    .points-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .point-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .point-card:hover {
+      border-color: var(--accent);
+      transform: translateX(3px);
+    }
+
+    .point-icon {
+      font-size: 1.25rem;
+      line-height: 1;
+      padding-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .point-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .point-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .point-text {
+      font-size: 0.98rem;
+      font-weight: 500;
+      line-height: 1.55;
+      color: var(--text);
+    }
+
+    /* Navigation Footer in Info Panel */
+    .info-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .nav-btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 12px;
+    }
+
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid var(--surface-border);
+    }
+
+    .nav-btn.prev {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .nav-btn.prev:hover:not(:disabled) {
+      background: var(--surface-hover);
+      border-color: var(--text-muted);
+    }
+
+    .nav-btn.next {
+      background: var(--accent);
+      color: #090D16;
+      border-color: var(--accent);
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    .nav-btn.next:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .zoom-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      transition: color 0.2s;
+    }
+
+    .zoom-hint:hover {
+      color: var(--accent);
+    }
+
+    /* Right Screenshot Area */
+    .image-panel {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      cursor: zoom-in;
+    }
+
+    .image-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .image-panel img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .image-panel:hover img {
+      transform: scale(1.012);
+    }
+
+    .image-badge {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(17, 23, 38, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #F8FAFC;
+      padding: 8px 14px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Overview Modal Grid */
+    .overview-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 13, 22, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 200;
+      padding: 30px 40px;
+      overflow-y: auto;
+      flex-direction: column;
+    }
+
+    .overview-modal.active {
+      display: flex;
+    }
+
+    .overview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-shrink: 0;
+    }
+
+    .overview-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .overview-filters {
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: var(--surface);
+      color: var(--text-muted);
+      border: 1px solid var(--surface-border);
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      background: var(--accent);
+      color: #090D16;
+      border-color: var(--accent);
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+      padding-bottom: 40px;
+    }
+
+    .thumb-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .thumb-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .thumb-card.current {
+      border-color: var(--accent);
+      outline: 2px solid var(--accent);
+    }
+
+    .thumb-img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      background: #000;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .thumb-info {
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .thumb-step {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .thumb-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Lightbox Modal */
+    .lightbox-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .lightbox-modal.active {
+      display: flex;
+    }
+
+    .lightbox-img {
+      max-width: 95vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+      user-select: none;
+      transition: transform 0.2s ease;
+    }
+
+    .lightbox-controls {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .lightbox-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #FFF;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .lightbox-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Print / PDF Handout Support */
+    @media print {
+      body {
+        overflow: visible !important;
+        height: auto !important;
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+      }
+      header, .top-progress, .info-footer, .overview-modal, .lightbox-modal, .shortcut-hints, .image-badge {
+        display: none !important;
+      }
+      main {
+        position: static !important;
+        padding: 0 !important;
+        display: block !important;
+      }
+      .slide {
+        display: flex !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        height: 100vh !important;
+        max-height: none !important;
+        padding: 30px !important;
+        box-sizing: border-box !important;
+      }
+      .info-panel {
+        background: #F8FAFC !important;
+        border: 1px solid #E2E8F0 !important;
+        box-shadow: none !important;
+        color: #0F172A !important;
+      }
+      .image-panel {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        box-shadow: none !important;
+      }
+      .step-title {
+        color: #0F172A !important;
+      }
+      .point-card {
+        background: #FFFFFF !important;
+        border-color: #E2E8F0 !important;
+      }
+      .point-text {
+        color: #1E293B !important;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .step-slide {
+        flex-direction: column;
+        overflow-y: auto;
+      }
+      .info-panel {
+        flex: none;
+        width: 100%;
+        padding: 24px;
+      }
+      .image-panel {
+        min-height: 380px;
+      }
+      .chapter-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .chapter-nav {
+        display: none;
+      }
+      .cover-title {
+        font-size: 2.2rem;
+      }
+      .cover-subtitle {
+        font-size: 1.2rem;
+      }
+      .chapter-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Progress Bar -->
+  <div class="top-progress">
+    <div id="progressBar" class="top-progress-fill"></div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand" onclick="goToSlide(0)">
+      <span>📖 PIRLS 閱讀理解測驗系統</span>
+      <span class="brand-badge">教師操作指引</span>
+    </div>
+
+    <!-- Chapter Navigation -->
+    <nav class="chapter-nav">
+      <button class="chapter-pill" data-chapter="ch1" onclick="goToSlide(1)">
+        <span class="dot"></span>01 教師帳號申請
+      </button>
+      <button class="chapter-pill" data-chapter="ch2" onclick="goToSlide(4)">
+        <span class="dot"></span>02 班級學生建立
+      </button>
+      <button class="chapter-pill" data-chapter="ch3" onclick="goToSlide(11)">
+        <span class="dot"></span>03 AI 設定
+      </button>
+      <button class="chapter-pill" data-chapter="ch4" onclick="goToSlide(17)">
+        <span class="dot"></span>04 AI 智慧出題
+      </button>
+    </nav>
+
+    <!-- Controls -->
+    <div class="header-controls">
+      <div id="slideCounter" class="slide-counter">封面</div>
+      <button class="btn-icon" title="縮圖總覽 (O)" onclick="toggleOverview()">🔲</button>
+      <button class="btn-icon" title="全螢幕切換 (F)" onclick="toggleFullscreen()">⛶</button>
+      <button class="btn-icon" title="切換深淺模式" onclick="toggleTheme()">🌓</button>
+    </div>
+  </header>
+
+  <!-- Main Slide Display -->
+  <main id="slideContainer">
+    <!-- Generated slides will be placed here -->
+  </main>
+
+  <!-- Overview Modal -->
+  <div id="overviewModal" class="overview-modal">
+    <div class="overview-header">
+      <div class="overview-title">📋 簡報章節總覽 (共 25 步驟)</div>
+      <div class="overview-filters">
+        <button class="filter-btn active" onclick="filterOverview('all', this)">全部 (25)</button>
+        <button class="filter-btn" onclick="filterOverview('ch1', this)">01 帳號申請 (3)</button>
+        <button class="filter-btn" onclick="filterOverview('ch2', this)">02 班級學生 (7)</button>
+        <button class="filter-btn" onclick="filterOverview('ch3', this)">03 AI設定 (6)</button>
+        <button class="filter-btn" onclick="filterOverview('ch4', this)">04 AI出題 (9)</button>
+      </div>
+      <button class="btn-icon" onclick="toggleOverview()">✕</button>
+    </div>
+    <div id="overviewGrid" class="overview-grid">
+      <!-- Thumbnail cards generated dynamically -->
+    </div>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div id="lightboxModal" class="lightbox-modal" onclick="closeLightbox(event)">
+    <div class="lightbox-controls">
+      <button class="lightbox-btn" onclick="zoomLightbox(0.2, event)" title="放大">🔍 +</button>
+      <button class="lightbox-btn" onclick="zoomLightbox(-0.2, event)" title="縮小">🔍 -</button>
+      <button class="lightbox-btn" onclick="resetLightboxZoom(event)" title="重設大小">100%</button>
+      <button class="lightbox-btn" onclick="closeLightbox(event)" style="font-size: 1.1rem; padding: 6px 12px;">✕</button>
+    </div>
+    <img id="lightboxImg" class="lightbox-img" src="" alt="放大檢視" onclick="event.stopPropagation()">
+  </div>
+
+  <script>
+    const slidesData = [
+  {
+    "type": "cover",
+    "title": "PIRLS 閱讀理解測驗系統",
+    "subtitle": "教師全方位操作與 AI 智慧出題指引",
+    "description": "從帳號申請、班級名冊建置，到運用 AI 全自動生成閱讀文章、素養試題與繪本插圖的實務指南。",
+    "chapters": [
+      {
+        "id": "ch1",
+        "num": "01",
+        "name": "教師帳號申請",
+        "count": "3 步驟",
+        "startIdx": 1,
+        "color": "#38BDF8"
+      },
+      {
+        "id": "ch2",
+        "num": "02",
+        "name": "班級學生建立",
+        "count": "7 步驟",
+        "startIdx": 4,
+        "color": "#818CF8"
+      },
+      {
+        "id": "ch3",
+        "num": "03",
+        "name": "AI 設定 (Gemini)",
+        "count": "6 步驟",
+        "startIdx": 11,
+        "color": "#F472B6"
+      },
+      {
+        "id": "ch4",
+        "num": "04",
+        "name": "AI 智慧出題與生圖",
+        "count": "9 步驟",
+        "startIdx": 17,
+        "color": "#34D399"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch1",
+    "chapterNum": "01",
+    "chapterName": "教師帳號申請",
+    "stepText": "步驟 01 / 03",
+    "title": "進入首頁，點選「教師帳號申請」",
+    "image": "截圖/01教師帳號申請/01_進入網頁，點選教師帳號申請.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "前往系統首頁，點擊右上角「教師帳號申請」進入註冊流程。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "初次使用系統之教師皆需先申請專屬帳號。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch1",
+    "chapterNum": "01",
+    "chapterName": "教師帳號申請",
+    "stepText": "步驟 02 / 03",
+    "title": "身分選擇：點選「我是新教師」",
+    "image": "截圖/01教師帳號申請/02_點選「我是新教師」.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "在申請入口選擇「我是新教師」註冊全新帳號。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "若此前已獲配發帳號，直接回登入頁登入即可。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch1",
+    "chapterNum": "01",
+    "chapterName": "教師帳號申請",
+    "stepText": "步驟 03 / 03",
+    "title": "填寫資料，點擊「提交申請」",
+    "image": "截圖/01教師帳號申請/03_填完資料，按提交申請.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "依序填入教師姓名、電子信箱及任教學校等基本資訊。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "確認無誤後按「提交申請」，等待審核或系統開通。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch2",
+    "chapterNum": "02",
+    "chapterName": "班級學生建立",
+    "stepText": "步驟 01 / 07",
+    "title": "帳號開通後，以教師身分登入",
+    "image": "截圖/02班級學生建立/01_以教師的身份登入.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "於系統登入頁輸入教師帳號與密碼完成身分驗證。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "登入後直接進入教師專屬後台與教學儀表板。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch2",
+    "chapterNum": "02",
+    "chapterName": "班級學生建立",
+    "stepText": "步驟 02 / 07",
+    "title": "進入班級管理，建立新班級",
+    "image": "截圖/02班級學生建立/02_先建立新的班級.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "於功能選單進入「班級管理」，點選「+ 建立新班級」。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "每個班級皆有獨立學生名冊與測驗成績統計空間。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch2",
+    "chapterNum": "02",
+    "chapterName": "班級學生建立",
+    "stepText": "步驟 03 / 07",
+    "title": "填寫學年度、年級與班級名稱",
+    "image": "截圖/02班級學生建立/03_按說明填入班級相關資料.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "填入學年度、所屬年級及班級名稱（如：四年一班）。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "資料填妥後按下確認，班級隨即建立完成。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch2",
+    "chapterNum": "02",
+    "chapterName": "班級學生建立",
+    "stepText": "步驟 04 / 07",
+    "title": "進入學生管理，準備批次建立帳號",
+    "image": "截圖/02班級學生建立/04_建立學生帳號.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "點進剛建立的班級，選擇「批次建立學生帳號」。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "系統貼心提供「模式一」與「模式二」兩種建號方式。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch2",
+    "chapterNum": "02",
+    "chapterName": "班級學生建立",
+    "stepText": "步驟 05 / 07",
+    "title": "模式一：給定帳號前綴，由系統自動排號",
+    "image": "截圖/02班級學生建立/05_學生帳號建立：第一種模式由系統來排，你只要給前面的帳號即可.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "僅需設定帳號前綴（如 s11201）與預計建立的學生人數。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "系統自動流水配號並產生預設密碼，全班統一建檔最省事。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch2",
+    "chapterNum": "02",
+    "chapterName": "班級學生建立",
+    "stepText": "步驟 06 / 07",
+    "title": "模式二：輸入姓名清單，系統自動配號",
+    "image": "截圖/02班級學生建立/06_學生帳號建立的第二種模式：給姓名，然後由系統來排.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "直接貼上全班學生真實姓名清單（一行一位）。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "系統自動對應姓名生成學生帳號，方便管理個別學生作答。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch2",
+    "chapterNum": "02",
+    "chapterName": "班級學生建立",
+    "stepText": "步驟 07 / 07",
+    "title": "秒級建檔完成，支援帳密名冊匯出",
+    "image": "截圖/02班級學生建立/07_兩者都可以很快速地建立學生帳號.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "兩種模式皆能瞬間產生完整學生清單與登入資訊。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "可一鍵複製或列印帳密卡，直接發放給學生登入測驗。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch3",
+    "chapterNum": "03",
+    "chapterName": "AI 設定",
+    "stepText": "步驟 01 / 06",
+    "title": "支援多款 AI 模型，附免費額度連結",
+    "image": "截圖/03AI設定/01_這邊列出多個 AI，大部分都有一些免費額度可以使用，裡面都附有連結，我們可以過去申請。.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "「AI 設定」介面中列出系統支援之多種主流 AI 服務。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "多數平台皆提供免費額度，點擊卡片連結即可前往申請。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch3",
+    "chapterNum": "03",
+    "chapterName": "AI 設定",
+    "stepText": "步驟 02 / 06",
+    "title": "以 Google Gemini API Key 為範例示範",
+    "image": "截圖/03AI設定/02_我們用 Google Gemini API key 來申請，以這個為範例.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "以推薦的 Google Gemini 為例，點擊連結前往 Google AI Studio。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "使用現有 Google 帳號登入即可開始申請免費金鑰。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch3",
+    "chapterNum": "03",
+    "chapterName": "AI 設定",
+    "stepText": "步驟 03 / 06",
+    "title": "在 Google AI Studio 建立新 Key",
+    "image": "截圖/03AI設定/03_建立一個新的 API Key.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "在 Google AI Studio 點擊藍色「Create API key」按鈕。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "選擇現有 GCP 專案或點擊快速新建專案即可生成。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch3",
+    "chapterNum": "03",
+    "chapterName": "AI 設定",
+    "stepText": "步驟 04 / 06",
+    "title": "點擊 Copy，妥善複製 API Key",
+    "image": "截圖/03AI設定/04_將 API Key 複製下來.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "點擊複製圖示，完整複製產生的 API Key 字串。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "API Key 代表存取權限，請妥善保管避免外洩。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch3",
+    "chapterNum": "03",
+    "chapterName": "AI 設定",
+    "stepText": "步驟 05 / 06",
+    "title": "確認金鑰清單新增成功",
+    "image": "截圖/03AI設定/05_建立完成後，你會在系統上看到多出一列你剛才建立的 API Key 的資訊.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "返回金鑰列表，確認清單中多出一列剛建立的 Key 資訊。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "確認狀態為已啟用（Active）後，切換回閱讀系統。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch3",
+    "chapterNum": "03",
+    "chapterName": "AI 設定",
+    "stepText": "步驟 06 / 06",
+    "title": "貼入金鑰並點擊「檢查測試」",
+    "image": "截圖/03AI設定/06_我們把 API Key 貼到我們的閱讀系統，並檢查看看它是否能用.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "將 API Key 貼入閱讀系統之欄位並儲存。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "點選「測試連線」進行驗證，顯示可用即完成設定。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch4",
+    "chapterNum": "04",
+    "chapterName": "AI 出題",
+    "stepText": "步驟 01 / 09",
+    "title": "出題模式一：僅給主題，自動出文出題",
+    "image": "截圖/04AI出題/01AI 出題：你只給題目，讓它自動出文章、自動出題.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "輸入想測驗的主題（例如：海洋生態、太空探險）。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "AI 將自動創作一篇完整短文，並同步產出素養評量題目。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch4",
+    "chapterNum": "04",
+    "chapterName": "AI 出題",
+    "stepText": "步驟 02 / 09",
+    "title": "出題模式二：自備文章內容出題（課文適用）",
+    "image": "截圖/04AI出題/02AI 出題第二種模式：您給文章內容，由它來出題，適合於像國語課的課文.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "自備現成素材，貼上國語課文、校本閱讀或外部文章。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "由 AI 依據指定文本進行深度閱讀理解與素養命題。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch4",
+    "chapterNum": "04",
+    "chapterName": "AI 出題",
+    "stepText": "步驟 03 / 09",
+    "title": "輸入文章與設定出題參數",
+    "image": "截圖/04AI出題/03給完文章之後.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "檢視文章內容分段，確認設定之適用年級與出題題數。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "設定妥當後，點擊「開始 AI 分析出題」進行運算。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch4",
+    "chapterNum": "04",
+    "chapterName": "AI 出題",
+    "stepText": "步驟 04 / 09",
+    "title": "AI 智慧運算，耐心等待出題完成",
+    "image": "截圖/04AI出題/04耐心等待出題完成.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "系統正呼叫 AI 模型進行 PIRLS 四大理解層次命題。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "約需 10~30 秒，運算完成後將自動跳轉至題目預覽頁面。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch4",
+    "chapterNum": "04",
+    "chapterName": "AI 出題",
+    "stepText": "步驟 05 / 09",
+    "title": "依序複製圖片提示詞 (Prompt)",
+    "image": "截圖/04AI出題/05_依序複製圖片的提示詞，去AI產生圖片.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "系統已自動為文章各情境產出專業生圖 Prompt 提示詞。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "點擊各張配圖旁的「複製」按鈕，快速帶走生圖指令。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch4",
+    "chapterNum": "04",
+    "chapterName": "AI 出題",
+    "stepText": "步驟 06 / 09",
+    "title": "將提示詞交由生圖 AI 產出配圖",
+    "image": "截圖/04AI出題/06_將圖片提示詞交由 AI 來產生圖片.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "將複製的 Prompt 貼入外部生圖工具（如 Recraft, Midjourney 等）。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "AI 將自動生成與故事意境高度吻合的高品質插圖。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch4",
+    "chapterNum": "04",
+    "chapterName": "AI 出題",
+    "stepText": "步驟 07 / 09",
+    "title": "下載生成插圖，回傳上傳至閱讀系統",
+    "image": "截圖/04AI出題/07_下載圖片之後，再上傳到我們的閱讀系統.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "將生成好的插圖下載存至本機電腦。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "在閱讀系統中點選「上傳圖片」，即可完成圖文排版。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch4",
+    "chapterNum": "04",
+    "chapterName": "AI 出題",
+    "stepText": "步驟 08 / 09",
+    "title": "檢視題目品質，支援線上微調",
+    "image": "截圖/04AI出題/08_檢視題目是否符合我們需求.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "逐題審查題幹描述、四個選項與正確解答解析。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "教師可直接在線編輯修改文字，精確符合班級學生程度。"
+      }
+    ]
+  },
+  {
+    "chapterId": "ch4",
+    "chapterNum": "04",
+    "chapterName": "AI 出題",
+    "stepText": "步驟 09 / 09",
+    "title": "題庫建立完成，隨時發布測驗",
+    "image": "截圖/04AI出題/09_題庫建立完成.png",
+    "points": [
+      {
+        "icon": "📌",
+        "title": "操作指引",
+        "text": "點擊儲存，此篇文章與題組正式收納於教師專屬題庫中。"
+      },
+      {
+        "icon": "💡",
+        "title": "重點提示",
+        "text": "隨時可一鍵指派給指定班級學生進行在線閱讀測驗。"
+      }
+    ]
+  }
+];
+    let currentIndex = 0;
+
+    const slideContainer = document.getElementById('slideContainer');
+    const progressBar = document.getElementById('progressBar');
+    const slideCounter = document.getElementById('slideCounter');
+    const overviewModal = document.getElementById('overviewModal');
+    const overviewGrid = document.getElementById('overviewGrid');
+    const lightboxModal = document.getElementById('lightboxModal');
+    const lightboxImg = document.getElementById('lightboxImg');
+
+    // Build Slide HTML
+    function buildSlides() {
+      slideContainer.innerHTML = '';
+      slidesData.forEach((s, idx) => {
+        const slideDiv = document.createElement('div');
+        slideDiv.className = 'slide' + (idx === 0 ? ' active' : '');
+        slideDiv.id = 'slide-' + idx;
+
+        if (s.type === 'cover') {
+          slideDiv.innerHTML = `
+            <div class="cover-container">
+              <div class="cover-tag">✨ 教師實務教學與命題指南</div>
+              <h1 class="cover-title">${s.title}</h1>
+              <div class="cover-subtitle">${s.subtitle}</div>
+              <p class="cover-desc">${s.description}</p>
+              
+              <div class="chapter-cards-grid">
+                ${s.chapters.map(ch => `
+                  <div class="chapter-card" onclick="goToSlide(${ch.startIdx})">
+                    <div class="card-top">
+                      <span class="card-num">${ch.num}</span>
+                      <span class="card-count">${ch.count}</span>
+                    </div>
+                    <div class="card-name">${ch.name}</div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div class="cover-actions">
+                <button class="btn-start" onclick="goToSlide(1)">
+                  <span>開始簡報</span>
+                  <span>→</span>
+                </button>
+              </div>
+
+              <div style="margin-top: 36px;" class="shortcut-hints">
+                <span>導航快捷鍵：<kbd>←</kbd> / <kbd>→</kbd> 或 <kbd>Space</kbd> 翻頁</span>
+                <span><kbd>O</kbd> 章節總覽</span>
+                <span><kbd>F</kbd> 全螢幕</span>
+              </div>
+            </div>
+          `;
+        } else {
+          slideDiv.innerHTML = `
+            <div class="step-slide">
+              <!-- Left Info Panel -->
+              <div class="info-panel">
+                <div class="info-header">
+                  <div class="badge-row">
+                    <span class="chapter-tag">${s.chapterNum} ${s.chapterName}</span>
+                    <span class="step-tag">${s.stepText}</span>
+                  </div>
+                  <h2 class="step-title">${s.title}</h2>
+                  
+                  <div class="points-container">
+                    ${s.points.map(pt => `
+                      <div class="point-card">
+                        <span class="point-icon">${pt.icon}</span>
+                        <div class="point-content">
+                          <span class="point-title">${pt.title}</span>
+                          <span class="point-text">${pt.text}</span>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <div class="info-footer">
+                  <div class="nav-btn-group">
+                    <button class="nav-btn prev" onclick="prevSlide()" ${idx === 0 ? 'disabled' : ''}>
+                      <span>←</span>
+                      <span>上一步</span>
+                    </button>
+                    <button class="nav-btn next" onclick="nextSlide()">
+                      <span>${idx === slidesData.length - 1 ? '回封面' : '下一步'}</span>
+                      <span>→</span>
+                    </button>
+                  </div>
+                  <div class="zoom-hint" onclick="openLightbox('${s.image}')">
+                    <span>🔍 點擊右側截圖可燈箱放大檢視</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Image Panel -->
+              <div class="image-panel" onclick="openLightbox('${s.image}')" title="點擊放大圖片">
+                <div class="image-wrapper">
+                  <img src="${s.image}" alt="${s.title}" loading="${idx < 5 ? 'eager' : 'lazy'}">
+                  <div class="image-badge">
+                    <span>🔍 點擊全螢幕放大</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        slideContainer.appendChild(slideDiv);
+      });
+
+      // Build Overview Thumbnails
+      overviewGrid.innerHTML = '';
+      slidesData.forEach((s, idx) => {
+        if (s.type === 'cover') return;
+        const card = document.createElement('div');
+        card.className = 'thumb-card';
+        card.dataset.chapter = s.chapterId;
+        card.onclick = () => {
+          goToSlide(idx);
+          toggleOverview(false);
+        };
+        card.innerHTML = `
+          <img class="thumb-img" src="${s.image}" alt="${s.title}" loading="lazy">
+          <div class="thumb-info">
+            <span class="thumb-step">${s.chapterName} ・ ${s.stepText}</span>
+            <span class="thumb-title">${s.title}</span>
+          </div>
+        `;
+        overviewGrid.appendChild(card);
+      });
+    }
+
+    function updateUI() {
+      // Toggle active slide
+      slidesData.forEach((_, idx) => {
+        const el = document.getElementById('slide-' + idx);
+        if (el) el.classList.toggle('active', idx === currentIndex);
+      });
+
+      // Progress bar
+      const progress = currentIndex === 0 ? 0 : (currentIndex / (slidesData.length - 1)) * 100;
+      progressBar.style.width = progress + '%';
+
+      // Slide Counter
+      if (currentIndex === 0) {
+        slideCounter.textContent = '封面';
+      } else {
+        slideCounter.textContent = String(currentIndex).padStart(2, '0') + ' / ' + String(slidesData.length - 1).padStart(2, '0');
+      }
+
+      // Update Chapter Nav Pills
+      const currentSlide = slidesData[currentIndex];
+      document.querySelectorAll('.chapter-pill').forEach(pill => {
+        if (currentSlide && currentSlide.chapterId) {
+          pill.classList.toggle('active', pill.dataset.chapter === currentSlide.chapterId);
+        } else {
+          pill.classList.remove('active');
+        }
+      });
+
+      // Update Current in Overview
+      document.querySelectorAll('.thumb-card').forEach((tc, i) => {
+        tc.classList.toggle('current', (i + 1) === currentIndex);
+      });
+    }
+
+    function goToSlide(idx) {
+      if (idx < 0) idx = 0;
+      if (idx >= slidesData.length) idx = 0;
+      currentIndex = idx;
+      updateUI();
+    }
+
+    function nextSlide() {
+      if (currentIndex < slidesData.length - 1) {
+        goToSlide(currentIndex + 1);
+      } else {
+        goToSlide(0);
+      }
+    }
+
+    function prevSlide() {
+      if (currentIndex > 0) {
+        goToSlide(currentIndex - 1);
+      }
+    }
+
+    // Keyboard Navigation
+    window.addEventListener('keydown', (e) => {
+      if (lightboxModal.classList.contains('active')) {
+        if (e.key === 'Escape') closeLightbox();
+        return;
+      }
+      if (overviewModal.classList.contains('active')) {
+        if (e.key === 'Escape' || e.key === 'o' || e.key === 'O') toggleOverview(false);
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowRight':
+        case 'PageDown':
+        case ' ':
+          e.preventDefault();
+          nextSlide();
+          break;
+        case 'ArrowLeft':
+        case 'PageUp':
+          e.preventDefault();
+          prevSlide();
+          break;
+        case 'Home':
+          e.preventDefault();
+          goToSlide(0);
+          break;
+        case 'End':
+          e.preventDefault();
+          goToSlide(slidesData.length - 1);
+          break;
+        case 'o':
+        case 'O':
+          e.preventDefault();
+          toggleOverview();
+          break;
+        case 'f':
+        case 'F':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+      }
+    });
+
+    // Touch Swipe Navigation
+    let touchStartX = 0;
+    let touchEndX = 0;
+    window.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+    window.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) nextSlide();
+      if (touchEndX - touchStartX > 50) prevSlide();
+    }, false);
+
+    // Lightbox
+    let lightboxScale = 1;
+
+    function openLightbox(src) {
+      lightboxScale = 1;
+      lightboxImg.style.transform = 'scale(1)';
+      lightboxImg.src = src;
+      lightboxModal.classList.add('active');
+    }
+
+    function zoomLightbox(delta, e) {
+      if (e) e.stopPropagation();
+      lightboxScale = Math.min(Math.max(0.6, lightboxScale + delta), 2.5);
+      lightboxImg.style.transform = 'scale(' + lightboxScale + ')';
+    }
+
+    function resetLightboxZoom(e) {
+      if (e) e.stopPropagation();
+      lightboxScale = 1;
+      lightboxImg.style.transform = 'scale(1)';
+    }
+
+    function closeLightbox(e) {
+      if (e) e.stopPropagation();
+      lightboxModal.classList.remove('active');
+      lightboxImg.src = '';
+      lightboxScale = 1;
+    }
+
+    // Overview
+    function toggleOverview(force) {
+      if (typeof force === 'boolean') {
+        overviewModal.classList.toggle('active', force);
+      } else {
+        overviewModal.classList.toggle('active');
+      }
+    }
+
+    function filterOverview(chapter, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.thumb-card').forEach(card => {
+        if (chapter === 'all' || card.dataset.chapter === chapter) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // Fullscreen
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // Dark/Light Theme
+    function toggleTheme() {
+      document.documentElement.classList.toggle('light');
+    }
+
+    // Init
+    buildSlides();
+    updateUI();
+  </script>
+</body>
+</html>
