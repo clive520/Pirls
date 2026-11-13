@@ -24,8 +24,15 @@ export default function HomePage() {
           </div>
           <div className="flex items-center space-x-2 sm:space-x-3">
             <Link
+              href="/guide/manual"
+              className="px-3 py-1.5 text-xs sm:text-sm font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition border border-indigo-200/60 flex items-center gap-1.5"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+              <span>網站使用說明書</span>
+            </Link>
+            <Link
               href="/guide/score-metrics"
-              className="px-3 py-1.5 text-xs sm:text-sm font-semibold text-slate-600 hover:text-blue-600 transition"
+              className="px-3 py-1.5 text-xs sm:text-sm font-semibold text-slate-600 hover:text-blue-600 transition hidden sm:inline-block"
             >
               指標計算說明
             </Link>
@@ -85,6 +92,17 @@ export default function HomePage() {
           </Link>
         </div>
 
+        {/* 說明書快捷橫幅 */}
+        <div className="mt-6 flex items-center justify-center gap-2 text-xs sm:text-sm text-slate-600 bg-indigo-50/80 border border-indigo-100 px-4 py-2 rounded-full shadow-sm">
+          <span className="font-medium text-slate-500">新手初次使用？歡迎查閱</span>
+          <Link
+            href="/guide/manual"
+            className="font-bold text-indigo-700 hover:text-indigo-800 underline inline-flex items-center gap-1"
+          >
+            <span>📖 教師與學生完整圖文操作說明書</span>
+          </Link>
+        </div>
+
         {/* 四大層次特點展示 */}
         <div className="mt-20 grid grid-cols-1 md:grid-cols-4 gap-6 text-left w-full">
           <div className="p-6 bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
@@ -133,6 +151,10 @@ export default function HomePage() {
       <footer className="border-t bg-white py-6 text-center text-xs sm:text-sm text-slate-500 space-y-2">
         <p>PIRLS 智慧閱讀素養評量平臺 © 2026 • 專為國小語文教學量身打造</p>
         <div className="flex items-center justify-center gap-4 text-xs">
+          <Link href="/guide/manual" className="text-indigo-700 font-bold hover:underline">
+            📖 網站使用說明書
+          </Link>
+          <span>•</span>
           <Link href="/guide/score-metrics" className="text-blue-600 hover:underline">
             📊 PIRLS 成績指標與常模計算說明
           </Link>

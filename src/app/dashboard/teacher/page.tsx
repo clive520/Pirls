@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw, TrendingUp, Crown, Handshake, Settings, Compass } from 'lucide-react';
+import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw, TrendingUp, Crown, Handshake, Settings, Compass, HelpCircle } from 'lucide-react';
 import api from '@/lib/api-client';
 import { CoTeacherManageModal } from '@/components/teacher';
 
@@ -410,6 +410,15 @@ export default function TeacherDashboardPage() {
             >
               <Settings className="w-4 h-4 text-slate-500" />
               <span className="hidden md:inline">AI 設定</span>
+            </Link>
+            <Link
+              href="/guide/manual"
+              target="_blank"
+              className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold transition border border-amber-200/80 shadow-2xs"
+              title="查看全流程圖文操作說明書（另開分頁）"
+            >
+              <HelpCircle className="w-4 h-4 text-amber-600" />
+              <span className="hidden md:inline">操作手冊</span>
             </Link>
             <button
               onClick={handleLogout}
