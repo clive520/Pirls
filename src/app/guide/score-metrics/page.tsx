@@ -232,10 +232,10 @@ export default function ScoreMetricsGuidePage() {
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-2">
             <h4 className="font-bold text-slate-800 flex items-center gap-1.5">
               <Target className="w-4 h-4 text-blue-600" />
-              <span>「四維思維能力雷達圖」的幾何生成原理：</span>
+              <span>「學科向度雷達圖 (個人 vs 班級)」的幾何生成原理：</span>
             </h4>
             <p className="leading-relaxed">
-              雷達圖以原點 (0%) 為核心，四個頂點依序分別為 <strong>L1 直接提取 (上軸)</strong>、<strong>L2 直接推論 (右軸)</strong>、<strong>L3 詮釋整合 (下軸)</strong>、<strong>L4 檢驗評估 (左軸)</strong>。各軸最大半徑對應 100%，多邊形面積與形狀即時反映出學生是「高階推論拔尖」、「基礎提取扎實」或「四大能力均衡發展」，讓教師一目了然其認知擴張向度。
+              雷達圖以原點 (0%) 為核心，四個頂點依序分別為 <strong>L1 直接提取 (上軸)</strong>、<strong>L2 直接推論 (右軸)</strong>、<strong>L3 詮釋整合 (下軸)</strong>、<strong>L4 檢驗評估 (左軸)</strong>。系統以<strong>雙層多邊形</strong>同時描繪「🔵 個人得分掌握率」與「🟠 全班平均掌握率」，並在四軸頂點及詳細卡片明確呈現個人實際獲得題分（得分 X/Y 分）與全班常模落差，讓教師與學生一目了然其認知擴張向度。
             </p>
           </div>
         </section>

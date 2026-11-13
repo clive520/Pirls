@@ -41,9 +41,18 @@ export async function GET(
 
   const testPaper = await getTestPaperById(submission.testPaperId);
 
-  // 取得班級平均國際量尺分數與平均原始得分，供常模落點儀表對照
+  // 取得班級平均國際量尺分數、平均原始得分與四大思維向度掌握率，供學科向度雷達圖與常模落點儀表對照
   let classAvgScaleScore: number | undefined = undefined;
   let classAvgScore: number | undefined = undefined;
+  let classProcessScores:
+    | {
+        level1: { earned: number; total: number; percentage: number };
+        level2: { earned: number; total: number; percentage: number };
+        level3: { earned: number; total: number; percentage: number };
+        level4: { earned: number; total: number; percentage: number };
+      }
+    | undefined = undefined;
+
   if (submission.classId && submission.classId !== 'open_practice_community') {
     try {
       const { getTestPaperSubmissions } = await import('@/lib/db');
@@ -57,6 +66,26 @@ export async function GET(
           Math.round(
             (classSubs.reduce((acc, s) => acc + s.totalScore, 0) / classSubs.length) * 10
           ) / 10;
+
+        const calcClassLevel = (lvl: 'level1' | 'level2' | 'level3' | 'level4') => {
+          const valid = classSubs.filter((s) => s.processScores?.[lvl]);
+          if (valid.length === 0) return { percentage: 0, earned: 0, total: 0 };
+          const sumPct = valid.reduce((acc, s) => acc + (s.processScores[lvl]?.percentage || 0), 0);
+          const sumEarned = valid.reduce((acc, s) => acc + (s.processScores[lvl]?.earned || 0), 0);
+          const sumTotal = valid.reduce((acc, s) => acc + (s.processScores[lvl]?.total || 0), 0);
+          return {
+            percentage: Math.round(sumPct / valid.length),
+            earned: Math.round((sumEarned / valid.length) * 10) / 10,
+            total: Math.round((sumTotal / valid.length) * 10) / 10,
+          };
+        };
+
+        classProcessScores = {
+          level1: calcClassLevel('level1'),
+          level2: calcClassLevel('level2'),
+          level3: calcClassLevel('level3'),
+          level4: calcClassLevel('level4'),
+        };
       }
     } catch (e) {
       console.warn('[Submission API] Failed to compute class averages:', e);
@@ -68,6 +97,7 @@ export async function GET(
       ...submission,
       classAvgScaleScore,
       classAvgScore,
+      classProcessScores,
     },
     testPaper,
   });

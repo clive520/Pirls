@@ -708,13 +708,12 @@ export default function TeacherReviewSubmissionPage() {
                 </div>
               </div>
 
-              {/* 四大思維能力雷達圖與層次落點解析 (即時連動) */}
+              {/* 學科向度雷達圖 (個人 vs 班級) 與層次落點解析 (即時連動) */}
               <div className="pt-2">
                 <ThinkingSkillsRadarCard
-                  title="各層次思維能力落點分析"
-                  subtitle="隨教師核定給分即時重新試算四層次掌握率"
-                  radarTitle="PIRLS 四個思考能力雷達"
                   data={dynamicProcessScores}
+                  classData={submission.classProcessScores}
+                  subtitle="隨教師核定給分即時重新試算個人得分，並對照全班平均掌握率"
                 />
               </div>
 

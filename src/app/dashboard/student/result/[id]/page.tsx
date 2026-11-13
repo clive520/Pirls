@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -75,8 +75,6 @@ export default function StudentResultPage() {
     );
   }
 
-  const { processScores } = submission;
-
   // PIRLS 國際量尺與五大基準計算
   const scaleScore =
     submission.scaleScore ??
@@ -85,22 +83,63 @@ export default function StudentResultPage() {
   const classPR = submission.classPR ?? 50;
   const normPR = submission.normPR ?? estimateTheoreticalPR(scaleScore);
 
-  // 計算四軸雷達圖多邊形點座標 (以中心 240, 160，半徑 85 為基準，SVG viewBox 0 0 480 320 保留兩側充足留白無裁切)
-  // 順序: Top (L1 提取), Right (L2 推論), Bottom (L3 詮釋), Left (L4 評估)
-  const cx = 240;
-  const cy = 160;
-  const maxR = 85;
+  // 保障各層次個人得分 (earned / total / percentage) 100% 完整計算，防止缺少 earned/total 導致無法顯示
+  const calcFromAnswers = (lvlNum: number, lvlStr: string) => {
+    if (!submission.answers || submission.answers.length === 0) return null;
+    let earned = 0;
+    let total = 0;
+    submission.answers.forEach((ans) => {
+      const q = testPaper?.questions?.find((item) => item.id === ans.questionId);
+      const match =
+        ans.processLevelNumber === lvlNum ||
+        ans.processLevel === lvlStr ||
+        q?.processLevelNumber === lvlNum ||
+        q?.processLevel === lvlStr;
+      if (match) {
+        earned += ans.score ?? 0;
+        total += ans.maxScore ?? (q?.points || 0);
+      }
+    });
+    if (total === 0) return null;
+    return {
+      earned,
+      total,
+      percentage: total > 0 ? Math.round((earned / total) * 100) : 0,
+    };
+  };
 
-  const r1 = (processScores.level1.percentage / 100) * maxR;
-  const r2 = (processScores.level2.percentage / 100) * maxR;
-  const r3 = (processScores.level3.percentage / 100) * maxR;
-  const r4 = (processScores.level4.percentage / 100) * maxR;
+  const ps = submission.processScores || ({} as any);
+  const l1Fallback = calcFromAnswers(1, 'direct_extract');
+  const l2Fallback = calcFromAnswers(2, 'inference');
+  const l3Fallback = calcFromAnswers(3, 'interpret');
+  const l4Fallback = calcFromAnswers(4, 'evaluate');
 
-  const p1 = `${cx},${cy - r1}`;
-  const p2 = `${cx + r2},${cy}`;
-  const p3 = `${cx},${cy + r3}`;
-  const p4 = `${cx - r4},${cy}`;
-  const polygonPoints = `${p1} ${p2} ${p3} ${p4}`;
+  const safeProcessScores = {
+    level1: {
+      earned: ps.level1?.earned ?? l1Fallback?.earned ?? 0,
+      total: ps.level1?.total ?? l1Fallback?.total ?? (l1Fallback?.earned ?? 0),
+      percentage: ps.level1?.percentage ?? l1Fallback?.percentage ?? 0,
+      description: '鎖定時間、人物、關鍵名詞與文句中明確呈現的事實細節。',
+    },
+    level2: {
+      earned: ps.level2?.earned ?? l2Fallback?.earned ?? 0,
+      total: ps.level2?.total ?? l2Fallback?.total ?? (l2Fallback?.earned ?? 0),
+      percentage: ps.level2?.percentage ?? l2Fallback?.percentage ?? 0,
+      description: '串聯相鄰文句線索，歸納出隱含的前後因果關係與角色意圖。',
+    },
+    level3: {
+      earned: ps.level3?.earned ?? l3Fallback?.earned ?? 0,
+      total: ps.level3?.total ?? l3Fallback?.total ?? (l3Fallback?.earned ?? 0),
+      percentage: ps.level3?.percentage ?? l3Fallback?.percentage ?? 0,
+      description: '跨越全文多個段落歸納主旨、領會作者深意與角色心理成長轉折。',
+    },
+    level4: {
+      earned: ps.level4?.earned ?? l4Fallback?.earned ?? 0,
+      total: ps.level4?.total ?? l4Fallback?.total ?? (l4Fallback?.earned ?? 0),
+      percentage: ps.level4?.percentage ?? l4Fallback?.percentage ?? 0,
+      description: '客觀反思寫作手法、評價論點完整性並結合個人現實經驗提出獨到見解。',
+    },
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between print:bg-white">
@@ -361,11 +400,10 @@ export default function StudentResultPage() {
           </div>
         </div>
 
-        {/* 四維素養雷達圖與層次解析 */}
+        {/* 學科向度雷達圖 (個人 vs 班級) 與層次落點解析 */}
         <ThinkingSkillsRadarCard
-          title="各層次思維能力落點分析"
-          radarTitle="PIRLS 四個思考能力雷達"
-          data={processScores}
+          data={safeProcessScores}
+          classData={submission.classProcessScores}
         />
 
         {/* 🎓 老師複閱指導：四層次思維能力落點分析與閱讀具體改進建議 */}

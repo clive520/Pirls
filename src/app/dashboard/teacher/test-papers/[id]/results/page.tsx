@@ -782,12 +782,12 @@ export default function TeacherTestResultsPage() {
           </div>
         )}
 
-        {/* PIRLS 四維思考能力雷達 */}
+        {/* PIRLS 學科向度四維思考能力雷達 */}
         <div id="radar-analysis">
           <ThinkingSkillsRadarCard
-            title="各層次思維能力落點分析"
+            title="全班學科向度思維能力落點分析"
             subtitle="PIRLS 四大思考歷程 全班平均掌握率與能力落點診斷"
-            radarTitle="PIRLS 四個思考能力雷達"
+            radarTitle="學科向度雷達圖 (全班平均落點)"
             data={{
               level1: {
                 percentage: l1Avg,
