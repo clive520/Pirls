@@ -86,6 +86,15 @@ export async function GET(
           level3: calcClassLevel('level3'),
           level4: calcClassLevel('level4'),
         };
+
+        const { calculatePercentileRank, estimateTheoreticalPR } = await import('@/lib/pirls-norm');
+        submission.classPR = calculatePercentileRank(
+          submission.totalScore,
+          classSubs.map((s) => s.totalScore)
+        );
+        if (submission.scaleScore) {
+          submission.normPR = estimateTheoreticalPR(submission.scaleScore);
+        }
       }
     } catch (e) {
       console.warn('[Submission API] Failed to compute class averages:', e);

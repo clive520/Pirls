@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/jwt';
 import { getTestPaperById, getTestPaperSubmissions } from '@/lib/db';
-import { calculatePIRLSScaleScore, getBenchmarkInfo } from '@/lib/pirls-norm';
+import {
+  calculatePIRLSScaleScore,
+  getBenchmarkInfo,
+  calculatePercentileRank,
+  estimateTheoreticalPR,
+} from '@/lib/pirls-norm';
 
 export async function GET(
   req: NextRequest,
@@ -48,10 +53,23 @@ export async function GET(
       '繳卷時間',
     ];
 
+    // 依班級建立最新全班總分群組，動態即時重算班級 PR，確保匯出時同班同分者 PR 100% 絕對一致
+    const classScoresMap = new Map<string, number[]>();
+    submissions.forEach((s) => {
+      const cid = s.classId || 'default';
+      if (!classScoresMap.has(cid)) classScoresMap.set(cid, []);
+      classScoresMap.get(cid)!.push(s.totalScore);
+    });
+
     // CSV 內容列轉換
     const rows = submissions.map((s) => {
       const sc = s.scaleScore ?? calculatePIRLSScaleScore(s.totalScore, s.maxScore);
       const bench = getBenchmarkInfo(sc);
+
+      const cid = s.classId || 'default';
+      const groupScores = classScoresMap.get(cid) || submissions.map((item) => item.totalScore);
+      const dynamicClassPR = calculatePercentileRank(s.totalScore, groupScores);
+      const dynamicNormPR = estimateTheoreticalPR(sc);
 
       const l1Earned = s.processScores?.level1?.earned ?? 0;
       const l1Total = s.processScores?.level1?.total ?? 0;
@@ -78,8 +96,8 @@ export async function GET(
         s.percentage,
         sc,
         `"${bench.name}"`,
-        s.classPR ?? 50,
-        s.normPR ?? 50,
+        dynamicClassPR,
+        dynamicNormPR,
         `"${l1Earned}/${l1Total}"`,
         l1Pct,
         `"${l2Earned}/${l2Total}"`,

@@ -42,9 +42,10 @@ export async function GET(
     isTeacherReviewed: !!s.isTeacherReviewed,
   }));
 
-  // 計算該班級在此試卷的平均國際量尺分數、平均得分與四大思維向度掌握率，供學科向度雷達圖對照
+  // 計算該班級在此試卷的平均國際量尺分數、平均得分、四大思維向度掌握率與即時班級 PR
   let classAvgScaleScore: number | undefined = undefined;
   let classAvgScore: number | undefined = undefined;
+  let dynamicClassPR: number | undefined = undefined;
   let classProcessScores:
     | {
         level1: { earned: number; total: number; percentage: number };
@@ -84,6 +85,12 @@ export async function GET(
         level3: calcClassLevel('level3'),
         level4: calcClassLevel('level4'),
       };
+
+      const { calculatePercentileRank } = await import('@/lib/pirls-norm');
+      dynamicClassPR = calculatePercentileRank(
+        submission.totalScore,
+        classSubs.map((s) => s.totalScore)
+      );
     }
   }
 
@@ -93,6 +100,7 @@ export async function GET(
       classAvgScaleScore,
       classAvgScore,
       classProcessScores,
+      classPR: dynamicClassPR ?? submission.classPR,
     },
     testPaper,
     siblings,
