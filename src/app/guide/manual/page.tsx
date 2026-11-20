@@ -22,6 +22,9 @@ import {
   Maximize2,
   ChevronLeft,
   Filter,
+  Calculator,
+  Target,
+  Compass,
 } from 'lucide-react';
 
 interface ManualStep {
@@ -451,6 +454,10 @@ const TEACHER_FAQS = [
     q: '若電腦教室時段不足，如何進行實體課堂紙筆測驗？',
     a: '直接在「我的題庫」點選「A4 學生卷」，系統已適配雙面雙欄排版、段落標號與書寫橫線；同時可點選「A4 解答卷」列印包含 IEA 雙位數規準之教師專用答案卷。',
   },
+  {
+    q: '「PIRLS 班級平均國際量尺」與「班級同儕排名 (Class PR)」是如何計算出來的？有何判斷標準？',
+    a: '① PIRLS 班級平均國際量尺：為全班已繳卷學生個人 PIRLS 量尺分數之算術平均數（∑各生量尺分 ÷ N）。個人量尺依據 IEA 官方標準常態母體（平均 500、標準差 100），依得分率進行分段線性錨定轉換至 260~715 分。若班平均高於 500 分，代表全班整體閱讀力優於全球平均；達 550 分以上更邁入「高基準」。在學生個人成績單中會標示「領先全班平均 +X 分」或「距離全班平均 -Y 分」供雙向對照。\n\n② 班級同儕排名 (Class PR)：採用心理計量學「中點百分等級公式」：Class PR = round( [ (低於該生分數人數 + 0.5 × 同分人數) ÷ 全班總人數 ] × 100 )。全平臺在查詢列表、匯出 Excel 與產出診斷書時，皆以最新全班總分即時動態重算，同班同分者之班級 PR 保證 100% 絕對相同一致。\n\n詳細演算法、錨定門檻與 IEA / 教育部 CIRN 官方參考資料網站，請詳見第 07 章專題解析區塊。',
+  },
 ];
 
 export default function UserManualPage() {
@@ -665,20 +672,37 @@ export default function UserManualPage() {
                 ))}
               </nav>
 
-              {/* 常模計算說明快速捷徑 */}
-              <div className="pt-3 border-t">
-                <Link
-                  href="/guide/score-metrics"
+              {/* 常模與演算法專題導覽 */}
+              <div className="pt-3 border-t space-y-2">
+                <a
+                  href="#section-scale-and-pr-guide"
                   className="p-3 bg-gradient-to-br from-indigo-50 to-sky-50 rounded-xl border border-indigo-100 block hover:shadow-sm transition group"
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-indigo-900 group-hover:text-indigo-700">
-                      📊 常模計算說明
+                    <span className="text-xs font-bold text-indigo-900 group-hover:text-indigo-700 flex items-center gap-1.5">
+                      <Calculator className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>班級平均量尺與 PR 計算</span>
                     </span>
                     <ChevronRight className="w-3.5 h-3.5 text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                   <p className="text-[11px] text-slate-500 leading-snug">
-                    了解國際量尺分數（Mean 500, SD 100）推估演算法。
+                    班級平均量尺公式、同儕 PR 中點演算法與官方參考資料網站。
+                  </p>
+                </a>
+
+                <Link
+                  href="/guide/score-metrics"
+                  className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 block transition group"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-slate-700 group-hover:text-blue-600 flex items-center gap-1.5">
+                      <Target className="w-3.5 h-3.5 text-blue-600" />
+                      <span>互動式量尺試算工具</span>
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-snug">
+                    線上拖曳得分滑桿，即時試算國際量尺、PR 與五大基準。
                   </p>
                 </Link>
               </div>
@@ -790,6 +814,236 @@ export default function UserManualPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* 若為第 07 章：嵌入專屬 PIRLS 班級平均國際量尺與班級 PR 演算法解析＆官方參考資料網站 */}
+                  {chapter.id === 'ch-07-analytics-and-export' && (
+                    <div id="section-scale-and-pr-guide" className="p-6 sm:p-8 pt-6 border-t border-slate-200/90 space-y-8 bg-slate-50/40">
+                      {/* 專題標題 Banner */}
+                      <div className="p-6 sm:p-7 rounded-2xl bg-gradient-to-br from-indigo-900 via-slate-900 to-sky-950 text-white space-y-3 shadow-lg">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-200 text-xs font-bold">
+                          <Calculator className="w-3.5 h-3.5 text-sky-400" />
+                          <span>PIRLS 心理計量學常模規範 • 官方計算標準</span>
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                          PIRLS 班級平均國際量尺與班級同儕排名 (Class PR) 演算法詳解
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">
+                          深入解析平臺如何透過「國際常模標準分數（Mean 500, SD 100）」與心理計量學「中點百分等級（Midpoint PR）」雙軌機制，客觀評估個別學生的同儕排名與班級整體學力水準。
+                        </p>
+                      </div>
+
+                      {/* 雙欄核心算法解析：班級平均量尺 vs 班級同儕 PR */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* 左欄：PIRLS 班級平均國際量尺 */}
+                        <div className="p-6 rounded-2xl bg-sky-50/70 border border-sky-200/90 space-y-4 shadow-sm">
+                          <div className="flex items-center justify-between border-b border-sky-200/70 pb-3">
+                            <h4 className="text-base font-black text-sky-950 flex items-center gap-2">
+                              <Target className="w-5 h-5 text-sky-600" />
+                              <span>PIRLS 班級平均國際量尺</span>
+                            </h4>
+                            <span className="text-xs font-bold text-sky-800 bg-sky-100 px-2.5 py-1 rounded-full border border-sky-200">
+                              全球尺標對照
+                            </span>
+                          </div>
+
+                          {/* 公式區 */}
+                          <div className="p-4 rounded-xl bg-white border border-sky-200 space-y-2 text-xs">
+                            <span className="font-bold text-slate-700 block text-[11px] uppercase tracking-wider">
+                              📐 班級平均量尺計算公式：
+                            </span>
+                            <div className="p-2.5 rounded-lg bg-sky-50 font-mono font-bold text-sky-950 text-center text-xs sm:text-sm border border-sky-100">
+                              班級平均量尺 = ( ∑ 本班各生 PIRLS 量尺分 ) ÷ 本班實測總人數 N
+                            </div>
+                            <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
+                              學生個人量尺非傳統 0~100 分，而是依據試卷得分率（實得分 ÷ 滿分），對齊 IEA 官方素養等級進行<strong>分段線性錨定轉換</strong>（260 ~ 715 分），使不同體裁與題數的試卷具備跨題本可比性。
+                            </p>
+                          </div>
+
+                          {/* 判斷依據與教學應用 */}
+                          <div className="space-y-2 text-xs text-slate-700 leading-relaxed">
+                            <div className="font-bold text-sky-900 flex items-center gap-1.5">
+                              <Compass className="w-4 h-4 text-sky-600" />
+                              <span>如何判斷班級平均量尺的能力水準？</span>
+                            </div>
+                            <ul className="space-y-1.5 pl-4 list-disc text-slate-600 marker:text-sky-500">
+                              <li>
+                                <strong>對照國際基準（500 分為全球常模平均）</strong>：班級平均高於 500 分代表優於全球平均；若達到 <strong>550 分以上</strong>，全班整體邁入「高基準（High Benchmark）」。
+                              </li>
+                              <li>
+                                <strong>落差診斷與同儕參照</strong>：在學生個人診斷書上，系統同步繪製學生落點與班級平均虛線，即時呈現<strong>「領先全班平均 +X 分」</strong>或<strong>「距離全班平均 -Y 分」</strong>，讓親師一眼看清相對優勢。
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        {/* 右欄：班級同儕排名 (Class PR) */}
+                        <div className="p-6 rounded-2xl bg-indigo-50/70 border border-indigo-200/90 space-y-4 shadow-sm">
+                          <div className="flex items-center justify-between border-b border-indigo-200/70 pb-3">
+                            <h4 className="text-base font-black text-indigo-950 flex items-center gap-2">
+                              <Users className="w-5 h-5 text-indigo-600" />
+                              <span>班級同儕排名 (Class PR)</span>
+                            </h4>
+                            <span className="text-xs font-bold text-indigo-800 bg-indigo-100 px-2.5 py-1 rounded-full border border-indigo-200">
+                              班內同儕對照
+                            </span>
+                          </div>
+
+                          {/* 公式區 */}
+                          <div className="p-4 rounded-xl bg-white border border-indigo-200 space-y-2 text-xs">
+                            <span className="font-bold text-slate-700 block text-[11px] uppercase tracking-wider">
+                              📐 心理計量學中點百分等級公式：
+                            </span>
+                            <div className="p-2.5 rounded-lg bg-indigo-50 font-mono font-bold text-indigo-950 text-center text-xs sm:text-sm border border-indigo-100">
+                              Class PR = round( [ ( 低於該生分數人數 + 0.5 × 同分人數 ) ÷ N ] × 100 )
+                            </div>
+                            <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
+                              納入<strong>「同分中點折算（0.5 × 同分人數）」</strong>，能徹底消除傳統名次並列時的極端離散偏差，客觀代表學生在班上超越了百分之幾的受測同儕。
+                            </p>
+                          </div>
+
+                          {/* 判斷依據與保障機制 */}
+                          <div className="space-y-2 text-xs text-slate-700 leading-relaxed">
+                            <div className="font-bold text-indigo-900 flex items-center gap-1.5">
+                              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                              <span>即時動態重算保障（同分同 PR）</span>
+                            </div>
+                            <ul className="space-y-1.5 pl-4 list-disc text-slate-600 marker:text-indigo-500">
+                              <li>
+                                <strong>全班最新成績即時運算</strong>：無論學生何時交卷或老師分批閱卷，系統在查詢後台、匯出 Excel 與產出診斷報告時，一律以全班最新成績動態重算，<strong>同得相同總分者，班級 PR 保證 100% 絕對相同一致</strong>。
+                              </li>
+                              <li>
+                                <strong>班級 PR vs 國際常模 PR 差異</strong>：班級 PR 參照「本班同儕實測表現」；國際常模 PR（常模 PR）則參照「全球標準常態分佈（$Z = (量尺 - 500) \div 100$）」，兩者母體不同，相輔相成。
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 第三部分：PIRLS 國際量尺與常模之「權威參考資料官方網站」 */}
+                      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+                          <div>
+                            <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
+                              <BookOpen className="w-5 h-5 text-blue-600" />
+                              <span>PIRLS 國際量尺與常模官方權威參考資料網站</span>
+                            </h4>
+                            <p className="text-xs text-slate-500">
+                              本平臺各項心理計量常模公式與閱讀思維層次，完全遵循國際官方研究文獻與教育部規範
+                            </p>
+                          </div>
+                          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md self-start sm:self-center">
+                            官方文獻指引
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                          {/* 1. IEA 國際總部與波士頓學院 */}
+                          <a
+                            href="https://timssandpirls.bc.edu/pirls2021/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-sky-50/50 hover:border-sky-300 transition-all flex flex-col justify-between"
+                          >
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-black text-slate-900 group-hover:text-sky-700 transition flex items-center gap-1.5">
+                                  <span>🌐 IEA TIMSS & PIRLS International Study Center</span>
+                                </span>
+                                <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-sky-600 transition" />
+                              </div>
+                              <p className="text-xs text-slate-600 leading-relaxed">
+                                <strong>所屬機構：</strong>國際教育成就評鑑學會（IEA）與美國波士頓學院（Boston College）。
+                              </p>
+                              <p className="text-[11px] text-slate-500 leading-relaxed">
+                                <strong>官方參考規範：</strong>發布《PIRLS 2021 Assessment Framework》與《International Results in Reading》，定義量尺分數母體（Mean=500, SD=100）及五大國際基準（International Benchmarks）。
+                              </p>
+                            </div>
+                            <span className="text-[11px] font-bold text-sky-600 mt-2 inline-flex items-center gap-1 group-hover:underline">
+                              前往 IEA 國際題本與研究中心官網 →
+                            </span>
+                          </a>
+
+                          {/* 2. 教育部 CIRN 平臺 */}
+                          <a
+                            href="https://cirn.moe.edu.tw/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-indigo-50/50 hover:border-indigo-300 transition-all flex flex-col justify-between"
+                          >
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-black text-slate-900 group-hover:text-indigo-700 transition flex items-center gap-1.5">
+                                  <span>🏛️ 教育部 CIRN 國民中小學課程與教學資源平臺</span>
+                                </span>
+                                <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition" />
+                              </div>
+                              <p className="text-xs text-slate-600 leading-relaxed">
+                                <strong>所屬機構：</strong>教育部國民及學前教育署（國教署）。
+                              </p>
+                              <p className="text-[11px] text-slate-500 leading-relaxed">
+                                <strong>官方參考規範：</strong>收錄臺灣歷屆 PIRLS 國家成果報告、國語文素養命題規準手冊，以及四層次閱讀理解思考歷程之國小教學引導範例。
+                              </p>
+                            </div>
+                            <span className="text-[11px] font-bold text-indigo-600 mt-2 inline-flex items-center gap-1 group-hover:underline">
+                              前往教育部 CIRN PIRLS 專區 →
+                            </span>
+                          </a>
+
+                          {/* 3. 臺灣 PIRLS 計畫官網 */}
+                          <a
+                            href="https://pirls.ntue.edu.tw/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-emerald-50/50 hover:border-emerald-300 transition-all flex flex-col justify-between"
+                          >
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-black text-slate-900 group-hover:text-emerald-700 transition flex items-center gap-1.5">
+                                  <span>🇹🇼 臺灣 PIRLS 計畫官方網站（國立臺北教育大學）</span>
+                                </span>
+                                <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition" />
+                              </div>
+                              <p className="text-xs text-slate-600 leading-relaxed">
+                                <strong>所屬機構：</strong>臺灣 PIRLS 國家研究中心（國立臺北教育大學 / 柯華葳教授研究團隊）。
+                              </p>
+                              <p className="text-[11px] text-slate-500 leading-relaxed">
+                                <strong>官方參考規範：</strong>提供臺灣四年級學童歷屆閱讀素養常模趨勢、國際各級基準落點分析，以及 ePIRLS 數位網頁閱讀模擬試題釋出資料。
+                              </p>
+                            </div>
+                            <span className="text-[11px] font-bold text-emerald-600 mt-2 inline-flex items-center gap-1 group-hover:underline">
+                              前往臺灣 PIRLS 研究中心平臺 →
+                            </span>
+                          </a>
+
+                          {/* 4. 心理計量學常模量尺與百分等級標準 */}
+                          <a
+                            href="https://en.wikipedia.org/wiki/Percentile_rank"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-purple-50/50 hover:border-purple-300 transition-all flex flex-col justify-between"
+                          >
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-black text-slate-900 group-hover:text-purple-700 transition flex items-center gap-1.5">
+                                  <span>📊 心理計量學「中點百分等級（Midpoint PR）」標準</span>
+                                </span>
+                                <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-purple-600 transition" />
+                              </div>
+                              <p className="text-xs text-slate-600 leading-relaxed">
+                                <strong>學術規範：</strong>教育心理測驗學與常模參照測驗（Norm-Referenced Test）通用計量標準。
+                              </p>
+                              <p className="text-[11px] text-slate-500 leading-relaxed">
+                                <strong>演算法則：</strong>標準中點百分等級公式定義，透過折算同分人數（0.5 × 等分頻率）消除傳統名次並列偏態，確立公平同儕定位。
+                              </p>
+                            </div>
+                            <span className="text-[11px] font-bold text-purple-600 mt-2 inline-flex items-center gap-1 group-hover:underline">
+                              查閱心理計量百分等級學術定義 →
+                            </span>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </section>
               ))
             )}
