@@ -5,7 +5,7 @@ import {
   Palette, CheckCircle2, Copy, PlusCircle, Trash2,
   Upload, Sparkles, Link as LinkIcon
 } from 'lucide-react';
-import { ArticleIllustration } from '@/lib/types';
+import { ArticleIllustration, cleanIllustrationCaption } from '@/lib/types';
 
 export interface IllustrationStoryboardProps {
   illustrations: ArticleIllustration[];
@@ -237,7 +237,7 @@ export const IllustrationStoryboard: React.FC<IllustrationStoryboardProps> = ({
                   >
                     <img
                       src={currentIll.imageUrl}
-                      alt={currentIll.caption || `場景 ${safeSceneIdx + 1}`}
+                      alt={cleanIllustrationCaption(currentIll.caption, safeSceneIdx)}
                       className={`max-h-64 w-full object-contain rounded-lg shadow-sm bg-white transition duration-200 ${
                         isDragging ? 'opacity-30 blur-[1px]' : ''
                       }`}
@@ -259,6 +259,7 @@ export const IllustrationStoryboard: React.FC<IllustrationStoryboardProps> = ({
                     <input
                       type="text"
                       value={currentIll.caption}
+                      onBlur={(e) => onCaptionChange(cleanIllustrationCaption(e.target.value, safeSceneIdx), safeSceneIdx)}
                       onChange={(e) => onCaptionChange(e.target.value, safeSceneIdx)}
                       placeholder={`圖 ${safeSceneIdx + 1}：情境圖說說明`}
                       className="flex-1 text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-medium focus:ring-1 focus:ring-sky-500 focus:outline-none bg-white"

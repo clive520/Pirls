@@ -20,7 +20,7 @@ export function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, ta
     {
       "id": "ill_1",
       "paragraphNumber": 1,
-      "caption": "圖 1：【起·開端情境 / 穿插於第 1 段後】金爺爺親切與孩子們交流",
+      "caption": "圖 1：金爺爺親切與孩子們交流",
       "type": "illustration_url",
       "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：和藹的金爺爺在古樸老鐘錶行門口向學童解說鐘錶齒輪，暖陽灑落、柔和明亮、充滿童趣與故事溫度，16:9 橫向構圖。 / English: Watercolor children storybook illustration of kind elderly Grandpa Jin explaining clock gears to kids, warm soft lighting --ar 16:9"
     }
@@ -68,7 +68,7 @@ export function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, ta
     {
       "id": "ill_1",
       "paragraphNumber": 1,
-      "caption": "圖 1：【起·開端情境 / 穿插於第 1 段後】關鍵場景",
+      "caption": "圖 1：課文關鍵場景",
       "type": "illustration_url",
       "imagePrompt": "溫馨細緻的兒童繪本水彩手繪插畫：... / English: Storybook watercolor illustration of ... --ar 16:9"
     }
@@ -135,7 +135,8 @@ export function buildPIRLSPrompt(params: GenerateParams, isLiterary: boolean, ta
    - 圖 1【起·開端，paragraphNumber: 1】：開端情境與角色，穿插於第 1 段後。
    - 圖 2【承轉·高潮，paragraphNumber 設為中間段落】：核心衝突挑戰，穿插於中段後。
    - 圖 3【合·結局，paragraphNumber 設為結尾段落】：問題解決與體悟，穿插於末段後。
-   - 每組提示詞皆需包含中英文雙語提示詞（溫馨兒童繪本水彩風、16:9 橫向構圖、type: "illustration_url"）。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
+   - 每組提示詞皆需包含中英文雙語提示詞（溫馨兒童繪本水彩風、16:9 橫向構圖、type: "illustration_url"）。
+   - 【圖說 (caption) 格式規定】：圖說僅能為「圖 1：具體畫面內容描述」（例如：「圖 1：金爺爺親切與孩子們交流」），嚴禁在圖說中出現【起·開端 / 穿插於第X段後】等排版標籤（段落位置請填於 paragraphNumber 即可）。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
 完整 JSON 架構參考如下：
 ${schemaExamplePaste}`
     : `你是一位享譽國際的 IEA PIRLS (國際閱讀素養進展研究) 命題專家與心理計量學家。
@@ -159,7 +160,8 @@ ${schemaExamplePaste}`
    - 圖 1【起·開端，paragraphNumber: 1】：開端情境與角色，穿插於第 1 段後。
    - 圖 2【承轉·高潮，paragraphNumber 設為中間段落】：核心衝突挑戰，穿插於中段後。
    - 圖 3【合·結局，paragraphNumber 設為結尾段落】：問題解決與體悟，穿插於末段後。
-   - 每組提示詞皆需包含中英文雙語提示詞（溫馨兒童繪本水彩風、16:9 橫向構圖、type: "illustration_url"）。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
+   - 每組提示詞皆需包含中英文雙語提示詞（溫馨兒童繪本水彩風、16:9 橫向構圖、type: "illustration_url"）。
+   - 【圖說 (caption) 格式規定】：圖說僅能為「圖 1：具體畫面內容描述」（例如：「圖 1：金爺爺親切與孩子們交流」），嚴禁在圖說中出現【起·開端 / 穿插於第X段後】等排版標籤（段落位置請填於 paragraphNumber 即可）。` : `本次任務不需插圖，"illustrations" 欄位請輸出空陣列 []。`}
    完整 JSON 架構參考如下：
 ${schemaExampleTheme}`;
 
@@ -170,7 +172,7 @@ ${schemaExampleTheme}`;
 年級：國小 ${params.targetGrade} 年級
 題量：共 ${targetCount} 題
 文章長度：約 800~1,200 字，分段清晰 (每段開頭標示【第一段】、【第二段】等)
-${includeDiagram ? '多模態生圖提示詞：請務必在 illustrations 陣列中，依文章脈絡擷取 3 個關鍵場景（起·開端、承轉·高潮、合·結局），分別構思 3 組生動細膩的中英文生圖提示詞 (imagePrompt) 與圖說 (caption)，並在 paragraphNumber 明確標明各插圖應「穿插於第幾段之後」（不可堆疊於文章開頭），供教師複製至專業繪圖 AI 生成真實插圖。' : '插圖需求：不需生成插圖，illustrations 填空陣列 []。'}
+${includeDiagram ? '多模態生圖提示詞：請務必在 illustrations 陣列中，依文章脈絡擷取 3 個關鍵場景（起·開端、承轉·高潮、合·結局），分別構思 3 組生動細膩的中英文生圖提示詞 (imagePrompt) 與圖說 (caption)，圖說僅保留「圖 1：畫面描述」，切勿包含【起·開端/穿插於第X段後】等標記，並在 paragraphNumber 明確標明各插圖應「穿插於第幾段之後」（不可堆疊於文章開頭），供教師複製至專業繪圖 AI 生成真實插圖。' : '插圖需求：不需生成插圖，illustrations 填空陣列 []。'}
 請即刻生成符合上述 PIRLS 規範之完整 JSON 試卷。`
     : `【自選文章提煉 PIRLS 題本】
 文章標題：${params.pastedTitle || '自選閱讀材料'}

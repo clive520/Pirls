@@ -370,7 +370,7 @@ export function generateMockAuthenticPIRLSTest(params: GenerateParams): TestPape
       {
         id: 'ill_1',
         paragraphNumber: 1,
-        caption: '圖 1：【起·開端情境 / 穿插於第 1 段後】佇立在青雲山脊上守護村莊的兩百年巨木老松樹',
+        caption: '圖 1：佇立在青雲山脊上守護村莊的兩百年巨木老松樹',
         type: 'svg_diagram',
         imagePrompt: '【場景 1（起·開端情境，建議穿插於第 1 段之後）】：溫馨細緻的兒童繪本水彩手繪插畫：晴空下青雲山脊上巍峨聳立的兩百年巨木五葉松，山下恬靜的雲霧村炊煙裊裊，小女孩阿雅在木廊下拿著望遠鏡仰望，晨光柔和溫暖，16:9 橫向構圖。 / English prompt: Storybook watercolor illustration of majestic 200-year-old pine tree on mountain ridge overlooking peaceful village, young girl looking through binoculars, soft morning light --ar 16:9',
         svgCode: `<svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-sky-50 border border-sky-100 p-2">
@@ -381,13 +381,13 @@ export function generateMockAuthenticPIRLSTest(params: GenerateParams): TestPape
           <polygon points="200,45 140,95 260,95" fill="#166534"/>
           <polygon points="200,70 130,120 270,120" fill="#14532d"/>
           <circle cx="340" cy="40" r="20" fill="#f59e0b" opacity="0.8"/>
-          <text x="110" y="190" font-size="12" fill="#334155" font-family="sans-serif">【圖 1：青雲山脊上的老松樹（穿插於第 1 段後）】</text>
+          <text x="110" y="190" font-size="12" fill="#334155" font-family="sans-serif">【圖 1：青雲山脊上的老松樹】</text>
         </svg>`,
       },
       {
         id: 'ill_2',
         paragraphNumber: 3,
-        caption: '圖 2：【承轉·衝突高潮 / 穿插於第 3 段後】全體村民手牽手排成人鏈奮勇阻絕森林大火',
+        caption: '圖 2：全體村民手牽手排成人鏈奮勇阻絕森林大火',
         type: 'svg_diagram',
         imagePrompt: '【場景 2（承轉·衝突高潮，建議穿插於第 3 段之後）】：緊張熱血的兒童繪本水彩手繪插畫：滾滾濃煙與橘紅火光中，阿雅滿臉煤灰卻眼神堅定地傳遞浸濕布袋，村民們緊密排成人鏈接力傳水，在老松樹前築起防線，動態張力十足，16:9 橫向構圖。 / English prompt: Dynamic children storybook watercolor illustration of courageous villagers and little girl Aya forming a human chain fighting forest fire with wet sacks and water buckets, dramatic smoke and fire glow, heroic atmosphere --ar 16:9',
         svgCode: `<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-amber-50 border border-amber-200 p-2">
@@ -398,19 +398,19 @@ export function generateMockAuthenticPIRLSTest(params: GenerateParams): TestPape
           <circle cx="220" cy="100" r="14" fill="#d97706"/>
           <circle cx="290" cy="95" r="14" fill="#ca8a04"/>
           <path d="M 80 110 L 150 105 L 220 100 L 290 95" stroke="#78350f" stroke-width="3" stroke-dasharray="4"/>
-          <text x="75" y="160" font-size="12" font-weight="bold" fill="#7c2d12">【圖 2：村民齊心排成人鏈滅火防線（穿插於第 3 段後）】</text>
+          <text x="75" y="160" font-size="12" font-weight="bold" fill="#7c2d12">【圖 2：村民齊心排成人鏈滅火防線】</text>
         </svg>`,
       },
       {
         id: 'ill_3',
         paragraphNumber: 4,
-        caption: '圖 3：【合·溫馨結局 / 穿插於第 4 段後】夕陽下老松樹巍然屹立與阿雅掌心青綠的松針',
+        caption: '圖 3：夕陽下老松樹巍然屹立與阿雅掌心青綠的松針',
         type: 'svg_diagram',
         imagePrompt: '【場景 3（合·溫馨結局，建議穿插於第 4 段之後）】：溫暖感動的兒童繪本水彩手繪插畫：金色夕陽灑落整片山脊，焦黑中老松樹迎風聳立，新芽微顫，老村長微笑將一片完好的青綠松針放在小女孩阿雅的掌心，溫馨治癒，16:9 橫向構圖。 / English prompt: Heartwarming children storybook watercolor illustration, sunset golden hour glowing over surviving pine tree, elder placing fresh green pine needles into young girl palm, touching emotional moment --ar 16:9',
         svgCode: `<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-emerald-50 border border-emerald-200 p-2">
           <circle cx="200" cy="90" r="70" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
           <path d="M 170 90 Q 200 60 230 90 Q 200 120 170 90" fill="#22c55e"/>
-          <text x="110" y="160" font-size="12" font-weight="bold" fill="#14532d">【圖 3：掌心松針與守護的心（穿插於第 4 段後）】</text>
+          <text x="110" y="160" font-size="12" font-weight="bold" fill="#14532d">【圖 3：掌心松針與守護的心】</text>
         </svg>`,
       },
     ];
@@ -652,19 +652,19 @@ export function generateMockAuthenticPIRLSTest(params: GenerateParams): TestPape
       {
         id: 'ill_info_1',
         paragraphNumber: 1,
-        caption: '圖 1：【引言·生態全景 / 穿插於第 1 段後】台灣黑熊胸前白色 V 字斑紋與高山棲地特徵',
+        caption: '圖 1：台灣黑熊胸前白色 V 字斑紋與高山棲地特徵',
         type: 'svg_diagram',
         imagePrompt: '【場景 1（引言·生態全景，建議穿插於第 1 段之後）】：現代教育科普插畫：台灣高山雲霧森林中，一隻健壯的台灣黑熊站在覆滿青苔的巨木旁，胸前白色新月形 V 字斑紋清晰醒目，神情好奇友善，陽光透過針葉林灑落，8k 高解析度少兒科普風格。 / English prompt: Educational wildlife science illustration of Formosan black bear with distinct white V crescent mark on chest in misty Taiwanese mountain forest, bright daylight, National Geographic Kids style --ar 16:9',
         svgCode: `<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-sky-50 border border-sky-100 p-2">
           <circle cx="200" cy="80" r="45" fill="#1e293b"/>
           <path d="M 180 75 Q 200 95 220 75" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
-          <text x="100" y="155" font-size="12" font-weight="bold" fill="#0f172a">【圖 1：黑熊新月斑紋與高山棲地（穿插於第 1 段後）】</text>
+          <text x="100" y="155" font-size="12" font-weight="bold" fill="#0f172a">【圖 1：黑熊新月斑紋與高山棲地】</text>
         </svg>`,
       },
       {
         id: 'ill_info_2',
         paragraphNumber: 3,
-        caption: '圖 2：【核心·生態循環 / 穿插於第 3 段後】黑熊在森林生態系中扮演「種子傳播與造林工程師」之循環示意圖',
+        caption: '圖 2：黑熊在森林生態系中扮演「種子傳播與造林工程師」之循環示意圖',
         type: 'svg_diagram',
         imagePrompt: '【場景 2（核心·生態循環，建議穿插於第 3 段之後）】：清晰明瞭的生態科普圖表：黑熊進食青剛櫟果實、在遠方排出完整未消化種子、種子在天然肥料中萌芽長成新樹之三步驟生態循環流程圖，富教育意義與圖文對照。 / English prompt: Educational infographic of bear ecological cycle: eating oak acorns, dispersing seeds over long distances in feces, and new healthy oak saplings growing, clean colorful diagram --ar 16:9',
         svgCode: `<svg viewBox="0 0 450 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-emerald-50 border border-emerald-100 p-2">
@@ -684,13 +684,13 @@ export function generateMockAuthenticPIRLSTest(params: GenerateParams): TestPape
           <text x="340" y="95" font-size="12" font-weight="bold" fill="#15803d">3.健康造林</text>
           <text x="335" y="115" font-size="10" fill="#14532d">多樣樹種新生</text>
 
-          <text x="95" y="180" font-size="12" fill="#0f766e" font-family="sans-serif">【圖 2：黑熊種子傳播與造林循環（穿插於第 3 段後）】</text>
+          <text x="95" y="180" font-size="12" fill="#0f766e" font-family="sans-serif">【圖 2：黑熊種子傳播與造林循環】</text>
         </svg>`,
       },
       {
         id: 'ill_info_3',
         paragraphNumber: 4,
-        caption: '圖 3：【體悟·人與自然 / 穿插於第 4 段後】保育巡護廊道與紅外線自動監測相機網絡',
+        caption: '圖 3：保育巡護廊道與紅外線自動監測相機網絡',
         type: 'svg_diagram',
         imagePrompt: '【場景 3（體悟·人與自然，建議穿插於第 4 段之後）】：溫暖正向的生態保育科普插畫：巡護員與原住民夥伴在山林間檢查樹幹上的紅外線自動相機，遠處安全的林道上黑熊母子悠閒散步，展現人與野生動物和諧共存的保育希望。 / English prompt: Inspiring wildlife conservation illustration, rangers and indigenous guides installing infrared trail cameras on trees, wild bear family safely roaming in background forest corridor --ar 16:9',
         svgCode: `<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto rounded-xl bg-teal-50 border border-teal-200 p-2">
@@ -702,7 +702,7 @@ export function generateMockAuthenticPIRLSTest(params: GenerateParams): TestPape
           <text x="175" y="90" font-size="10" fill="#ffffff" font-weight="bold">相機B</text>
           <text x="275" y="90" font-size="10" fill="#ffffff" font-weight="bold">相機C</text>
           <path d="M 125 85 L 175 85 M 225 85 L 275 85" stroke="#0f766e" stroke-width="2" stroke-dasharray="4"/>
-          <text x="100" y="160" font-size="12" font-weight="bold" fill="#115e59">【圖 3：安全巡護廊道與相機網絡（穿插於第 4 段後）】</text>
+          <text x="100" y="160" font-size="12" font-weight="bold" fill="#115e59">【圖 3：安全巡護廊道與相機網絡】</text>
         </svg>`,
       },
     ];

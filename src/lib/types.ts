@@ -126,6 +126,33 @@ export interface ArticleIllustration {
   imagePrompt?: string; // 供教師複製至 Midjourney / DALL-E / 繪圖 AI 的精準生圖提示詞
 }
 
+/**
+ * 清理文章插圖圖說文字：
+ * 刪除「【起·開端情境 / 穿插於第 1 段後】」或「【起·開端情境】」等排版結構說明標籤，
+ * 僅保留「圖 X：」以及後面針對圖片的具體情境描述。
+ */
+export function cleanIllustrationCaption(caption?: string, fallbackIndex: number = 0): string {
+  if (!caption) return `圖 ${fallbackIndex + 1}：課文情境插圖`;
+
+  const prefixMatch = caption.match(/^(?:【[^】]*】\s*)?(?:圖\s*(\d+)\s*[:：.]?\s*)?(?:【[^】]*】\s*)?/);
+  let figNum = fallbackIndex + 1;
+  if (prefixMatch && prefixMatch[1]) {
+    figNum = parseInt(prefixMatch[1], 10);
+  }
+
+  let desc = caption
+    .replace(/^圖\s*\d+\s*[:：.]?\s*/, '')
+    .replace(/【[^】]*】/g, '')
+    .replace(/^[:：\s]+/, '')
+    .trim();
+
+  if (!desc) {
+    desc = '課文情境插圖';
+  }
+
+  return `圖 ${figNum}：${desc}`;
+}
+
 export interface TestPaper {
   id: string;
   title: string;

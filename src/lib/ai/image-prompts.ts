@@ -68,7 +68,7 @@ export function generateSmartImagePrompts(
   return scenes.map((s, idx) => ({
     id: `ill_scene_${idx + 1}_${Date.now()}`,
     paragraphNumber: s.para,
-    caption: `圖 ${idx + 1}：【${s.stage} / 穿插於第 ${s.para} 段後】《${title}》課文情境插圖`,
+    caption: `圖 ${idx + 1}：《${title}》情境插圖`,
     type: 'illustration_url' as const,
     imageUrl: '',
     imagePrompt: `【場景 ${idx + 1}（${s.stage}，建議穿插於文章第 ${s.para} 段之後）中文描述 - 適用 ChatGPT / DALL-E 3 / Bing 繪圖】：

@@ -1,4 +1,4 @@
-import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration } from '@/lib/types';
+import { TestPaper, TestQuestion, CognitiveProcess, ArticleIllustration, cleanIllustrationCaption } from '@/lib/types';
 import { GenerateParams } from './types';
 import { generateSmartImagePrompts } from './image-prompts';
 import { generateSmartFallbackQuestions } from './fallback-generator';
@@ -172,7 +172,8 @@ export function formatToTestPaper(parsed: any, params: GenerateParams): TestPape
       const validatedPara = (!isNaN(parsedPara) && parsedPara >= 1 && parsedPara <= totalParas)
         ? parsedPara
         : fallbackPara;
-      const caption = ill?.caption || `圖 ${idx + 1}：${parsed.title || '文章'}情境插圖`;
+      const rawCaption = ill?.caption || `圖 ${idx + 1}：${parsed.title || '文章'}情境插圖`;
+      const caption = cleanIllustrationCaption(rawCaption, idx);
       list.push({
         id: ill?.id || `ill_${Date.now()}_${idx + 1}`,
         paragraphNumber: validatedPara,

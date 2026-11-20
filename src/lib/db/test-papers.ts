@@ -1,4 +1,4 @@
-import { TestPaper } from '../types';
+import { TestPaper, cleanIllustrationCaption } from '../types';
 import {
   ensureLocalDB,
   saveLocalDB,
@@ -8,6 +8,17 @@ import {
   deleteTestPaperFromFirestore,
 } from './core';
 
+function sanitizePaperCaptions(paper: TestPaper): TestPaper {
+  if (!paper || !Array.isArray(paper.illustrations)) return paper;
+  return {
+    ...paper,
+    illustrations: paper.illustrations.map((ill, idx) => ({
+      ...ill,
+      caption: cleanIllustrationCaption(ill.caption, idx),
+    })),
+  };
+}
+
 export async function createTestPaper(
   data: Omit<TestPaper, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<TestPaper> {
@@ -15,13 +26,13 @@ export async function createTestPaper(
   const state = ensureLocalDB();
   const id = 'test_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
   const now = new Date().toISOString();
-  const newTest: TestPaper = {
+  const newTest: TestPaper = sanitizePaperCaptions({
     ...data,
     id,
     assignedClassIds: data.assignedClassIds || [],
     createdAt: now,
     updatedAt: now,
-  };
+  });
   state.testPapers[id] = newTest;
   saveLocalDB(state);
 
@@ -46,11 +57,11 @@ export async function updateTestPaper(
       : { ...updates };
   delete (actualUpdates as any).testPaper;
 
-  state.testPapers[id] = {
+  state.testPapers[id] = sanitizePaperCaptions({
     ...state.testPapers[id],
     ...actualUpdates,
     updatedAt: new Date().toISOString(),
-  };
+  });
   delete (state.testPapers[id] as any).testPaper;
 
   const updated = state.testPapers[id];
@@ -64,7 +75,8 @@ export async function updateTestPaper(
 export async function getTestPaperById(id: string): Promise<TestPaper | null> {
   await syncCloudOnBoot();
   const state = ensureLocalDB();
-  return state.testPapers[id] || null;
+  const paper = state.testPapers[id];
+  return paper ? sanitizePaperCaptions(paper) : null;
 }
 
 export async function getTeacherTestPapers(teacherId: string, isAdmin: boolean = false): Promise<TestPaper[]> {
@@ -72,6 +84,7 @@ export async function getTeacherTestPapers(teacherId: string, isAdmin: boolean =
   const state = ensureLocalDB();
   return Object.values(state.testPapers)
     .filter((t) => isAdmin || t.creatorId === teacherId || t.isPublic === true)
+    .map((t) => sanitizePaperCaptions(t))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
@@ -80,6 +93,7 @@ export async function getPublicTestPapers(): Promise<TestPaper[]> {
   const state = ensureLocalDB();
   return Object.values(state.testPapers)
     .filter((t) => t.isPublic === true)
+    .map((t) => sanitizePaperCaptions(t))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 

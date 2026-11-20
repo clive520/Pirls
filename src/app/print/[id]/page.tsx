@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Printer, ArrowLeft, CheckCircle2, BookOpen, FileText } from 'lucide-react';
-import { TestPaper } from '@/lib/types';
+import { TestPaper, cleanIllustrationCaption } from '@/lib/types';
 
 function PrintTestPaperContent() {
   const router = useRouter();
@@ -184,8 +184,9 @@ function PrintTestPaperContent() {
                   </p>
 
                   {/* 穿插於本段落後的情境插圖 (A4 紙本列印最佳化) */}
-                  {allIllsForThisPara.map((ill) => {
+                  {allIllsForThisPara.map((ill, illIdx) => {
                     if (!ill.imageUrl && !ill.svgCode) return null;
+                    const displayCaption = cleanIllustrationCaption(ill.caption, illIdx);
                     return (
                       <div
                         key={ill.id}
@@ -195,7 +196,7 @@ function PrintTestPaperContent() {
                           <div className="w-full flex justify-center py-1">
                             <img
                               src={ill.imageUrl}
-                              alt={ill.caption || '課文插圖'}
+                              alt={displayCaption}
                               className="max-h-48 max-w-md w-auto object-contain rounded border border-slate-300 shadow-sm"
                             />
                           </div>
@@ -205,9 +206,9 @@ function PrintTestPaperContent() {
                             dangerouslySetInnerHTML={{ __html: ill.svgCode }}
                           />
                         ) : null}
-                        {ill.caption && (
+                        {displayCaption && (
                           <div className="text-center text-[11px] font-sans font-semibold text-slate-700 mt-1">
-                            【圖】{ill.caption}
+                            {displayCaption}
                           </div>
                         )}
                       </div>

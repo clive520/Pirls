@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArticleIllustration } from '@/lib/types';
+import { ArticleIllustration, cleanIllustrationCaption } from '@/lib/types';
 
 export interface ArticleContentProps {
   paragraphs?: Array<{ paragraphNumber: number; text?: string; content?: string }>;
@@ -59,8 +59,9 @@ export const ArticleContent: React.FC<ArticleContentProps> = ({
             </div>
 
             {/* 穿插於本段落後的情境插圖 */}
-            {allIllsForThisPara.map((ill) => {
+            {allIllsForThisPara.map((ill, illIdx) => {
               if (!ill.imageUrl && !ill.svgCode) return null;
+              const displayCaption = cleanIllustrationCaption(ill.caption, illIdx);
               return (
                 <figure
                   key={ill.id}
@@ -70,7 +71,7 @@ export const ArticleContent: React.FC<ArticleContentProps> = ({
                     <div className="flex justify-center p-1 bg-white rounded-xl w-full">
                       <img
                         src={ill.imageUrl}
-                        alt={ill.caption || '課文情境插圖'}
+                        alt={displayCaption}
                         className="w-full max-h-80 object-contain rounded-lg shadow-sm"
                       />
                     </div>
@@ -80,9 +81,9 @@ export const ArticleContent: React.FC<ArticleContentProps> = ({
                       dangerouslySetInnerHTML={{ __html: ill.svgCode }}
                     />
                   ) : null}
-                  {ill.caption && (
+                  {displayCaption && (
                     <figcaption className="text-xs text-center text-slate-600 font-semibold mt-2.5 px-2 leading-relaxed">
-                      {ill.caption}
+                      {displayCaption}
                     </figcaption>
                   )}
                 </figure>
