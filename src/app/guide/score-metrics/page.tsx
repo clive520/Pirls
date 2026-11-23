@@ -104,46 +104,250 @@ export default function ScoreMetricsGuidePage() {
         </div>
 
         {/* 快捷導覽卡片 */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs font-bold">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs font-bold">
+          <a
+            href="#section-question-criteria"
+            className="p-3 bg-white rounded-xl border border-slate-200 hover:border-sky-400 hover:shadow-sm transition-all text-center block text-slate-700 hover:text-sky-600"
+          >
+            1. 試題生成準則
+          </a>
           <a
             href="#section-thinking-radar"
             className="p-3 bg-white rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-sm transition-all text-center block text-slate-700 hover:text-blue-600"
           >
-            1. 四維思維雷達
+            2. 四維思維雷達
           </a>
           <a
             href="#section-scale-score"
-            className="p-3 bg-white rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-sm transition-all text-center block text-slate-700 hover:text-blue-600"
+            className="p-3 bg-white rounded-xl border border-slate-200 hover:border-indigo-400 hover:shadow-sm transition-all text-center block text-slate-700 hover:text-indigo-600"
           >
-            2. 國際量尺與班平均
+            3. 國際量尺與班平均
           </a>
           <a
             href="#section-benchmarks"
-            className="p-3 bg-white rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-sm transition-all text-center block text-slate-700 hover:text-blue-600"
+            className="p-3 bg-white rounded-xl border border-slate-200 hover:border-emerald-400 hover:shadow-sm transition-all text-center block text-slate-700 hover:text-emerald-600"
           >
-            3. 五大國際基準
+            4. 五大國際基準
           </a>
           <a
             href="#section-pr-ranks"
-            className="p-3 bg-white rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-sm transition-all text-center block text-slate-700 hover:text-blue-600"
+            className="p-3 bg-white rounded-xl border border-slate-200 hover:border-amber-400 hover:shadow-sm transition-all text-center block text-slate-700 hover:text-amber-600"
           >
-            4. 班級 PR vs 國際 PR
+            5. 班級 PR vs 國際 PR
           </a>
           <a
             href="#section-references"
-            className="p-3 bg-white rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-sm transition-all text-center block text-slate-700 hover:text-blue-600 col-span-2 sm:col-span-1"
+            className="p-3 bg-white rounded-xl border border-slate-200 hover:border-purple-400 hover:shadow-sm transition-all text-center block text-slate-700 hover:text-purple-600"
           >
-            5. 官方參考文獻網站
+            6. 官方參考文獻網站
           </a>
         </div>
 
         {/* =========================================================================
-            區塊一：四維思維能力落點與雷達圖
+            區塊一：PIRLS 素養試題生成準則與學理依據 (出題條件與官方來源)
+           ========================================================================= */}
+        <section id="section-question-criteria" className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-sky-600 text-white flex items-center justify-center font-bold shadow-md shadow-sky-200">
+              1
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 text-[10px] font-black uppercase tracking-wide border border-sky-200/60 mb-1">
+                <Sparkles className="w-3 h-3 text-sky-600" />
+                <span>IEA PIRLS 國際命題規範 • 國教署課綱對齊</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-black text-slate-900">
+                PIRLS 素養試題生成準則與學理依據（依據條件與官方來源）
+              </h3>
+              <p className="text-xs text-slate-500">
+                本平臺產生學生作答試題的六大條件準則、認知思考歷程黃金配比與學術文獻依據
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            <p>
+              本平臺之題本生成並非隨意提問，而是<strong>嚴格對齊 IEA（國際教育成就評鑑學會）官方發布之《PIRLS 國際閱讀素養評量架構》（PIRLS Assessment Framework）</strong>，並結合<strong>中華民國教育部《十二年國民基本教育國語文課程綱要》</strong>及<strong>臺灣 PIRLS 國家研究中心（國立臺北教育大學 / 柯華葳教授團隊）之命題指引</strong>。
+            </p>
+            <p>
+              每一篇文本、每一道題目與給分規準，皆必須同時滿足下列<strong>「六大核心命題條件」</strong>：
+            </p>
+          </div>
+
+          {/* 六大核心條件卡片 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* 條件一 */}
+            <div className="p-4 rounded-2xl border border-sky-100 bg-sky-50/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-sky-950 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-sky-600" />
+                  條件一：雙軌閱讀目的與文本選材（Purposes for Reading）
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-200/70 text-sky-800">50% / 50%</span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                PIRLS 評量兩大生活閱讀目的，本平臺支援教師自選或 AI 依題生成：
+              </p>
+              <ul className="text-xs text-slate-600 space-y-1 list-disc pl-4 marker:text-sky-500">
+                <li><strong>文學性經驗（Literary Experience, 50%）：</strong>以敘事故事、寓言傳奇或生活經歷為主，聚焦於情節起承轉合、角色內在動機與情感體悟。</li>
+                <li><strong>獲取與運用資訊（Acquire & Use Information, 50%）：</strong>科普說明、生態觀察、歷史傳記或實作指南，聚焦於概念定義、客觀事實組織與因果歷程。</li>
+                <li><strong>文本長度與適讀年段：</strong>精準適配國小 3～6 年級認知負荷，篇幅嚴格限制在 800～1,200 字，段落標號清晰（【第一段】、【第二段】…）。</li>
+              </ul>
+            </div>
+
+            {/* 條件二 */}
+            <div className="p-4 rounded-2xl border border-indigo-100 bg-indigo-50/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                  條件二：四維認知歷程黃金配比（Processes of Comprehension）
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-200/70 text-indigo-800">IEA 官方黃金比例</span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                試卷題目之認知思考歷程分佈，嚴格遵守 IEA 官方規範，維持<strong>低階思考 60% : 高階思考 40%</strong>：
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
+                <div className="bg-white/80 p-2 rounded-xl border border-indigo-100">
+                  <span className="font-bold text-blue-700">L1 直接提取：約 25%</span>
+                  <div className="text-slate-500 text-[10px]">字面直接陳述之人事時地物事實</div>
+                </div>
+                <div className="bg-white/80 p-2 rounded-xl border border-indigo-100">
+                  <span className="font-bold text-emerald-700">L2 直接推論：約 35%</span>
+                  <div className="text-slate-500 text-[10px]">句意因果串聯、指涉代名詞、角色動機</div>
+                </div>
+                <div className="bg-white/80 p-2 rounded-xl border border-indigo-100">
+                  <span className="font-bold text-amber-700">L3 詮釋整合：約 25%</span>
+                  <div className="text-slate-500 text-[10px]">跨段落統整主旨、心理轉折與深層寓意</div>
+                </div>
+                <div className="bg-white/80 p-2 rounded-xl border border-indigo-100">
+                  <span className="font-bold text-purple-700">L4 檢驗評估：約 15%</span>
+                  <div className="text-slate-500 text-[10px]">審視寫作修辭、標題適配度與生活思辨</div>
+                </div>
+              </div>
+            </div>
+
+            {/* 條件三 */}
+            <div className="p-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                  條件三：題型分佈與分值比例（Item Formats & Scoring）
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-200/70 text-emerald-800">客觀 50% : 建構 50%</span>
+              </div>
+              <ul className="text-xs text-slate-600 space-y-1.5 list-disc pl-4 marker:text-emerald-500">
+                <li><strong>四選一客觀單選題（Multiple-Choice, 約佔 50%）：</strong>每題 1 分。選項設計注重「心理誘答力（Distractors）」，非正確選項必須能反映國小學童常見之閱讀理解迷思與直覺誤區，非無意義干擾。</li>
+                <li><strong>建構反應問答題（Constructed-Response, 約佔 50%）：</strong>每題 1～3 分。要求學童從文本中尋求具體事證，並以自身語言組織條理化文字進行闡述，檢驗高階深層閱讀力。</li>
+              </ul>
+            </div>
+
+            {/* 條件四 */}
+            <div className="p-4 rounded-2xl border border-amber-100 bg-amber-50/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-amber-950 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-600" />
+                  條件四：IEA 官方雙位數評分規準系統（Two-Digit Scoring Rubrics）
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-200/70 text-amber-800">客觀可驗證</span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                所有問答題在命題同時，系統必須同時產出對齊 IEA 國際代碼之<strong>階梯式評分規準（Rubrics）</strong>，確保 AI 初閱與教師微調有嚴謹客觀標尺：
+              </p>
+              <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200 space-y-1 text-[11px] font-mono">
+                <div><strong className="text-emerald-700">Code 20 (滿分 2分)：</strong>完整涵蓋核心概念，並正確提出文本關鍵證據（Key Evidences）。</div>
+                <div><strong className="text-amber-700">Code 10 (部分給分 1分)：</strong>理解主要意旨，但事證不完全或推論過於模糊簡略。</div>
+                <div><strong className="text-rose-700">Code 79 (不給分 0分)：</strong>答案偏離題旨、抄錄不相干文句或空白未答。</div>
+              </div>
+            </div>
+
+            {/* 條件五 */}
+            <div className="p-4 rounded-2xl border border-purple-100 bg-purple-50/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-purple-950 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-purple-600" />
+                  條件五：多模態圖文互涉結構（Multimodal Integration）
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-200/70 text-purple-800">ePIRLS 數位閱讀</span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                對齊國際數位閱讀評量（ePIRLS）多模態趨勢，文章必備連續性文本與非連續性圖文：
+              </p>
+              <ul className="text-xs text-slate-600 space-y-1 list-disc pl-4 marker:text-purple-500">
+                <li><strong>三分鏡情境插圖：</strong>自動擷取「起·開端（第1段後）」、「承轉·核心衝突（中段後）」、「合·結局體悟（末段後）」3 組關鍵場景與生圖提示詞。</li>
+                <li><strong>非連續性資訊圖表：</strong>科學科普文自動生成 SVG 數據圖表或因果流程圖，試題中配置「圖文整合題」，評量學童圖表與文字交叉驗證之素養。</li>
+              </ul>
+            </div>
+
+            {/* 條件六 */}
+            <div className="p-4 rounded-2xl border border-rose-100 bg-rose-50/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-rose-950 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-600" />
+                  條件六：年級自適應可讀性規範（Grade-Level Adaptability）
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-200/70 text-rose-800">3～6 年級分段</span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                依據國小中年級（三、四年級）與高年級（五、六年級）之心理發展與閱讀策略指標動態適配：
+              </p>
+              <ul className="text-xs text-slate-600 space-y-1 list-disc pl-4 marker:text-rose-500">
+                <li><strong>國小 3～4 年級：</strong>以短句、常用詞彙、具體生活情境為主，著重「從學會閱讀走向透過閱讀來學習（Learning to Read）」。</li>
+                <li><strong>國小 5～6 年級：</strong>融入複句因果、多重視角、抽象意象與寫作手法反思，強化「透過閱讀來學習（Reading to Learn）」與批判思考。</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* 學理依據與文獻資料來源詳細清單 */}
+          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+            <h4 className="text-xs font-black text-slate-900 flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-sky-600" />
+              <span>題目產生的官方學理依據與參考資料來源（權威文獻）</span>
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600">
+              <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                <div className="font-bold text-slate-800">📚 1. IEA PIRLS 國際評量官方綱領</div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Mullis, I. V. S., & Martin, M. O. (Eds.). <em>PIRLS 2021 Assessment Framework</em>. Boston College: TIMSS & PIRLS International Study Center.
+                  <br />
+                  <span className="text-slate-400">（確立 4 個思考歷程定義、兩大閱讀目的各佔 50%、選擇題與問答題各半之黃金比例）</span>
+                </p>
+              </div>
+              <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                <div className="font-bold text-slate-800">📚 2. IEA 評分規準與釋出試題指引</div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  IEA. <em>PIRLS Released Items & Scoring Guides</em>. TIMSS & PIRLS International Study Center.
+                  <br />
+                  <span className="text-slate-400">（規範問答題 Code 20/10/79 雙位數編碼規準、關鍵證據檢核法與滿分示範答題格式）</span>
+                </p>
+              </div>
+              <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                <div className="font-bold text-slate-800">🇹🇼 3. 臺灣 PIRLS 國家研究中心命題指南</div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  柯華葳、陳冠銘、詹益綾。《PIRLS 閱讀素養評量架構與試題編製指南》。國立中央大學 / 國立臺北教育大學。
+                  <br />
+                  <span className="text-slate-400">（將國際評量指標在地化適配臺灣國小國語文教學體系與試題研發手冊）</span>
+                </p>
+              </div>
+              <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                <div className="font-bold text-slate-800">🏛️ 4. 中華民國教育部國語文課綱規範</div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  教育部。《十二年國民基本教育課程綱要：語文領域（國語文）》與國教署《國小國語文閱讀理解提問設計與評量規準手冊》。
+                  <br />
+                  <span className="text-slate-400">（提供國小 3～6 年級篇章理解、句型結構與素養導向命題檢核標準）</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            區塊二：四維思維能力落點與雷達圖
            ========================================================================= */}
         <section id="section-thinking-radar" className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-200">
-              1
+              2
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-black text-slate-900">
@@ -248,12 +452,12 @@ export default function ScoreMetricsGuidePage() {
         </section>
 
         {/* =========================================================================
-            區塊二：PIRLS 國際量尺分數 (Scale Score) 演算法
+            區塊三：PIRLS 國際量尺分數 (Scale Score) 演算法
            ========================================================================= */}
         <section id="section-scale-score" className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
             <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-200">
-              2
+              3
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-black text-slate-900">
@@ -361,12 +565,12 @@ export default function ScoreMetricsGuidePage() {
         </section>
 
         {/* =========================================================================
-            區塊三：五大國際基準等級 (Benchmarks) 劃分
+            區塊四：五大國際基準等級 (Benchmarks) 劃分
            ========================================================================= */}
         <section id="section-benchmarks" className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
             <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-200">
-              3
+              4
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-black text-slate-900">
@@ -472,12 +676,12 @@ export default function ScoreMetricsGuidePage() {
         </section>
 
         {/* =========================================================================
-            區塊四：班級同儕排名 (Class PR) vs 國際常模對照 (Norm PR)
+            區塊五：班級同儕排名 (Class PR) vs 國際常模對照 (Norm PR)
            ========================================================================= */}
         <section id="section-pr-ranks" className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
             <div className="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center font-bold shadow-md shadow-amber-200">
-              4
+              5
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-black text-slate-900">
@@ -543,12 +747,12 @@ export default function ScoreMetricsGuidePage() {
         </section>
 
         {/* =========================================================================
-            區塊五：作答計分與 AI / 教師雙軌閱卷機制
+            區塊六：作答計分與 AI / 教師雙軌閱卷機制
            ========================================================================= */}
         <section className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
             <div className="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center font-bold shadow-md shadow-rose-200">
-              5
+              6
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-black text-slate-900">

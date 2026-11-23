@@ -458,6 +458,10 @@ const TEACHER_FAQS = [
     q: '「PIRLS 班級平均國際量尺」與「班級同儕排名 (Class PR)」是如何計算出來的？有何判斷標準？',
     a: '① PIRLS 班級平均國際量尺：為全班已繳卷學生個人 PIRLS 量尺分數之算術平均數（∑各生量尺分 ÷ N）。個人量尺依據 IEA 官方標準常態母體（平均 500、標準差 100），依得分率進行分段線性錨定轉換至 260~715 分。若班平均高於 500 分，代表全班整體閱讀力優於全球平均；達 550 分以上更邁入「高基準」。在學生個人成績單中會標示「領先全班平均 +X 分」或「距離全班平均 -Y 分」供雙向對照。\n\n② 班級同儕排名 (Class PR)：採用心理計量學「中點百分等級公式」：Class PR = round( [ (低於該生分數人數 + 0.5 × 同分人數) ÷ 全班總人數 ] × 100 )。全平臺在查詢列表、匯出 Excel 與產出診斷書時，皆以最新全班總分即時動態重算，同班同分者之班級 PR 保證 100% 絕對相同一致。\n\n詳細演算法、錨定門檻與 IEA / 教育部 CIRN 官方參考資料網站，請詳見第 07 章專題解析區塊。',
   },
+  {
+    q: '系統產生題目的準則是什麼？是依據什麼條件與學理資料來命題的？',
+    a: '本平臺試題生成完全對齊 IEA（國際教育成就評鑑學會）官方發布之《PIRLS Assessment Framework》與教育部國教署國小國語文課綱規範，嚴格遵循以下六大準則：\n\n① 雙軌文體選材：文學性經驗（敘事故事/寓言）與訊息性文本（科普/生態/說明）各佔 50%，適齡 800～1,200 字。\n\n② 四維歷程黃金配比：嚴格遵守 IEA 官方標準——L1 直接提取 (25%)、L2 直接推論 (35%)、L3 詮釋整合 (25%)、L4 檢驗評估 (15%)，低階思考 60% : 高階思考 40%。\n\n③ 題型配比與心理誘答：選擇題 (50%, 1分) 與建構反應簡答題 (50%, 1～3分) 各半，選擇題干擾選項專門針對學童常見認知迷思設計。\n\n④ IEA 雙位數評分規準：問答題皆內建 IEA 官方 Code 20 (滿分2分)、Code 10 (部分給分1分)、Code 79 (不給分0分) 雙位數規準與關鍵證據檢核點。\n\n⑤ 多模態圖文互涉：每篇文本配置「起、承、合」3 幅關鍵情境插圖或 SVG 圖表，融入圖文互證思維題。\n\n⑥ 權威文獻依據：包含 Boston College TIMSS & PIRLS 國際研究中心官方綱領、國立臺北教育大學柯華葳教授團隊《PIRLS 閱讀素養評量架構與試題編製指南》與教育部國語文課綱。詳情請參閱第 04 章專題指引或常模說明頁。',
+  },
 ];
 
 export default function UserManualPage() {
@@ -814,6 +818,161 @@ export default function UserManualPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* 若為第 04 章：嵌入專屬 PIRLS 試題產生準則、出題條件與權威資料來源 */}
+                  {chapter.id === 'ch-04-ai-create' && (
+                    <div id="section-ai-question-criteria-guide" className="p-6 sm:p-8 pt-6 border-t border-slate-200/90 space-y-8 bg-slate-50/40">
+                      {/* 專題標題 Banner */}
+                      <div className="p-6 sm:p-7 rounded-2xl bg-gradient-to-br from-sky-900 via-slate-900 to-indigo-950 text-white space-y-3 shadow-lg">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-200 text-xs font-bold">
+                          <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                          <span>IEA PIRLS 國際命題規範 • 國小國語文素養課綱對齊</span>
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                          PIRLS 素養試題生成準則：依據條件與權威學理來源
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">
+                          本平臺產生學生作答題目的運算模型，並非隨機提問，而是完全依據國際教育成就評鑑學會（IEA）官方標準與臺灣教育部國教署課綱，兼顧「四維認知歷程黃金配比」、「題型各半客觀度」與「IEA 雙位數評分規準」。
+                        </p>
+                      </div>
+
+                      {/* 六大核心命題條件網格 */}
+                      <div className="space-y-4">
+                        <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
+                          <Layers className="w-5 h-5 text-sky-600" />
+                          <span>系統生成試題之「六大必備條件規範」</span>
+                        </h4>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* 1. 雙軌文體平衡 */}
+                          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2">
+                            <span className="text-xs font-black text-sky-900 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-sky-600" />
+                              1. 雙軌文體平衡選材 (50% : 50%)
+                            </span>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              嚴格劃分<strong>「文學性經驗文本」</strong>（敘事故事、情節起承轉合、寓言反思）與<strong>「訊息性文本」</strong>（科普、說明、因果機制），篇幅規範於 800～1,200 字適齡長度。
+                            </p>
+                          </div>
+
+                          {/* 2. 四大歷程黃金配比 */}
+                          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2">
+                            <span className="text-xs font-black text-indigo-900 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                              2. 四維認知歷程黃金配比 (60% : 40%)
+                            </span>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              維持低階思考 60% 與高階思考 40% 的官方標準：<strong>L1 直接提取 (25%)</strong>、<strong>L2 直接推論 (35%)</strong>、<strong>L3 詮釋整合 (25%)</strong>、<strong>L4 檢驗評估 (15%)</strong>。
+                            </p>
+                          </div>
+
+                          {/* 3. 題型分佈客觀度 */}
+                          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2">
+                            <span className="text-xs font-black text-emerald-900 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                              3. 題型分配與誘答設計 (客觀 50% : 建構 50%)
+                            </span>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              四選一選擇題（1分）干擾選項依據學童常見認知迷思設計；建構問答題（1～3分）強調自文本摘取具體證據與條理闡述。
+                            </p>
+                          </div>
+
+                          {/* 4. IEA 雙位數雙向評分規準 */}
+                          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2">
+                            <span className="text-xs font-black text-amber-900 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-amber-600" />
+                              4. IEA 雙位數評分規準系統 (Two-Digit Rubrics)
+                            </span>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              問答題自動產出階梯規準：<strong>Code 20 (滿分2分)</strong>、<strong>Code 10 (部分給分1分)</strong>、<strong>Code 79 (0分)</strong>，明確定義「關鍵證據檢核要點」與滿分示範答題。
+                            </p>
+                          </div>
+
+                          {/* 5. 多模態圖文互涉 */}
+                          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2">
+                            <span className="text-xs font-black text-purple-900 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-purple-600" />
+                              5. 多模態圖文互涉架構 (ePIRLS 趨勢)
+                            </span>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              配置「起·開端」、「承轉·高潮」、「合·結局」三組情境插圖或非連續性 SVG 圖表，題幹融入跨模態圖文對照題。
+                            </p>
+                          </div>
+
+                          {/* 6. 年級自適應可讀性 */}
+                          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2">
+                            <span className="text-xs font-black text-rose-900 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-rose-600" />
+                              6. 年段自適應可讀性 (3～6年級)
+                            </span>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              依據中年級（3-4年級）「學會閱讀」與高年級（5-6年級）「透過閱讀學習」動態調校詞彙、複句與設問深度。
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 官方文獻與學理依據列表 */}
+                      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+                          <div>
+                            <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
+                              <BookOpen className="w-5 h-5 text-sky-600" />
+                              <span>題目產生之官方權威文獻與資料來源</span>
+                            </h4>
+                            <p className="text-xs text-slate-500">
+                              出題邏輯、歷程比例與評分指引皆具備國內外權威學術研究背書
+                            </p>
+                          </div>
+                          <Link
+                            href="/guide/score-metrics#section-question-criteria"
+                            className="text-xs font-bold text-sky-600 hover:text-sky-700 inline-flex items-center gap-1"
+                          >
+                            <span>查看深入學理對照表</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <div className="text-xs font-black text-slate-900">
+                              🌐 IEA PIRLS 國際評量官方架構（Boston College）
+                            </div>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              Mullis & Martin (2021). <em>PIRLS 2021 Assessment Framework</em>. 定義四大認知歷程權重、兩大閱讀目的各 50%、選擇題與問答題各半之黃金比例。
+                            </p>
+                          </div>
+
+                          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <div className="text-xs font-black text-slate-900">
+                              🇹🇼 臺灣 PIRLS 國家研究中心（國立臺北教育大學）
+                            </div>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              柯華葳教授團隊《PIRLS 閱讀素養評量架構與試題編製指南》。將國際評量指標在地化適配臺灣國小國語文教學體系與試題研發手冊。
+                            </p>
+                          </div>
+
+                          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <div className="text-xs font-black text-slate-900">
+                              🏛️ 教育部國教署國語文素養指引與課綱
+                            </div>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              教育部《十二年國民基本教育課程綱要國語文領域》與國教署《國小國語文閱讀理解提問設計與評量規準手冊》，規範 3～6 年級篇章理解階梯指標。
+                            </p>
+                          </div>
+
+                          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <div className="text-xs font-black text-slate-900">
+                              📑 IEA 雙位數評分規準代碼標準（Released Items）
+                            </div>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              IEA PIRLS 官方歷屆釋出試題與閱卷手冊，規範問答題以 Code 20/10/79 結合「文本關鍵證據」進行客觀給分。
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* 若為第 07 章：嵌入專屬 PIRLS 班級平均國際量尺與班級 PR 演算法解析＆官方參考資料網站 */}
                   {chapter.id === 'ch-07-analytics-and-export' && (
