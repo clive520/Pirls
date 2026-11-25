@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import {
   X,
   Users,
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api-client';
 import { ClassCoTeachersData, CoTeacherMember } from '@/lib/types';
+import { ModalDialog } from '@/components/ui/ModalDialog';
 
 interface CoTeacherManageModalProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export const CoTeacherManageModal: React.FC<CoTeacherManageModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ClassCoTeachersData | null>(null);
   const [selectedInviteTeacherId, setSelectedInviteTeacherId] = useState<string>('');
+  const titleId = useId();
 
   const loadData = async () => {
     if (!classId) return;
@@ -61,8 +63,6 @@ export const CoTeacherManageModal: React.FC<CoTeacherManageModalProps> = ({
       loadData();
     }
   }, [isOpen, classId]);
-
-  if (!isOpen) return null;
 
   // 邀請新協同教師
   const handleInvite = async (e: React.FormEvent) => {
@@ -126,8 +126,14 @@ export const CoTeacherManageModal: React.FC<CoTeacherManageModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+    <ModalDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      ariaLabelledBy={titleId}
+      dismissMode="any"
+      className="bg-white w-[calc(100vw-2rem)] max-w-2xl rounded-3xl shadow-2xl border border-slate-200 p-0 m-auto overflow-hidden max-h-[90vh]"
+    >
+      <div className="flex flex-col max-h-[90vh] overflow-hidden">
         {/* 頂部 Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-50 to-indigo-50/40">
           <div className="flex items-center space-x-3">
@@ -135,7 +141,7 @@ export const CoTeacherManageModal: React.FC<CoTeacherManageModalProps> = ({
               <Handshake className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <h2 id={titleId} className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <span>班級共同管理與協同教學</span>
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-bold">
                   {className}
@@ -147,7 +153,9 @@ export const CoTeacherManageModal: React.FC<CoTeacherManageModalProps> = ({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="關閉視窗"
             className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-white transition"
           >
             <X className="w-5 h-5" />
@@ -350,6 +358,7 @@ export const CoTeacherManageModal: React.FC<CoTeacherManageModalProps> = ({
         {/* 底部 Footer */}
         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/60 flex justify-end">
           <button
+            type="button"
             onClick={onClose}
             className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition shadow-sm"
           >
@@ -357,6 +366,6 @@ export const CoTeacherManageModal: React.FC<CoTeacherManageModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </ModalDialog>
   );
 };

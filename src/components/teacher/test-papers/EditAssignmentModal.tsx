@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { Calendar, Clock, Lock, RotateCcw, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import { TestAssignment } from '@/lib/types';
+import { ModalDialog } from '@/components/ui/ModalDialog';
 
 interface EditAssignmentModalProps {
   assignment: TestAssignment | null;
@@ -32,18 +33,19 @@ export const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
   onClose,
   onSave,
 }) => {
-  if (!assignment) return null;
-
+  const titleId = useId();
   const [deadlineType, setDeadlineType] = useState<'unlimited' | 'scheduled'>(
-    assignment.deadlineType || 'unlimited'
+    assignment?.deadlineType || 'unlimited'
   );
   const [dueDate, setDueDate] = useState<string>(
-    assignment.dueDate ? toLocalDatetimeString(new Date(assignment.dueDate)) : ''
+    assignment?.dueDate ? toLocalDatetimeString(new Date(assignment.dueDate)) : ''
   );
-  const [allowRetake, setAllowRetake] = useState<boolean>(assignment.allowRetake !== false);
-  const [examCode, setExamCode] = useState<string>(assignment.examCode || '');
-  const [status, setStatus] = useState<'active' | 'closed'>(assignment.status || 'active');
+  const [allowRetake, setAllowRetake] = useState<boolean>(assignment?.allowRetake !== false);
+  const [examCode, setExamCode] = useState<string>(assignment?.examCode || '');
+  const [status, setStatus] = useState<'active' | 'closed'>(assignment?.status || 'active');
   const [allowRetakeOnExtend, setAllowRetakeOnExtend] = useState<boolean>(false);
+
+  if (!assignment) return null;
 
   const setQuickDeadline = (daysFromNow: number, fixedHour: number = 17) => {
     const d = new Date();
@@ -68,14 +70,20 @@ export const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+    <ModalDialog
+      isOpen={true}
+      onClose={onClose}
+      ariaLabelledBy={titleId}
+      dismissMode="any"
+      className="bg-white rounded-3xl max-w-lg w-[calc(100vw-2rem)] p-0 m-auto shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+    >
+      <div className="p-6 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
             <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
               調整測驗指派設定
             </span>
-            <h3 className="text-base font-bold text-slate-900 mt-1 line-clamp-1">
+            <h3 id={titleId} className="text-base font-bold text-slate-900 mt-1 line-clamp-1">
               {assignment.assignmentTitle}
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -83,7 +91,9 @@ export const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="關閉視窗"
             className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
           >
             <X className="w-5 h-5" />
@@ -280,6 +290,6 @@ export const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </ModalDialog>
   );
 };

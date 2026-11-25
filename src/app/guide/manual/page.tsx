@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useId } from 'react';
 import Link from 'next/link';
+import { ModalDialog } from '@/components/ui/ModalDialog';
 import {
   BookOpen,
   Users,
@@ -471,6 +472,7 @@ export default function UserManualPage() {
 
   // 燈箱狀態
   const [lightboxImg, setLightboxImg] = useState<{ src: string; title: string; stepText: string } | null>(null);
+  const lightboxTitleId = useId();
 
   // 當前顯示章節
   const currentChapters = activeTab === 'teacher' ? TEACHER_CHAPTERS : STUDENT_CHAPTERS;
@@ -510,17 +512,6 @@ export default function UserManualPage() {
       window.print();
     }
   };
-
-  // 鍵盤監聽 ESC 關閉燈箱
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && lightboxImg) {
-        setLightboxImg(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxImg]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between selection:bg-sky-500 selection:text-white">
@@ -1284,47 +1275,48 @@ export default function UserManualPage() {
       </main>
 
       {/* 燈箱視窗 (Lightbox Modal) */}
-      {lightboxImg && (
-        <div
-          onClick={() => setLightboxImg(null)}
-          className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6 transition-all"
-        >
-          {/* 燈箱頂部工具列 */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-5xl flex items-center justify-between text-white pb-3 border-b border-white/10"
-          >
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded bg-sky-600 text-white text-[11px] font-bold">
-                {lightboxImg.stepText}
-              </span>
-              <span className="font-bold text-sm sm:text-base">{lightboxImg.title}</span>
+      <ModalDialog
+        isOpen={Boolean(lightboxImg)}
+        onClose={() => setLightboxImg(null)}
+        ariaLabelledBy={lightboxTitleId}
+        dismissMode="any"
+        className="dialog-backdrop-dark bg-transparent border-0 p-0 m-auto max-w-5xl w-[calc(100vw-2rem)] shadow-none overflow-visible"
+      >
+        {lightboxImg && (
+          <div className="flex flex-col items-center justify-center text-white">
+            {/* 燈箱頂部工具列 */}
+            <div className="w-full flex items-center justify-between text-white pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded bg-sky-600 text-white text-[11px] font-bold">
+                  {lightboxImg.stepText}
+                </span>
+                <span id={lightboxTitleId} className="font-bold text-sm sm:text-base">{lightboxImg.title}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLightboxImg(null)}
+                aria-label="關閉放大視窗"
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <button
-              onClick={() => setLightboxImg(null)}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
 
-          {/* 燈箱圖片本體 */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-5xl max-h-[82vh] overflow-auto py-4 flex items-center justify-center"
-          >
-            <img
-              src={lightboxImg.src}
-              alt={lightboxImg.title}
-              className="max-h-[80vh] w-auto max-w-full rounded-xl shadow-2xl object-contain border border-white/10"
-            />
-          </div>
+            {/* 燈箱圖片本體 */}
+            <div className="w-full max-h-[82vh] overflow-auto py-4 flex items-center justify-center">
+              <img
+                src={lightboxImg.src}
+                alt={lightboxImg.title}
+                className="max-h-[80vh] w-auto max-w-full rounded-xl shadow-2xl object-contain border border-white/10"
+              />
+            </div>
 
-          <p className="text-slate-400 text-xs pt-1">
-            按鍵盤 ESC 或點選背景任意處關閉放大視窗
-          </p>
-        </div>
-      )}
+            <p className="text-slate-400 text-xs pt-1">
+              按鍵盤 ESC 或點選背景任意處關閉放大視窗
+            </p>
+          </div>
+        )}
+      </ModalDialog>
 
       {/* 頁尾 Footer */}
       <footer className="border-t bg-white py-6 text-center text-xs text-slate-500 space-y-2 print:hidden">

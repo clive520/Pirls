@@ -1,6 +1,7 @@
 import React from 'react';
 import { BookOpen, PlusCircle, Trash2, Upload } from 'lucide-react';
 import { TestPaper, ArticleIllustration } from '@/lib/types';
+import { SafeSvg } from '@/components/article/SafeSvg';
 import { IllustrationStoryboard } from './IllustrationStoryboard';
 
 interface ArticleEditorProps {
@@ -275,7 +276,7 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
                     </div>
                   ) : ill.svgCode ? (
                     <div className="flex flex-col items-center pt-1">
-                      <div dangerouslySetInnerHTML={{ __html: ill.svgCode }} className="w-full flex justify-center" />
+                      <SafeSvg svgCode={ill.svgCode} className="w-full flex justify-center" />
                       <p className="text-xs text-center text-slate-600 font-medium mt-1.5">
                         {ill.caption}
                       </p>

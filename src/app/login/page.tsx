@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useId } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { ModalDialog } from '@/components/ui/ModalDialog';
 import {
   BookOpen,
   Lock,
@@ -14,6 +15,8 @@ import {
   GraduationCap,
   School,
   Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 interface DirectoryStudent {
@@ -59,6 +62,9 @@ function LoginFormContent() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [showStudentPassword, setShowStudentPassword] = useState(false);
+  const [showAccountPassword, setShowAccountPassword] = useState(false);
+  const forgotTitleId = useId();
 
   // 載入班級與學生目錄
   useEffect(() => {
@@ -209,9 +215,11 @@ function LoginFormContent() {
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-6 px-5 sm:py-8 sm:px-10 shadow-xl shadow-slate-200/50 rounded-2xl border border-slate-200/80">
           {/* 模式切換 Tabs */}
-          <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
+          <div className="flex p-1 bg-slate-100 rounded-xl mb-6" role="tablist" aria-label="登入身分切換">
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'student'}
               onClick={() => {
                 setActiveTab('student');
                 setError('');
@@ -227,6 +235,8 @@ function LoginFormContent() {
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'account'}
               onClick={() => {
                 setActiveTab('account');
                 setError('');
@@ -244,7 +254,11 @@ function LoginFormContent() {
 
           {/* 錯誤訊息 */}
           {error && (
-            <div className="mb-5 rounded-xl bg-red-50 p-3.5 border border-red-200 flex items-start space-x-2.5 text-red-700 text-xs sm:text-sm">
+            <div
+              role="alert"
+              aria-live="polite"
+              className="mb-5 rounded-xl bg-red-50 p-3.5 border border-red-200 flex items-start space-x-2.5 text-red-700 text-xs sm:text-sm"
+            >
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-500" />
               <span>{error}</span>
             </div>
@@ -266,10 +280,12 @@ function LoginFormContent() {
                 <>
                   {/* 第 1 步：選擇授課老師 */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                    <label htmlFor="student-teacher-select" className="block text-xs font-bold text-slate-700 mb-1">
                       步驟 1：選擇授課老師
                     </label>
                     <select
+                      id="student-teacher-select"
+                      name="teacherId"
                       value={selectedTeacherId}
                       onChange={(e) => handleTeacherChange(e.target.value)}
                       required
@@ -286,10 +302,12 @@ function LoginFormContent() {
 
                   {/* 第 2 步：選擇班級 */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                    <label htmlFor="student-class-select" className="block text-xs font-bold text-slate-700 mb-1">
                       步驟 2：選擇班級
                     </label>
                     <select
+                      id="student-class-select"
+                      name="classId"
                       value={selectedClassId}
                       onChange={(e) => handleClassChange(e.target.value)}
                       disabled={!selectedTeacherId}
@@ -307,10 +325,13 @@ function LoginFormContent() {
 
                   {/* 第 3 步：選擇座號與姓名 */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                    <label htmlFor="student-username-select" className="block text-xs font-bold text-slate-700 mb-1">
                       步驟 3：選擇座號與姓名
                     </label>
                     <select
+                      id="student-username-select"
+                      name="username"
+                      autoComplete="username"
                       value={selectedStudentUsername}
                       onChange={(e) => setSelectedStudentUsername(e.target.value)}
                       disabled={!selectedClassId}
@@ -330,7 +351,7 @@ function LoginFormContent() {
                   {/* 第 4 步：輸入密碼 */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold text-slate-700">
+                      <label htmlFor="student-password" className="block text-xs font-bold text-slate-700">
                         步驟 4：輸入密碼
                       </label>
                       <button
@@ -346,13 +367,26 @@ function LoginFormContent() {
                         <Lock className="h-4 w-4" />
                       </div>
                       <input
-                        type="password"
+                        id="student-password"
+                        name="password"
+                        type={showStudentPassword ? 'text' : 'password'}
+                        autoComplete="current-password"
+                        enterKeyHint="done"
                         required
                         value={studentPassword}
                         onChange={(e) => setStudentPassword(e.target.value)}
                         placeholder="請輸入老師發給你的密碼"
-                        className="block w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm font-medium"
+                        className="block w-full pl-9 pr-10 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm font-medium"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowStudentPassword((v) => !v)}
+                        aria-pressed={showStudentPassword}
+                        aria-label={showStudentPassword ? '隱藏密碼' : '顯示密碼'}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition"
+                      >
+                        {showStudentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
 
@@ -372,7 +406,7 @@ function LoginFormContent() {
           {activeTab === 'account' && (
             <form className="space-y-4" onSubmit={handleAccountSubmit}>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="account-username" className="block text-xs font-bold text-slate-700 mb-1">
                   帳號 (Username)
                 </label>
                 <div className="relative rounded-lg shadow-sm">
@@ -380,7 +414,14 @@ function LoginFormContent() {
                     <User className="h-4 w-4" />
                   </div>
                   <input
+                    id="account-username"
+                    name="username"
                     type="text"
+                    autoComplete="username"
+                    spellCheck={false}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    enterKeyHint="next"
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -392,7 +433,7 @@ function LoginFormContent() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-bold text-slate-700">
+                  <label htmlFor="account-password" className="block text-xs font-bold text-slate-700">
                     密碼 (Password)
                   </label>
                   <button
@@ -408,13 +449,26 @@ function LoginFormContent() {
                     <Lock className="h-4 w-4" />
                   </div>
                   <input
-                    type="password"
+                    id="account-password"
+                    name="password"
+                    type={showAccountPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    enterKeyHint="done"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="輸入密碼"
-                    className="block w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm font-medium"
+                    className="block w-full pl-9 pr-10 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm font-medium"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowAccountPassword((v) => !v)}
+                    aria-pressed={showAccountPassword}
+                    aria-label={showAccountPassword ? '隱藏密碼' : '顯示密碼'}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition"
+                  >
+                    {showAccountPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -440,64 +494,70 @@ function LoginFormContent() {
       </div>
 
       {/* 忘記密碼補救指引 Modal */}
-      {showForgotModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
-                <KeyRound className="w-5 h-5" />
-              </div>
-              <button
-                onClick={() => setShowForgotModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
+      <ModalDialog
+        isOpen={showForgotModal}
+        onClose={() => setShowForgotModal(false)}
+        ariaLabelledBy={forgotTitleId}
+        dismissMode="any"
+        className="bg-white rounded-3xl max-w-md w-[calc(100vw-2rem)] p-0 m-auto shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
+              <KeyRound className="w-5 h-5" />
             </div>
+            <button
+              type="button"
+              onClick={() => setShowForgotModal(false)}
+              aria-label="關閉指引"
+              className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-            <div>
-              <h3 className="text-base font-bold text-slate-900">忘記密碼補救指引</h3>
-              <p className="text-xs text-slate-500 mt-0.5">依據校園教學平臺與資安管理規範：</p>
-            </div>
+          <div>
+            <h3 id={forgotTitleId} className="text-base font-bold text-slate-900">忘記密碼補救指引</h3>
+            <p className="text-xs text-slate-500 mt-0.5">依據校園教學平臺與資安管理規範：</p>
+          </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-700 space-y-3">
-              <div className="flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px] mt-0.5">
-                  1
-                </span>
-                <div>
-                  <strong className="text-slate-900">班級學生忘記密碼：</strong>
-                  <p className="text-slate-600 mt-0.5 leading-relaxed">
-                    請直接向您的<strong className="text-emerald-800">國語任課老師</strong>反映，老師可在「班級管理後台」的學生名冊中點擊「編輯帳密」，直接為您重設新密碼！
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5 pt-2.5 border-t border-slate-200/60">
-                <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px] mt-0.5">
-                  2
-                </span>
-                <div>
-                  <strong className="text-slate-900">授課教師忘記密碼：</strong>
-                  <p className="text-slate-600 mt-0.5 leading-relaxed">
-                    請聯繫校內<strong className="text-sky-800">系統最高管理員</strong>（如教務主任、資訊組長或設備組長），管理員可於管理員後台為您一鍵重設臨時密碼。
-                  </p>
-                </div>
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-700 space-y-3">
+            <div className="flex items-start gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px] mt-0.5">
+                1
+              </span>
+              <div>
+                <strong className="text-slate-900">班級學生忘記密碼：</strong>
+                <p className="text-slate-600 mt-0.5 leading-relaxed">
+                  請直接向您的<strong className="text-emerald-800">國語任課老師</strong>反映，老師可在「班級管理後台」的學生名冊中點擊「編輯帳密」，直接為您重設新密碼！
+                </p>
               </div>
             </div>
 
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={() => setShowForgotModal(false)}
-                className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition"
-              >
-                我知道了，返回登入
-              </button>
+            <div className="flex items-start gap-2.5 pt-2.5 border-t border-slate-200/60">
+              <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px] mt-0.5">
+                2
+              </span>
+              <div>
+                <strong className="text-slate-900">授課教師忘記密碼：</strong>
+                <p className="text-slate-600 mt-0.5 leading-relaxed">
+                  請聯繫校內<strong className="text-sky-800">系統最高管理員</strong>（如教務主任、資訊組長或設備組長），管理員可於管理員後台為您一鍵重設臨時密碼。
+                </p>
+              </div>
             </div>
           </div>
+
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => setShowForgotModal(false)}
+              className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition"
+            >
+              我知道了，返回登入
+            </button>
+          </div>
         </div>
-      )}
+      </ModalDialog>
     </div>
   );
 }

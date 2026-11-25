@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Printer, ArrowLeft, CheckCircle2, BookOpen, FileText } from 'lucide-react';
 import { TestPaper, cleanIllustrationCaption } from '@/lib/types';
+import { SafeSvg } from '@/components/article/SafeSvg';
 
 function PrintTestPaperContent() {
   const router = useRouter();
@@ -201,9 +202,9 @@ function PrintTestPaperContent() {
                             />
                           </div>
                         ) : ill.svgCode ? (
-                          <div
+                          <SafeSvg
+                            svgCode={ill.svgCode}
                             className="w-full max-w-md flex justify-center overflow-hidden"
-                            dangerouslySetInnerHTML={{ __html: ill.svgCode }}
                           />
                         ) : null}
                         {displayCaption && (

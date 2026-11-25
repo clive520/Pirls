@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ArticleIllustration, cleanIllustrationCaption } from '@/lib/types';
+import { SafeSvg } from './SafeSvg';
 
 export interface ArticleContentProps {
   paragraphs?: Array<{ paragraphNumber: number; text?: string; content?: string }>;
@@ -76,9 +77,9 @@ export const ArticleContent: React.FC<ArticleContentProps> = ({
                       />
                     </div>
                   ) : ill.svgCode ? (
-                    <div
+                    <SafeSvg
+                      svgCode={ill.svgCode}
                       className="w-full flex justify-center py-2 overflow-x-auto"
-                      dangerouslySetInnerHTML={{ __html: ill.svgCode }}
                     />
                   ) : null}
                   {displayCaption && (

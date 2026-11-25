@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { Calendar, Clock, AlertCircle, CheckCircle2, Lock, RotateCcw } from 'lucide-react';
 import { TestPaper, ClassRoom } from '@/lib/types';
+import { ModalDialog } from '@/components/ui/ModalDialog';
 
 interface AssignModalProps {
   testPaper: TestPaper | null;
@@ -50,6 +51,8 @@ export const AssignModal: React.FC<AssignModalProps> = ({
   onChangeDueDate,
   onSave,
 }) => {
+  const titleId = useId();
+
   if (!testPaper) return null;
 
   // 快捷時間設定器
@@ -77,8 +80,14 @@ export const AssignModal: React.FC<AssignModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+    <ModalDialog
+      isOpen={true}
+      onClose={onClose}
+      ariaLabelledBy={titleId}
+      dismissMode="any"
+      className="bg-white rounded-3xl max-w-lg w-[calc(100vw-2rem)] p-0 m-auto shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+    >
+      <div className="p-6 space-y-4">
         <div className="border-b border-slate-100 pb-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200">
@@ -88,7 +97,7 @@ export const AssignModal: React.FC<AssignModalProps> = ({
               國小 {testPaper.targetGrade} 年級 • {testPaper.questions.length} 題
             </span>
           </div>
-          <h3 className="text-lg font-bold text-slate-900 mt-1 line-clamp-1">
+          <h3 id={titleId} className="text-lg font-bold text-slate-900 mt-1 line-clamp-1">
             指派試卷《{testPaper.title}》
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -319,6 +328,6 @@ export const AssignModal: React.FC<AssignModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </ModalDialog>
   );
 };

@@ -49,12 +49,9 @@ export async function getAvailableGeminiModels(apiKey: string, preferredModel?: 
   }
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timeoutId));
+      signal: AbortSignal.timeout(8000),
+    });
 
     if (res.ok) {
       const data = await res.json();
@@ -116,18 +113,14 @@ export async function fetchWithRetry(url: string, payload: any, maxRetries = 1, 
   let attempt = 0;
   while (attempt < maxRetries) {
     attempt++;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-        signal: controller.signal,
+        signal: AbortSignal.timeout(timeoutMs),
       });
-
-      clearTimeout(timer);
 
       // 若遇到 503 (High demand) 或 429 且還有重試次數，等待 1 秒後重試
       if ((response.status === 503 || response.status === 429) && attempt < maxRetries) {
@@ -138,9 +131,8 @@ export async function fetchWithRetry(url: string, payload: any, maxRetries = 1, 
 
       return response;
     } catch (err: any) {
-      clearTimeout(timer);
-      if (err.name === 'AbortError') {
-        throw new Error(`Google API 響應逾時 (${timeoutMs / 1000}秒)`);
+      if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+        throw new Error(`Google API 響應逾時 (${timeoutMs / 1000}秒)`, { cause: err });
       }
       if (attempt >= maxRetries) throw err;
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -211,7 +203,7 @@ export async function callGeminiAPI(params: GenerateParams, apiKey: string): Pro
       lastError = err;
       // 若是 API Key 無效，無須再嘗試其他模型，立即拋出清楚錯誤
       if (err.message.includes('API key not valid') || err.message.includes('API_KEY_INVALID')) {
-        throw new Error(`Google API Key 無效，請檢查您的金鑰是否正確輸入。(${err.message})`);
+        throw new Error(`Google API Key 無效，請檢查您的金鑰是否正確輸入。(${err.message})`, { cause: err });
       }
       // 若是專案帳單餘額為 0 (402)，無須再嘗試其他模型，立即拋出清楚指引
       if (err.message.includes('402 Prepayment Depleted')) {

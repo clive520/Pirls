@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, ApiClientError } from '@/lib/api-client';
+import { ModalDialog } from '@/components/ui/ModalDialog';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -54,6 +55,9 @@ interface TransferTarget {
 
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const deleteTitleId = useId();
+  const createTitleId = useId();
+  const resetTitleId = useId();
 
   const [pendingTeachers, setPendingTeachers] = useState<TeacherItem[]>([]);
   const [approvedTeachers, setApprovedTeachers] = useState<TeacherItem[]>([]);
@@ -727,15 +731,21 @@ export default function AdminDashboardPage() {
       {/* ========================================================
           刪除教師與班級資料處置方案 Modal (核心需求 2)
          ======================================================== */}
-      {showDeleteModal && selectedTeacherForDelete && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <ModalDialog
+        isOpen={Boolean(showDeleteModal && selectedTeacherForDelete)}
+        onClose={() => !deleteLoading && setShowDeleteModal(false)}
+        ariaLabelledBy={deleteTitleId}
+        dismissMode={deleteLoading ? 'none' : 'any'}
+        className="bg-white rounded-3xl max-w-lg w-[calc(100vw-2rem)] p-0 m-auto shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+      >
+        {selectedTeacherForDelete && (
+          <div className="p-6 space-y-4">
             <div className="flex items-start space-x-3">
               <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 id={deleteTitleId} className="text-base font-bold text-slate-900">
                   刪除教師與名下班級學生處置方案
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -902,17 +912,22 @@ export default function AdminDashboardPage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </ModalDialog>
 
       {/* ========================================================
           直接新增教師 Modal (快速建立無需審核之教師)
          ======================================================== */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
-            <div>
-              <h3 className="text-base font-bold text-slate-900">管理員直接建立已開通教師帳號</h3>
+      <ModalDialog
+        isOpen={showCreateModal}
+        onClose={() => !createLoading && setShowCreateModal(false)}
+        ariaLabelledBy={createTitleId}
+        dismissMode={createLoading ? 'none' : 'any'}
+        className="bg-white rounded-3xl max-w-md w-[calc(100vw-2rem)] p-0 m-auto shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="p-6 space-y-4">
+          <div>
+            <h3 id={createTitleId} className="text-base font-bold text-slate-900">管理員直接建立已開通教師帳號</h3>
               <p className="text-xs text-slate-500 mt-0.5">
                 此處由管理員直接建立之教師帳號將自動設為「已開通」，可立即登入使用
               </p>
@@ -985,22 +1000,33 @@ export default function AdminDashboardPage() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+      </ModalDialog>
 
       {/* ========================================================
           重設教師密碼 Modal (方案 1)
          ======================================================== */}
-      {showResetPasswordModal && selectedTeacherForReset && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <ModalDialog
+        isOpen={Boolean(showResetPasswordModal && selectedTeacherForReset)}
+        onClose={() => {
+          if (!resetLoading) {
+            setShowResetPasswordModal(false);
+            setSelectedTeacherForReset(null);
+            setResetSuccessData(null);
+          }
+        }}
+        ariaLabelledBy={resetTitleId}
+        dismissMode={resetLoading ? 'none' : 'any'}
+        className="bg-white rounded-3xl max-w-md w-[calc(100vw-2rem)] p-0 m-auto shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+      >
+        {selectedTeacherForReset && (
+          <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
                   <KeyRound className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">重設登入密碼</h3>
+                  <h3 id={resetTitleId} className="text-base font-bold text-slate-900">重設登入密碼</h3>
                   <p className="text-xs text-slate-500">教師忘記密碼補救服務</p>
                 </div>
               </div>
@@ -1149,8 +1175,8 @@ export default function AdminDashboardPage() {
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </ModalDialog>
     </div>
   );
 }

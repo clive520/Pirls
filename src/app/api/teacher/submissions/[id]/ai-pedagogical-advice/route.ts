@@ -274,7 +274,7 @@ function generateFallbackPedagogicalAdvice(params: {
     { num: 4, name: '第四層：檢驗與評估', pct: p.level4.percentage, earned: p.level4.earned, total: p.level4.total },
   ];
 
-  const sortedByPct = [...levels].sort((a, b) => b.pct - a.pct);
+  const sortedByPct = levels.toSorted((a, b) => b.pct - a.pct);
   const strongest = sortedByPct[0];
   const weakest = sortedByPct[sortedByPct.length - 1];
 
@@ -328,7 +328,7 @@ function generateFallbackPedagogicalAdvice(params: {
   // 2. 篩選學生真實失分題目，打造「錯題鏡像對照鏡 (Question Mirrors)」
   const missedQuestions = questionDetails.filter((q) => q.earned < q.maxScore);
   // 優先挑選簡答題 (constructed_response) 與失分最大的題目
-  const sortedMissed = [...missedQuestions].sort((a, b) => {
+  const sortedMissed = missedQuestions.toSorted((a, b) => {
     if (a.type === 'constructed_response' && b.type !== 'constructed_response') return -1;
     if (b.type === 'constructed_response' && a.type !== 'constructed_response') return 1;
     return (b.maxScore - b.earned) - (a.maxScore - a.earned);

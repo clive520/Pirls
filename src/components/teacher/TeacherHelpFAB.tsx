@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useId } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ModalDialog } from '@/components/ui/ModalDialog';
 import {
   HelpCircle,
   X,
@@ -106,6 +107,8 @@ export function TeacherHelpFAB() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const drawerId = useId();
+  const drawerTitleId = useId();
 
   // 根據目前所在路由決定情境推薦
   const getContextualItem = (): QuickHelpItem => {
@@ -131,23 +134,15 @@ export function TeacherHelpFAB() {
       })
     : QUICK_HELP_ITEMS;
 
-  // 監聽鍵盤 ESC 關閉
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        setIsOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
-
   return (
     <>
       {/* 浮動按鈕 (FAB) */}
       <div className="fixed bottom-6 right-6 z-40 print:hidden">
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
+          aria-expanded={isOpen}
+          aria-controls={drawerId}
           className="group relative flex items-center gap-2.5 px-4 py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-sm rounded-full shadow-xl shadow-sky-600/30 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200"
           title="中途有疑問？點此開啟操作手冊速查"
         >
@@ -160,38 +155,36 @@ export function TeacherHelpFAB() {
         </button>
       </div>
 
-      {/* 側邊抽屜 Backdrop */}
-      {isOpen && (
-        <div
-          onClick={() => setIsOpen(false)}
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 transition-opacity"
-        />
-      )}
-
-      {/* 側邊抽屜主體 */}
-      <div
-        className={`fixed top-0 right-0 bottom-0 w-full sm:w-[460px] bg-white shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-out print:hidden ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+      {/* 側邊抽屜 (原生 Top-Layer <dialog>) */}
+      <ModalDialog
+        id={drawerId}
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        ariaLabelledBy={drawerTitleId}
+        dismissMode="any"
+        className="drawer-right ml-auto mr-0 my-0 h-[100svh] max-h-none w-full sm:w-[460px] max-w-none bg-white shadow-2xl p-0 border-0 print:hidden"
       >
-        {/* 抽屜頂部標題列 */}
-        <div className="p-4 sm:p-5 border-b bg-gradient-to-r from-sky-50 to-indigo-50/60 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-sm">
-              <BookOpen className="w-5 h-5" />
+        <div className="flex flex-col h-full">
+          {/* 抽屜頂部標題列 */}
+          <div className="p-4 sm:p-5 border-b bg-gradient-to-r from-sky-50 to-indigo-50/60 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-sm">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 id={drawerTitleId} className="font-black text-slate-900 text-base">操作指引與快速救急</h3>
+                <p className="text-xs text-slate-500">教師工作台專屬即時救援手冊</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-black text-slate-900 text-base">操作指引與快速救急</h3>
-              <p className="text-xs text-slate-500">教師工作台專屬即時救援手冊</p>
-            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              aria-label="關閉操作指引抽屜"
+              className="w-8 h-8 rounded-lg hover:bg-slate-200/60 text-slate-500 hover:text-slate-800 flex items-center justify-center transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="w-8 h-8 rounded-lg hover:bg-slate-200/60 text-slate-500 hover:text-slate-800 flex items-center justify-center transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
 
         {/* 搜尋列 */}
         <div className="p-4 border-b bg-white">
@@ -320,7 +313,8 @@ export function TeacherHelpFAB() {
             <ExternalLink className="w-3.5 h-3.5" />
           </Link>
         </div>
-      </div>
+        </div>
+      </ModalDialog>
     </>
   );
 }

@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, User, Lock, Building, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { BookOpen, User, Lock, Building, CheckCircle2, AlertCircle, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [school, setSchool] = useState('');
   const [error, setError] = useState('');
@@ -67,7 +68,11 @@ export default function RegisterPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-6 shadow-xl shadow-slate-200/50 rounded-2xl sm:px-10 border border-slate-200/80">
           {error && (
-            <div className="mb-6 rounded-xl bg-red-50 p-4 border border-red-200 flex items-start space-x-3 text-red-700 text-sm">
+            <div
+              role="alert"
+              aria-live="polite"
+              className="mb-6 rounded-xl bg-red-50 p-4 border border-red-200 flex items-start space-x-3 text-red-700 text-sm"
+            >
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500" />
               <span>{error}</span>
             </div>
@@ -94,13 +99,17 @@ export default function RegisterPage() {
           ) : (
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
-                <label className="block text-sm font-semibold text-slate-700">真實姓名</label>
+                <label htmlFor="register-display-name" className="block text-sm font-semibold text-slate-700">真實姓名</label>
                 <div className="mt-1 relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <User className="h-5 w-5" />
                   </div>
                   <input
+                    id="register-display-name"
+                    name="name"
                     type="text"
+                    autoComplete="name"
+                    enterKeyHint="next"
                     required
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
@@ -111,13 +120,17 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700">任教學校與縣市</label>
+                <label htmlFor="register-school" className="block text-sm font-semibold text-slate-700">任教學校與縣市</label>
                 <div className="mt-1 relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <Building className="h-5 w-5" />
                   </div>
                   <input
+                    id="register-school"
+                    name="organization"
                     type="text"
+                    autoComplete="organization"
+                    enterKeyHint="next"
                     required
                     value={school}
                     onChange={(e) => setSchool(e.target.value)}
@@ -128,13 +141,20 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700">自訂登入帳號 (Username)</label>
+                <label htmlFor="register-username" className="block text-sm font-semibold text-slate-700">自訂登入帳號 (Username)</label>
                 <div className="mt-1 relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <User className="h-5 w-5" />
                   </div>
                   <input
+                    id="register-username"
+                    name="username"
                     type="text"
+                    autoComplete="username"
+                    spellCheck={false}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    enterKeyHint="next"
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -145,19 +165,33 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700">自訂登入密碼</label>
+                <label htmlFor="register-password" className="block text-sm font-semibold text-slate-700">自訂登入密碼</label>
                 <div className="mt-1 relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <Lock className="h-5 w-5" />
                   </div>
                   <input
-                    type="password"
+                    id="register-password"
+                    name="new-password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    minLength={6}
+                    enterKeyHint="done"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="請設置至少 6 位密碼"
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
+                    className="block w-full pl-10 pr-10 py-2 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-pressed={showPassword}
+                    aria-label={showPassword ? '隱藏密碼' : '顯示密碼'}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
               </div>
 

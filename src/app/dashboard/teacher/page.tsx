@@ -1,14 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BookOpen, Users, PlusCircle, UserPlus, Printer, LogOut, CheckCircle, Sparkles, Trash2, KeyRound, ShieldCheck, QrCode, RefreshCw, TrendingUp, Crown, Handshake, Settings, Compass, HelpCircle } from 'lucide-react';
 import api from '@/lib/api-client';
 import { CoTeacherManageModal } from '@/components/teacher';
+import { ModalDialog } from '@/components/ui/ModalDialog';
 
 export default function TeacherDashboardPage() {
   const router = useRouter();
+  const createClassTitleId = useId();
+  const batchTitleId = useId();
+  const editStudentTitleId = useId();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [classes, setClasses] = useState<any[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
@@ -655,10 +659,15 @@ export default function TeacherDashboardPage() {
       </main>
 
       {/* 新增班級 Modal */}
-      {showClassModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
-            <h3 className="text-lg font-bold text-slate-900">建立新教學班級</h3>
+      <ModalDialog
+        isOpen={showClassModal}
+        onClose={() => setShowClassModal(false)}
+        ariaLabelledBy={createClassTitleId}
+        dismissMode="any"
+        className="bg-white rounded-2xl max-w-md w-[calc(100vw-2rem)] p-0 m-auto shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="p-6">
+          <h3 id={createClassTitleId} className="text-lg font-bold text-slate-900">建立新教學班級</h3>
             <form onSubmit={handleCreateClass} className="mt-4 space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700">班級名稱</label>
@@ -702,17 +711,21 @@ export default function TeacherDashboardPage() {
                 </button>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </ModalDialog>
 
       {/* 建立學生 Modal */}
-      {showBatchModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
-            <h3 className="text-lg font-bold text-slate-900">
-              建立學生帳號（{selectedClass?.name}）
-            </h3>
+      <ModalDialog
+        isOpen={showBatchModal}
+        onClose={() => !isBatchCreating && setShowBatchModal(false)}
+        ariaLabelledBy={batchTitleId}
+        dismissMode={isBatchCreating ? 'none' : 'any'}
+        className="bg-white rounded-2xl max-w-lg w-[calc(100vw-2rem)] p-0 m-auto shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="p-6">
+          <h3 id={batchTitleId} className="text-lg font-bold text-slate-900">
+            建立學生帳號（{selectedClass?.name}）
+          </h3>
 
             {createdStudentSlips.length > 0 ? (
               <div className="mt-4 space-y-4">
@@ -866,20 +879,26 @@ export default function TeacherDashboardPage() {
                 </div>
               </form>
             )}
-          </div>
         </div>
-      )}
+      </ModalDialog>
+
       {/* 編輯學生帳號密碼 Modal */}
-      {showEditModal && editingStudent && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+      <ModalDialog
+        isOpen={Boolean(showEditModal && editingStudent)}
+        onClose={() => !editLoading && setShowEditModal(false)}
+        ariaLabelledBy={editStudentTitleId}
+        dismissMode={editLoading ? 'none' : 'any'}
+        className="bg-white rounded-2xl max-w-md w-[calc(100vw-2rem)] p-0 m-auto shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+      >
+        {editingStudent && (
+          <div className="p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
                   <KeyRound className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">編輯學生帳號與密碼</h3>
+                  <h3 id={editStudentTitleId} className="text-base font-bold text-slate-900">編輯學生帳號與密碼</h3>
                   <p className="text-xs text-slate-500">修改學生基本資料或為忘記密碼的學生重設密碼</p>
                 </div>
               </div>
@@ -1006,8 +1025,8 @@ export default function TeacherDashboardPage() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+        )}
+      </ModalDialog>
 
       {/* 協同教師共同管理彈窗 */}
       {selectedClassId && (

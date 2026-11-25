@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { ModalDialog } from '@/components/ui/ModalDialog';
 import {
   ArrowLeft, Users, Award, BookOpen, BarChart3,
   CheckCircle2, Clock, Eye, AlertCircle, Trophy,
@@ -106,6 +107,7 @@ interface QueueState {
 
 export default function TeacherTestResultsPage() {
   const router = useRouter();
+  const queueTitleId = useId();
   const params = useParams();
   const searchParams = useSearchParams();
   const testId = params.id as string;
@@ -321,7 +323,7 @@ export default function TeacherTestResultsPage() {
   });
 
   // 2. 排序
-  const sortedSubmissions = [...filteredSubmissions].sort((a, b) => {
+  const sortedSubmissions = filteredSubmissions.toSorted((a, b) => {
     let valA: any;
     let valB: any;
 
@@ -1207,9 +1209,18 @@ export default function TeacherTestResultsPage() {
       </main>
 
       {/* 全班批次佇列進度 Modal (高響應、防轉圈逾時架構) */}
-      {queueState.isOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+      <ModalDialog
+        isOpen={queueState.isOpen}
+        onClose={() => {
+          if (queueState.isCompleted) {
+            setQueueState((prev) => ({ ...prev, isOpen: false }));
+          }
+        }}
+        ariaLabelledBy={queueTitleId}
+        dismissMode={queueState.isCompleted ? 'any' : 'none'}
+        className="bg-white rounded-3xl p-0 m-auto max-w-md w-[calc(100vw-2rem)] shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="p-6 sm:p-8 space-y-5">
             {/* 標題與圖示 */}
             <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
               <div
@@ -1226,7 +1237,7 @@ export default function TeacherTestResultsPage() {
                 )}
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 id={queueTitleId} className="text-base font-bold text-slate-900">
                   {queueState.isCompleted
                     ? '🎉 全班處理完成！'
                     : queueState.type === 'regrade'
@@ -1332,9 +1343,8 @@ export default function TeacherTestResultsPage() {
                 </button>
               )}
             </div>
-          </div>
         </div>
-      )}
+      </ModalDialog>
 
       {/* Toast 提示通知 */}
       {toastMsg && (

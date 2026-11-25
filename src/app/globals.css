@@ -18,3 +18,34 @@ body {
     rgb(var(--background-start-rgb));
   min-height: 100vh;
 }
+
+/* 原生 <dialog> Modal 背景捲動鎖定與遮罩樣式 (漸進增強) */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background-color: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+dialog.dialog-backdrop-dark::backdrop {
+  background-color: rgba(2, 6, 23, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+/* 右側滑出抽屜動畫（尊重 prefers-reduced-motion） */
+@media (prefers-reduced-motion: no-preference) {
+  dialog.drawer-right[open] {
+    transform: translateX(0);
+    transition: transform 0.28s ease-out;
+  }
+
+  @starting-style {
+    dialog.drawer-right[open] {
+      transform: translateX(100%);
+    }
+  }
+}

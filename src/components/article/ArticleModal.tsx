@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useId } from 'react';
 import { BookOpen, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { ArticleIllustration } from '@/lib/types';
 import { ArticleContent } from './ArticleContent';
+import { ModalDialog } from '@/components/ui/ModalDialog';
 
 export interface ArticleModalProps {
   isOpen: boolean;
@@ -27,31 +28,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
   accentColor = 'indigo',
 }) => {
   const [fontSizeLevel, setFontSizeLevel] = useState<number>(0);
-
-  // 鍵盤 Esc 關閉支援
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  // 開啟時鎖定頁面背景捲軸
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
+  const titleId = useId();
 
   const getFontSizeClass = () => {
     if (fontSizeLevel === 1) return 'text-base sm:text-lg leading-relaxed';
@@ -66,14 +43,14 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
     : 'bg-indigo-600 hover:bg-indigo-700';
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={onClose}
+    <ModalDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      ariaLabelledBy={titleId}
+      dismissMode="any"
+      className="bg-white w-[calc(100vw-1.5rem)] sm:w-[calc(100vw-3rem)] max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 p-0 m-auto overflow-hidden"
     >
-      <div
-        className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex flex-col max-h-[90vh] overflow-hidden">
         {/* 彈窗標頭 */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/90">
           <div className="flex items-center space-x-2.5">
@@ -81,7 +58,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
               <BookOpen className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-sm sm:text-base line-clamp-1">
+              <h3 id={titleId} className="font-bold text-slate-900 text-sm sm:text-base line-clamp-1">
                 {title}
               </h3>
               <div className="text-[11px] text-slate-400 font-mono">
@@ -94,17 +71,21 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
             {/* 字級縮放 */}
             <div className="flex items-center space-x-1 bg-white p-1 rounded-lg border border-slate-200">
               <button
+                type="button"
                 onClick={() => setFontSizeLevel(Math.max(0, fontSizeLevel - 1))}
                 className="p-1 rounded hover:bg-slate-100 text-slate-600 transition"
                 title="縮小字體"
+                aria-label="縮小字體"
               >
                 <ZoomOut className="w-3.5 h-3.5" />
               </button>
               <span className="text-[11px] font-bold px-1 text-slate-600">字級</span>
               <button
+                type="button"
                 onClick={() => setFontSizeLevel(Math.min(2, fontSizeLevel + 1))}
                 className="p-1 rounded hover:bg-slate-100 text-slate-600 transition"
                 title="放大字體"
+                aria-label="放大字體"
               >
                 <ZoomIn className="w-3.5 h-3.5" />
               </button>
@@ -112,9 +93,11 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
 
             {/* 關閉按鈕 */}
             <button
+              type="button"
               onClick={onClose}
               className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition"
               title="關閉彈窗 (Esc)"
+              aria-label="關閉彈窗"
             >
               <X className="w-5 h-5" />
             </button>
@@ -142,6 +125,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
             💡 提示：隨時可滾動查閱各段落與插圖，已作答的所有內容均完整保留。
           </span>
           <button
+            type="button"
             onClick={onClose}
             className={`w-full sm:w-auto px-6 py-2 rounded-xl ${buttonBg} text-white font-bold text-xs shadow transition ml-auto`}
           >
@@ -149,6 +133,6 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </ModalDialog>
   );
 };
